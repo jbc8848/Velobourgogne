@@ -341,8 +341,9 @@ footer{
 }
 .topline{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
 .ver{
-  font-family:'Spline Sans Mono',monospace; font-size:.7rem; letter-spacing:.1em;
-  color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:4px 10px;
+  font-family:'Spline Sans Mono',monospace; font-size:.72rem; letter-spacing:.1em; font-weight:500;
+  color:var(--gold); background:rgba(240,184,96,.12);
+  border:1px solid rgba(240,184,96,.45); border-radius:999px; padding:4px 11px;
 }
 #theme-toggle{
   border:1px solid var(--line); background:var(--deep2); color:var(--ink);
@@ -438,7 +439,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v2.2.0</span>
+      <span class="ver" id="app-version">v2.3.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne · itinérance 17 jours</div>
@@ -458,14 +459,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v2.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v2.3.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v2.2.0
+   Tour de Bourgogne à vélo — PWA · v2.3.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    14–27 août 2026 · 2 adultes + 2 enfants (3 ans) en remorques
    -------------------------------------------------------
