@@ -482,7 +482,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v4.5.0</span>
+      <span class="ver" id="app-version">v4.6.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -495,14 +495,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v4.5.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v4.6.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v4.5.0
+   Tour de Bourgogne à vélo — PWA · v4.6.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -821,7 +821,7 @@ try{
   if(lsv){ ['camps','bains','etapes','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.5.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.6.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1418,7 +1418,7 @@ function initOverviewMap(){
       note(all.length+' points d\u2019eau \u00b7 hors ligne'); return; }
     note('Pr\u00e9paration\u2026');
     ensureAllRoutes(rides, note, function(){
-      var blocks = routeBlocks(rides, 4), bi = 0, failed = 0;
+      var blocks = routeBlocks(rides, 6), bi = 0, failed = 0;
       (function nextBlock(){
         if(bi >= blocks.length){
           if(all.length && !failed){ try{ localStorage.setItem(CK, JSON.stringify(all)); }catch(e){} }
@@ -1431,12 +1431,14 @@ function initOverviewMap(){
         /* Bo\u00eete englobante : bien moins co\u00fbteuse pour Overpass qu'un filtre
            « around » sur des centaines de points, qui faisait refuser la requ\u00eate.
            Le corridor de 2 km est appliqu\u00e9 ici, sur le trac\u00e9 r\u00e9el. */
-        var q = '[out:json][timeout:90];('
+        /* Uniquement des nœuds : une requête bbox sur des nœuds est très peu
+           coûteuse. Les cimetières (nwr, polygones) faisaient exploser le coût
+           et se faisaient rejeter — ils sont demandés à part, en seconde passe. */
+        var q = '[out:json][timeout:60];('
           + 'node["amenity"="drinking_water"]('+bb+');'
           + 'node["man_made"="water_tap"]["drinking_water"!="no"]('+bb+');'
           + 'node["amenity"="water_point"]('+bb+');'
-          + 'nwr["landuse"="cemetery"]('+bb+');'
-          + ');out center 900;';
+          + ');out 600;';
         note('Points d\u2019eau \u2014 secteur '+(bi+1)+'/'+blocks.length+'\u2026');
         overpassQuery(q, function(j){
           if(!j){ failed++; }
@@ -1625,26 +1627,39 @@ function overpassPump(){
 function overpassRun(q, onDone, onNote){
   var tries = 0;
   function go(){
-    var url = OVERPASS[tries % OVERPASS.length];
-    fetch(url, {
+    var base = OVERPASS[tries % OVERPASS.length];
+    /* GET par défaut : c'est ce qui fonctionnait. Le passage en POST a coïncidé
+       avec l'arrêt complet du chargement — certains navigateurs ou relais le
+       traitent différemment (préflight, cache, filtrage). POST uniquement si la
+       requête dépasse ce qu'une URL peut porter. */
+    var useGet = q.length < 6000;
+    var opts = useGet ? undefined : {
       method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:'data='+encodeURIComponent(q)
-    })
+    };
+    var url = useGet ? (base + '?data=' + encodeURIComponent(q)) : base;
+    var why = '';
+    fetch(url, opts)
     .then(function(r){
-      if(r.status===429 || r.status===503 || r.status===504){ throw new Error('quota'); }
-      if(!r.ok){ throw new Error('http '+r.status); }
+      if(r.status===429 || r.status===503 || r.status===504){ why='saturé'; throw new Error('quota'); }
+      if(!r.ok){ why='erreur '+r.status; throw new Error('http'); }
       return r.json();
     })
     .then(function(j){
-      if(j && j.remark && /error|timed out|exceeded/i.test(j.remark)){ throw new Error('remark'); }
+      if(j && j.remark && /error|timed out|exceeded/i.test(j.remark)){ why='requête trop lourde'; throw new Error('remark'); }
       onDone(j);
     })
-    .catch(function(){
+    .catch(function(e){
+      if(!why){ why = 'réseau indisponible'; }
       tries++;
-      if(tries > 5){ onDone(null); return; }
-      var wait = Math.min(40000, 4000*Math.pow(2, tries-1));
-      if(onNote){ onNote('Serveur occupé \u2014 nouvelle tentative dans '+Math.round(wait/1000)+' s\u2026'); }
+      if(tries > 5){
+        if(onNote){ onNote('Échec après 6 tentatives ('+why+'). Réessaie plus tard ou en wifi.'); }
+        onDone(null);
+        return;
+      }
+      var wait = Math.min(30000, 3000*Math.pow(2, tries-1));
+      if(onNote){ onNote('Serveur '+why+' \u2014 tentative '+(tries+1)+'/6 dans '+Math.round(wait/1000)+' s\u2026'); }
       setTimeout(go, wait);
     });
   }
