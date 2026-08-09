@@ -405,6 +405,19 @@ footer{
 .ck:active{background:rgba(240,184,96,.08)}
 .ck input{margin-top:3px;accent-color:var(--aqua);width:18px;height:18px;flex:none}
 .ck.done{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--aqua)}
+.ckline{display:flex;align-items:flex-start;gap:6px}
+.ckline .ck{flex:1}
+.gear-del{flex:none;background:transparent;border:1px solid var(--line);color:var(--danger);
+  border-radius:8px;width:30px;height:30px;font-size:.85rem;cursor:pointer;margin-top:5px;line-height:1}
+.gear-del:active{background:rgba(229,138,122,.15)}
+.cust{font-family:'Spline Sans Mono',monospace;font-size:.6rem;color:var(--gold);
+  border:1px solid rgba(240,184,96,.4);border-radius:999px;padding:1px 6px;margin-left:5px;white-space:nowrap}
+.addrow{display:flex;gap:7px;margin-top:10px}
+.addrow input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:9px 11px;font:400 .82rem/1.3 'Spline Sans',sans-serif}
+.addrow input:focus{outline:none;border-color:rgba(240,184,96,.55)}
+.addrow button{flex:none;background:var(--gold);color:#08252e;border:none;border-radius:10px;
+  padding:9px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .ckprog{font-family:'Spline Sans Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:4px}
 .svc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .svc span{font-family:'Spline Sans Mono',monospace;font-size:.66rem;padding:3px 8px;border-radius:6px;
@@ -454,7 +467,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v2.5.0</span>
+      <span class="ver" id="app-version">v2.6.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne · itinérance 17 jours</div>
@@ -474,14 +487,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v2.5.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v2.6.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v2.5.0
+   Tour de Bourgogne à vélo — PWA · v2.6.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    14–27 août 2026 · 2 adultes + 2 enfants (3 ans) en remorques
    -------------------------------------------------------
@@ -1920,26 +1933,80 @@ var GEAR = [
   'Couteau suisse, jeu de cartes, carnet de bord'
  ]]
 ];
-function gearHtml(){
-  var done = 0, tot = 0;
-  GEAR.forEach(function(c){ tot += c[1].length; });
-  GEAR.forEach(function(c,ci){ c[1].forEach(function(_,ii){
-    try{ if(localStorage.getItem('bourg-ck-'+ci+'-'+ii)==='1') done++; }catch(e){}
-  });});
-  var h = '<div class="card"><h2><small>Autonomie 14 jours</small>Le matériel</h2>'
-    +'<p class="muted" style="margin-top:8px">Calibré pour 2 adultes et 2 enfants de 3 ans en remorques, camping et bivouac, canicule d\u2019août. Un village par jour minimum sur toute la boucle : inutile de porter plus de 24 à 36 h de nourriture. Viser 15 à 18 kg de bagages par vélo, remorques non comprises.</p>'
-    +'<p class="ckprog" style="margin-top:12px" id="ckprog">'+done+' / '+tot+' cochés</p></div>';
-  GEAR.forEach(function(c,ci){
-    h += '<div class="card"><h3>'+c[0]+'</h3><div class="ckcat">';
-    c[1].forEach(function(it,ii){
-      var on = false;
-      try{ on = localStorage.getItem('bourg-ck-'+ci+'-'+ii)==='1'; }catch(e){}
-      h += '<label class="ck'+(on?' done':'')+'"><input type="checkbox" class="gck" data-ck="'+ci+'-'+ii+'"'+(on?' checked':'')+'>'
-        +'<span>'+it+'</span></label>';
+/* Modifications de la liste par l'utilisateur :
+   GEARADD = éléments ajoutés (par catégorie) · GEARDEL = éléments d'origine masqués.
+   Les éléments d'origine ne sont jamais effacés, seulement masqués : on peut
+   toujours les restaurer. */
+var GEARADD = {}, GEARDEL = {}, GEAREDIT = false;
+try{ GEARADD = JSON.parse(localStorage.getItem('bourg-gear-add')||'{}') || {}; }catch(e){ GEARADD = {}; }
+try{ GEARDEL = JSON.parse(localStorage.getItem('bourg-gear-del')||'{}') || {}; }catch(e){ GEARDEL = {}; }
+function saveGear(){
+  try{
+    localStorage.setItem('bourg-gear-add', JSON.stringify(GEARADD));
+    localStorage.setItem('bourg-gear-del', JSON.stringify(GEARDEL));
+  }catch(e){}
+}
+/* liste effective d'une catégorie : [{key, text, custom}] */
+function gearItems(ci){
+  var out = [];
+  GEAR[ci][1].forEach(function(t, ii){
+    if(GEARDEL[ci+'-'+ii]) return;
+    out.push({key:ci+'-'+ii, text:t, custom:false});
+  });
+  (GEARADD[ci]||[]).forEach(function(o){
+    out.push({key:'c'+o.id, text:o.t, custom:true});
+  });
+  return out;
+}
+function gearCounts(){
+  var d=0, t=0;
+  GEAR.forEach(function(_, ci){
+    gearItems(ci).forEach(function(it){
+      t++;
+      try{ if(localStorage.getItem('bourg-ck-'+it.key)==='1') d++; }catch(e){}
     });
-    h += '</div></div>';
+  });
+  return {done:d, total:t};
+}
+function gearHtml(){
+  var c = gearCounts();
+  var nDel = Object.keys(GEARDEL).length;
+  var h = '<div class="card"><h2><small>Autonomie 17 jours</small>Le matériel</h2>'
+    +'<p class="muted" style="margin-top:8px">Calibré pour 2 adultes et 2 enfants de 3 ans en remorques, camping et bivouac, canicule d\u2019août. Un village par jour minimum sur toute la boucle : inutile de porter plus de 24 à 36 h de nourriture. Viser 15 à 18 kg de bagages par vélo, remorques non comprises.</p>'
+    +'<p class="ckprog" style="margin-top:12px" id="ckprog">'+c.done+' / '+c.total+' cochés</p>'
+    +'<div class="btn-row"><button class="gear-edit">'+(GEAREDIT?'\u2713 Terminer les modifications':'\u270f\ufe0f Modifier la liste')+'</button></div>';
+  if(GEAREDIT && nDel>0){
+    h += '<div class="btn-row"><button class="gear-restore">\u21ba Restaurer les '+nDel+' élément'+(nDel>1?'s':'')+' d\u2019origine supprimé'+(nDel>1?'s':'')+'</button></div>';
+  }
+  if(GEAREDIT){
+    h += '<p class="muted" style="margin-top:10px;font-size:.78rem">Touche \u2715 pour retirer un élément, ou ajoute le tien en bas de chaque catégorie. Les éléments d\u2019origine sont seulement masqués \u2014 tu peux toujours les restaurer.</p>';
+  }
+  h += '</div>';
+  GEAR.forEach(function(cat, ci){
+    var items = gearItems(ci);
+    h += '<div class="card"><h3>'+cat[0]+'</h3><div class="ckcat">';
+    items.forEach(function(it){
+      var on = false;
+      try{ on = localStorage.getItem('bourg-ck-'+it.key)==='1'; }catch(e){}
+      h += '<div class="ckline">'
+        +'<label class="ck'+(on?' done':'')+'"><input type="checkbox" class="gck" data-ck="'+it.key+'"'+(on?' checked':'')+'>'
+        +'<span>'+it.text+(it.custom?' <span class="cust">ajouté</span>':'')+'</span></label>'
+        +(GEAREDIT?'<button class="gear-del" data-k="'+it.key+'" data-cat="'+ci+'" aria-label="Retirer cet élément">\u2715</button>':'')
+        +'</div>';
+    });
+    h += '</div>';
+    if(GEAREDIT){
+      h += '<div class="addrow">'
+        +'<input type="text" class="gear-in" data-cat="'+ci+'" placeholder="Ajouter un élément\u2026" maxlength="160">'
+        +'<button class="gear-add" data-cat="'+ci+'">Ajouter</button></div>';
+    }
+    h += '</div>';
   });
   return h;
+}
+function renderGear(){
+  var sec = document.getElementById('sec-materiel');
+  if(sec){ sec.innerHTML = gearHtml(); }
 }
 
 /* ---------- partage ---------- */
@@ -2052,13 +2119,7 @@ mainEl.addEventListener('change', function(ev){
     var lab = el.closest('label');
     if(lab){ lab.classList.toggle('done', el.checked); }
     var pr = document.getElementById('ckprog');
-    if(pr){
-      var d=0,t=0;
-      GEAR.forEach(function(c,ci){ c[1].forEach(function(_,ii){
-        t++; try{ if(localStorage.getItem('bourg-ck-'+ci+'-'+ii)==='1') d++; }catch(e){}
-      });});
-      pr.textContent = d+' / '+t+' cochés';
-    }
+    if(pr){ var cc = gearCounts(); pr.textContent = cc.done+' / '+cc.total+' cochés'; }
     return;
   }
 });
@@ -2087,12 +2148,52 @@ mainEl.addEventListener('click', function(ev){
     return;
   }
   if(t.closest && t.closest('.reset-btn')){ resetDays(); recompute(); return; }
+
+  /* ----- édition de la liste de matériel ----- */
+  if(t.closest && t.closest('.gear-edit')){ GEAREDIT = !GEAREDIT; renderGear(); return; }
+  var gd = t.closest ? t.closest('.gear-del') : null;
+  if(gd){
+    var key = gd.getAttribute('data-k'), cat = gd.getAttribute('data-cat');
+    if(key.charAt(0)==='c'){
+      var id = key.slice(1);
+      GEARADD[cat] = (GEARADD[cat]||[]).filter(function(o){ return String(o.id)!==id; });
+      if(!GEARADD[cat].length){ delete GEARADD[cat]; }
+    }else{
+      GEARDEL[key] = 1;                      /* masqué, jamais effacé */
+    }
+    try{ localStorage.removeItem('bourg-ck-'+key); }catch(e){}
+    saveGear(); renderGear(); return;
+  }
+  var ga = t.closest ? t.closest('.gear-add') : null;
+  if(ga){ addGearItem(ga.getAttribute('data-cat')); return; }
+  if(t.closest && t.closest('.gear-restore')){ GEARDEL = {}; saveGear(); renderGear(); return; }
   var g = t.closest ? t.closest('.gpx-btn') : null;
   if(g){ downloadGpx(g.getAttribute('data-stage')); return; }
   var gd = t.closest ? t.closest('.guidon-btn') : null;
   if(gd){ enterGuidon(gd.getAttribute('data-stage')); return; }
   if(t.closest && t.closest('.allgpx-btn')){ downloadAllGpx(); return; }
   if(t.closest && t.closest('.share-btn')){ toggleShare(); return; }
+});
+
+function addGearItem(cat){
+  var inp = document.querySelector('.gear-in[data-cat="'+cat+'"]');
+  if(!inp) return;
+  var v = (inp.value||'').trim();
+  if(!v) { inp.focus(); return; }
+  v = v.replace(/[<>]/g,'').slice(0,160);
+  if(!GEARADD[cat]) GEARADD[cat] = [];
+  GEARADD[cat].push({id: Date.now().toString(36)+Math.floor(Math.random()*1000), t: v});
+  saveGear();
+  inp.value = '';
+  renderGear();
+  var again = document.querySelector('.gear-in[data-cat="'+cat+'"]');
+  if(again) again.focus();
+}
+mainEl.addEventListener('keydown', function(ev){
+  if(ev.key==='Enter' && ev.target && ev.target.classList && ev.target.classList.contains('gear-in')){
+    ev.preventDefault();
+    addGearItem(ev.target.getAttribute('data-cat'));
+  }
 });
 
 /* balayage vers la droite = retour */
