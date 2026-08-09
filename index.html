@@ -482,7 +482,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v4.2.0</span>
+      <span class="ver" id="app-version">v4.3.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -495,14 +495,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v4.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v4.3.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v4.2.0
+   Tour de Bourgogne à vélo — PWA · v4.3.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -515,7 +515,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'b6';
+var GEN = 'b7';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -821,7 +821,7 @@ try{
   if(lsv){ ['camps','bains','etapes','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.2.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.3.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1401,68 +1401,110 @@ function initOverviewMap(){
   m._loadEau = function(){
     if(m._eauLoaded) return;
     m._eauLoaded = true;
-    var n = 0, done = 0, failed = 0;
     var stat = document.getElementById('eau-stat');
-    if(stat){ stat.style.display='block'; stat.textContent = 'Recherche des points d\u2019eau sur OpenStreetMap\u2026'; }
-    (function next(i){
-      if(i>=rides.length){
-        if(stat){
-          stat.textContent = failed
-            ? (n+' points d\u2019eau trouvés \u00b7 '+failed+' étape(s) non chargée(s), réessaie plus tard.')
-            : (n+' points d\u2019eau potable à moins de 2 km du tracé, désormais disponibles hors ligne.');
-        }
-        var ce = document.getElementById('cnt-eau'); if(ce) ce.textContent = n;
-        return;
-      }
-      getWater(rides[i], function(list, src){
-        if(!list){ failed++; }
-        else{
-          list.forEach(function(wp){
-            var stl = WSTYLE[wp[2]] || WSTYLE.tap;
-            L.marker([wp[0],wp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gEau)
-             .bindPopup('<b>'+(wp[4]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab
-               +'<br>\u2248 '+wp[3]+' m du tracé \u00b7 J'+rides[i].day+'</span>'
-               +'<br><a href="https://www.google.com/maps?q='+wp[0]+','+wp[1]+'" target="_blank" rel="noopener">Ouvrir dans Maps</a>');
-            n++;
-          });
-        }
-        done++;
-        if(stat){ stat.textContent = 'Points d\u2019eau : '+done+'/'+rides.length+' étapes analysées \u00b7 '+n+' trouvés\u2026'; }
-        setTimeout(function(){ next(i+1); }, src==='cache' ? 0 : 700);
+    function note(t){ if(stat){ stat.style.display='block'; stat.textContent=t; } }
+    var CK = 'bourgwaterall-'+GEN+'-'+Math.round(RUN.total);
+    function draw(list){
+      list.forEach(function(wp){
+        var stl = WSTYLE[wp[2]] || WSTYLE.tap;
+        L.marker([wp[0],wp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gEau)
+         .bindPopup('<b>'+(wp[3]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+'</span>'
+           +'<br><a href="https://www.google.com/maps?q='+wp[0]+','+wp[1]+'" target="_blank" rel="noopener">Maps</a>');
       });
-    })(0);
+      note(list.length+' points d\u2019eau le long du parcours \u00b7 disponibles hors ligne');
+      var ce = document.getElementById('cnt-eau'); if(ce) ce.textContent = list.length;
+    }
+    var cached = null;
+    try{ cached = JSON.parse(localStorage.getItem(CK)||'null'); }catch(e){}
+    if(cached){ draw(cached); return; }
+    note('Préparation\u2026');
+    ensureAllRoutes(rides, note, function(){
+      var line = fullRouteLine(rides, 1200);
+      if(!line.length){ note('Tracés indisponibles.'); return; }
+      var C = coordList(line);
+      var q = '[out:json][timeout:180];('
+        + 'node(around:'+WATER_MAX_M+','+C+')["amenity"="drinking_water"];'
+        + 'node(around:'+WATER_MAX_M+','+C+')["man_made"="water_tap"]["drinking_water"!="no"];'
+        + 'node(around:'+WATER_MAX_M+','+C+')["amenity"="water_point"];'
+        + 'nwr(around:'+WATER_MAX_M+','+C+')["landuse"="cemetery"];'
+        + ');out center 1500;';
+      note('Interrogation d\u2019OpenStreetMap sur les '+Math.round(RUN.total)+' km\u2026');
+      overpassQuery(q, function(j){
+        if(!j){ note('Serveur OpenStreetMap injoignable. Recharge la page pour réessayer.'); return; }
+        var out = [], seen = {};
+        (j.elements||[]).forEach(function(e){
+          var la = e.lat!=null ? e.lat : (e.center && e.center.lat);
+          var lo = e.lon!=null ? e.lon : (e.center && e.center.lon);
+          if(la==null || lo==null) return;
+          var t = e.tags||{};
+          var kind = (t.amenity==='drinking_water' || t.man_made==='water_tap') ? 'tap'
+                   : (t.amenity==='water_point' ? 'point'
+                   : (t.landuse==='cemetery' ? 'cim' : null));
+          if(!kind) return;
+          var id = la.toFixed(4)+','+lo.toFixed(4);
+          if(seen[id]) return;
+          seen[id] = 1;
+          out.push([+la.toFixed(5), +lo.toFixed(5), kind, (t.name||'').replace(/[<>&"]/g,' ').slice(0,40)]);
+        });
+        try{ localStorage.setItem(CK, JSON.stringify(out)); }catch(e){}
+        draw(out);
+      }, note);
+    });
   };
 
   m._veloLoaded = false;
   m._loadVelo = function(){
     if(m._veloLoaded) return;
     m._veloLoaded = true;
-    var n = 0, done = 0, failed = 0;
     var stat = document.getElementById('velo-stat');
-    if(stat){ stat.style.display='block'; stat.textContent = 'Recherche des vélocistes\u2026'; }
-    (function next(i){
-      if(i>=rides.length){
-        if(stat){ stat.textContent = n+' vélocistes et Decathlon à moins de 5 km'+(failed?' \u00b7 '+failed+' étape(s) non chargée(s)':''); }
-        var cv = document.getElementById('cnt-velo'); if(cv) cv.textContent = n;
-        return;
-      }
-      getVelo(rides[i], function(list, src){
-        if(!list){ failed++; }
-        else{
-          list.forEach(function(vp){
-            var stl = VSTYLE[vp[2]] || VSTYLE.bike;
-            L.marker([vp[0],vp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gVelo)
-             .bindPopup('<b>'+(vp[4]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+' \u00b7 \u2248 '+vp[3]+' m \u00b7 J'+rides[i].day+'</span>'
-               +(vp[5]?'<br><a href="tel:'+vp[5].replace(/\s/g,'')+'">'+vp[5]+'</a>':'')
-               +'<br><a href="https://www.google.com/maps?q='+vp[0]+','+vp[1]+'" target="_blank" rel="noopener">Maps</a>');
-            n++;
-          });
-        }
-        done++;
-        if(stat){ stat.textContent = done+'/'+rides.length+' étapes \u00b7 '+n+' trouvés\u2026'; }
-        setTimeout(function(){ next(i+1); }, src==='cache' ? 0 : 700);
+    function note(t){ if(stat){ stat.style.display='block'; stat.textContent=t; } }
+    var CK = 'bourgveloall-'+GEN+'-'+Math.round(RUN.total);
+    function draw(list){
+      list.forEach(function(vp){
+        var stl = VSTYLE[vp[2]] || VSTYLE.bike;
+        L.marker([vp[0],vp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gVelo)
+         .bindPopup('<b>'+(vp[3]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+'</span>'
+           +(vp[4]?'<br><a href="tel:'+vp[4].replace(/\s/g,'')+'">'+vp[4]+'</a>':'')
+           +'<br><a href="https://www.google.com/maps?q='+vp[0]+','+vp[1]+'" target="_blank" rel="noopener">Maps</a>');
       });
-    })(0);
+      note(list.length+' vélocistes et Decathlon \u00b7 disponibles hors ligne');
+      var cv = document.getElementById('cnt-velo'); if(cv) cv.textContent = list.length;
+    }
+    var cached = null;
+    try{ cached = JSON.parse(localStorage.getItem(CK)||'null'); }catch(e){}
+    if(cached){ draw(cached); return; }
+    note('Préparation\u2026');
+    ensureAllRoutes(rides, note, function(){
+      var line = fullRouteLine(rides, 3000);
+      if(!line.length){ note('Tracés indisponibles.'); return; }
+      var C = coordList(line);
+      var q = '[out:json][timeout:180];('
+        + 'nwr(around:'+VELO_MAX_M+','+C+')["shop"="bicycle"];'
+        + 'nwr(around:'+VELO_MAX_M+','+C+')["brand"~"Decathlon",i];'
+        + 'nwr(around:'+VELO_MAX_M+','+C+')["name"~"Decathlon",i];'
+        + ');out center 400;';
+      note('Interrogation d\u2019OpenStreetMap\u2026');
+      overpassQuery(q, function(j){
+        if(!j){ note('Serveur OpenStreetMap injoignable. Recharge la page pour réessayer.'); return; }
+        var out = [], seen = {};
+        (j.elements||[]).forEach(function(e){
+          var la = e.lat!=null ? e.lat : (e.center && e.center.lat);
+          var lo = e.lon!=null ? e.lon : (e.center && e.center.lon);
+          if(la==null || lo==null) return;
+          var t = e.tags||{}, nm = (t.name||'').trim();
+          var isDeca = /decathlon/i.test(nm) || /decathlon/i.test(t.brand||'');
+          if(!isDeca && t.shop!=='bicycle') return;
+          var id = la.toFixed(4)+','+lo.toFixed(4);
+          if(seen[id]) return;
+          seen[id] = 1;
+          out.push([+la.toFixed(5), +lo.toFixed(5), isDeca?'deca':'bike',
+                    nm.replace(/[<>&"]/g,' ').slice(0,40),
+                    (t.phone||t['contact:phone']||'').replace(/[<>&"]/g,' ').slice(0,20)]);
+        });
+        try{ localStorage.setItem(CK, JSON.stringify(out)); }catch(e){}
+        draw(out);
+      }, note);
+    });
   };
 
   if(LAYERS.etapes) gEtapes.addTo(m);
@@ -1525,6 +1567,83 @@ function toggleLayer(key, on){
   }
 }
 
+
+/* =========================================================
+   REQUÊTES OVERPASS — une seule par couche, pour tout le parcours
+   Les 17 requêtes rapprochées d'avant déclenchaient le quota
+   d'Overpass (429/504) : le chargement s'arrêtait en cours de
+   route. On utilise maintenant le filtre (around: rayon, liste de
+   coordonnées) introduit en 0.7.55, qui filtre le corridor côté
+   serveur, avec réessais espacés et bascule sur un miroir.
+   ========================================================= */
+var OVERPASS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter'
+];
+function overpassQuery(q, onDone, onNote){
+  var tries = 0;
+  function go(){
+    var url = OVERPASS[tries % OVERPASS.length];
+    fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'data='+encodeURIComponent(q)
+    })
+    .then(function(r){
+      if(r.status===429 || r.status===504 || r.status===503){ throw new Error('quota'); }
+      if(!r.ok){ throw new Error('http '+r.status); }
+      return r.json();
+    })
+    .then(function(j){ onDone(j); })
+    .catch(function(e){
+      tries++;
+      if(tries > 4){ onDone(null); return; }
+      var wait = Math.min(25000, 3000*Math.pow(2, tries-1));
+      if(onNote){ onNote('Serveur OpenStreetMap occupé \u2014 nouvelle tentative dans '+Math.round(wait/1000)+' s\u2026'); }
+      setTimeout(go, wait);
+    });
+  }
+  go();
+}
+
+/* Polyligne complète du parcours, sous-échantillonnée */
+function fullRouteLine(rides, stepM){
+  var line = [];
+  rides.forEach(function(st){
+    var co = ROUTED[st.id];
+    var seg = (co && co.length>1) ? co.map(function(c){ return [c[0],c[1]]; })
+                                  : densify(st.pts.map(function(p){ return p.ll; }), 300);
+    seg.forEach(function(p){ line.push(p); });
+  });
+  if(!line.length) return line;
+  var out = [line[0]], acc = 0;
+  for(var i=1;i<line.length;i++){
+    acc += distM(line[i-1], line[i]);
+    if(acc >= stepM){ out.push(line[i]); acc = 0; }
+  }
+  var last = line[line.length-1];
+  if(out[out.length-1] !== last) out.push(last);
+  return out;
+}
+function coordList(line){
+  return line.map(function(p){ return p[0].toFixed(4)+','+p[1].toFixed(4); }).join(',');
+}
+
+/* Charge toutes les routes d'abord (séquentiel, mis en cache), puis rappelle cb */
+function ensureAllRoutes(rides, onProgress, cb){
+  var i = 0;
+  (function next(){
+    if(i >= rides.length){ cb(); return; }
+    var st = rides[i];
+    if(ROUTED[st.id] && ROUTED[st.id].length>1){ i++; next(); return; }
+    if(onProgress){ onProgress('Calcul des tracés \u2014 étape '+(i+1)+'/'+rides.length+'\u2026'); }
+    getRoute(st, function(co, src){
+      if(co){ ROUTED[st.id] = co; }
+      i++;
+      setTimeout(next, src==='cache' ? 0 : 120);
+    });
+  })();
+}
 
 /* =========================================================
    POINTS D'EAU POTABLE — données OpenStreetMap en direct
