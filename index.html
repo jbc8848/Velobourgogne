@@ -431,6 +431,16 @@ footer{
   border:1px solid rgba(159,196,143,.4);border-radius:10px;padding:10px 12px}
 .chain li.okday{background:rgba(159,196,143,.09)}
 .chain li.okday .dj{color:var(--sage)}
+.dgrid-lab{font-family:'Spline Sans Mono',monospace;font-size:.66rem;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);margin:12px 0 6px}
+.dgrid{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.dbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:9px;
+  padding:9px 0;font:600 .78rem/1 'Spline Sans Mono',monospace;cursor:pointer}
+.dbtn.ok{background:rgba(159,196,143,.22);border-color:rgba(159,196,143,.6);color:var(--ink)}
+.dbtn.load{background:rgba(240,184,96,.25);border-color:var(--gold);color:var(--ink)}
+.dbtn.fail{background:rgba(229,138,122,.2);border-color:rgba(229,138,122,.6);color:var(--danger)}
+.loadall-osm{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .retry-osm{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);
   border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .valid-btn{width:100%;background:var(--sage);color:#08252e;border:none;border-radius:10px;
@@ -484,7 +494,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v4.7.0</span>
+      <span class="ver" id="app-version">v5.0.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -497,14 +507,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v4.7.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v5.0.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v4.7.0
+   Tour de Bourgogne à vélo — PWA · v5.0.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -823,7 +833,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.7.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v5.0.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1389,146 +1399,187 @@ function initOverviewMap(){
      .bindPopup('<b>'+esc(n.n)+'</b><br><span style="font-size:.85em">'+st2.lab+'</span><br>'+b.d);
   });
 
-  /* --- couche 5 : eau potable, chargée depuis OpenStreetMap à la demande --- */
-  m._eauLoaded = false;
-  m._loadEau = function(){
-    if(m._eauLoaded) return;
-    m._eauLoaded = true;
-    var stat = document.getElementById('eau-stat');
-    function note(t){ if(stat){ stat.style.display='block'; stat.textContent=t; } }
-    var CK = 'bourgwaterall-'+GEN+'-'+Math.round(RUN.total);
-    var all = [], seen = {};
-    function drawOne(wp){
-      var stl = WSTYLE[wp[2]] || WSTYLE.tap;
-      L.marker([wp[0],wp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gEau)
-       .bindPopup('<b>'+(wp[3]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+'</span>'
-         +'<br><a href="https://www.google.com/maps?q='+wp[0]+','+wp[1]+'" target="_blank" rel="noopener">Maps</a>');
-    }
-    function count(){ var ce=document.getElementById('cnt-eau'); if(ce) ce.textContent = all.length; }
-    var cached = null;
-    try{ cached = JSON.parse(localStorage.getItem(CK)||'null'); }catch(e){}
-    if(cached && cached.length){ all = cached; all.forEach(drawOne); count();
-      note(all.length+' points d\u2019eau \u00b7 hors ligne'); return; }
-    note('Pr\u00e9paration\u2026');
-    ensureAllRoutes(rides, note, function(){
-      var blocks = routeBlocks(rides, 6), bi = 0, failed = 0;
-      (function nextBlock(){
-        if(bi >= blocks.length){
-          if(all.length && !failed){ try{ localStorage.setItem(CK, JSON.stringify(all)); }catch(e){} }
-          note(all.length+' points d\u2019eau'
-            + (failed ? ' \u00b7 '+failed+' secteur(s) manquant(s), recharge pour compl\u00e9ter' : ' \u00b7 hors ligne'));
-          return;
-        }
-        var line = blockLine(blocks[bi]);
-        var bb = bboxOf(line, 0.03).join(',');
-        /* Bo\u00eete englobante : bien moins co\u00fbteuse pour Overpass qu'un filtre
-           « around » sur des centaines de points, qui faisait refuser la requ\u00eate.
-           Le corridor de 2 km est appliqu\u00e9 ici, sur le trac\u00e9 r\u00e9el. */
-        /* Uniquement des nœuds : une requête bbox sur des nœuds est très peu
-           coûteuse. Les cimetières (nwr, polygones) faisaient exploser le coût
-           et se faisaient rejeter — ils sont demandés à part, en seconde passe. */
-        var q = '[out:json][timeout:60];('
-          + 'node["amenity"="drinking_water"]('+bb+');'
-          + 'node["man_made"="water_tap"]["drinking_water"!="no"]('+bb+');'
-          + 'node["amenity"="water_point"]('+bb+');'
-          + ');out 600;';
-        note('Points d\u2019eau \u2014 secteur '+(bi+1)+'/'+blocks.length+'\u2026');
-        overpassQuery(q, function(j){
-          if(!j){ failed++; }
-          else{
-            (j.elements||[]).forEach(function(e){
-              var la = e.lat!=null ? e.lat : (e.center && e.center.lat);
-              var lo = e.lon!=null ? e.lon : (e.center && e.center.lon);
-              if(la==null || lo==null) return;
-              var t = e.tags||{};
-              var kind = (t.amenity==='drinking_water' || t.man_made==='water_tap') ? 'tap'
-                       : (t.amenity==='water_point' ? 'point'
-                       : (t.landuse==='cemetery' ? 'cim' : null));
-              if(!kind) return;
-              var id = la.toFixed(4)+','+lo.toFixed(4);
-              if(seen[id]) return;
-              if(distToLine([la,lo], line) > WATER_MAX_M) return;
-              seen[id] = 1;
-              var wp = [+la.toFixed(5), +lo.toFixed(5), kind, (t.name||'').replace(/[<>&"]/g,' ').slice(0,40)];
-              all.push(wp); drawOne(wp);
-            });
-            count();
-          }
-          bi++;
-          setTimeout(nextBlock, 4000);
-        }, note);
-      })();
+  /* --- couches réseau : chargement PAR JOURNÉE, à la demande ---------------
+     Une requête pour tout le parcours sature Overpass. Ici, chaque journée est
+     une requête minuscule (une bbox d'étape), déclenchée par un appui sur le
+     numéro du jour, et conservée séparément. On charge à son rythme, et une
+     journée déjà chargée n'est jamais redemandée. */
+  m._dayState = {};                       /* 'ok' | 'load' | 'fail' par jour */
+  m._gDay = {eau:gEau, velo:gVelo};
+
+  function dayKey(kind, st){
+    return 'bourgday-'+kind+'-'+(st.from.n+'_'+st.to.n)
+           .replace(/[^A-Za-z0-9_]/g,'').slice(0,50);
+  }
+  function drawEau(wp){
+    var stl = WSTYLE[wp[2]] || WSTYLE.tap;
+    L.marker([wp[0],wp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gEau)
+     .bindPopup('<b>'+(wp[3]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+'</span>'
+       +'<br><a href="https://www.google.com/maps?q='+wp[0]+','+wp[1]+'" target="_blank" rel="noopener">Maps</a>');
+  }
+  function drawVelo(vp){
+    var stl = VSTYLE[vp[2]] || VSTYLE.bike;
+    L.marker([vp[0],vp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gVelo)
+     .bindPopup('<b>'+(vp[3]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+'</span>'
+       +(vp[4]?'<br><a href="tel:'+vp[4].replace(/\s/g,'')+'">'+vp[4]+'</a>':'')
+       +'<br><a href="https://www.google.com/maps?q='+vp[0]+','+vp[1]+'" target="_blank" rel="noopener">Maps</a>');
+  }
+  function tally(){
+    var ne=0, nv=0;
+    gEau.eachLayer(function(){ ne++; });
+    gVelo.eachLayer(function(){ nv++; });
+    var ce=document.getElementById('cnt-eau'); if(ce) ce.textContent = ne;
+    var cv=document.getElementById('cnt-velo'); if(cv) cv.textContent = nv;
+  }
+  function paintDay(day){
+    var b = document.querySelector('.dbtn[data-day="'+day+'"]');
+    if(!b) return;
+    b.className = 'dbtn ' + (m._dayState[day]||'');
+  }
+  m._tallyDays = function(){
+    var kinds = [];
+    if(LAYERS.eau)  kinds.push('eau');
+    if(LAYERS.velo) kinds.push('velo');
+    rides.forEach(function(st){
+      if(m._dayState[st.day]==='load') return;      /* en cours : on n'y touche pas */
+      if(!kinds.length){ m._dayState[st.day]=''; paintDay(st.day); return; }
+      /* une journée n'est « chargée » que si TOUTES les couches actives le sont */
+      var done = true;
+      kinds.forEach(function(k){
+        if(localStorage.getItem(dayKey(k, st))===null){ done = false; }
+      });
+      m._dayState[st.day] = done ? 'ok' : '';
+      paintDay(st.day);
     });
   };
 
-  m._loadVelo = function(){
-    if(m._veloLoaded) return;
-    m._veloLoaded = true;
-    var stat = document.getElementById('velo-stat');
-    function note(t){ if(stat){ stat.style.display='block'; stat.textContent=t; } }
-    var CK = 'bourgveloall-'+GEN+'-'+Math.round(RUN.total);
-    var all = [], seen = {};
-    function drawOne(vp){
-      var stl = VSTYLE[vp[2]] || VSTYLE.bike;
-      L.marker([vp[0],vp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gVelo)
-       .bindPopup('<b>'+(vp[3]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+'</span>'
-         +(vp[4]?'<br><a href="tel:'+vp[4].replace(/\s/g,'')+'">'+vp[4]+'</a>':'')
-         +'<br><a href="https://www.google.com/maps?q='+vp[0]+','+vp[1]+'" target="_blank" rel="noopener">Maps</a>');
-    }
-    function count(){ var cv=document.getElementById('cnt-velo'); if(cv) cv.textContent = all.length; }
-    var cached = null;
-    try{ cached = JSON.parse(localStorage.getItem(CK)||'null'); }catch(e){}
-    if(cached && cached.length){ all = cached; all.forEach(drawOne); count();
-      note(all.length+' v\u00e9locistes \u00b7 hors ligne'); return; }
-    note('Pr\u00e9paration\u2026');
-    ensureAllRoutes(rides, note, function(){
-      var blocks = routeBlocks(rides, 4), bi = 0, failed = 0;
-      (function nextBlock(){
-        if(bi >= blocks.length){
-          if(all.length && !failed){ try{ localStorage.setItem(CK, JSON.stringify(all)); }catch(e){} }
-          note(all.length+' v\u00e9locistes et Decathlon'
-            + (failed ? ' \u00b7 '+failed+' secteur(s) manquant(s)' : ' \u00b7 hors ligne'));
+  /* Charge une journée : au plus 2 petites requêtes (eau, vélocistes). */
+  m._loadDay = function(day, silent, done){
+    var st = null;
+    rides.forEach(function(x){ if(x.day===day) st = x; });
+    if(!st){ if(done) done(false); return; }
+    if(m._dayState[day]==='load'){ if(done) done(false); return; }
+    m._dayState[day]='load'; paintDay(day);
+    var stat = document.getElementById('eau-stat');
+    function note(t){ if(stat && !silent){ stat.style.display='block'; stat.textContent=t; } }
+
+    var kinds = [];
+    if(LAYERS.eau)  kinds.push('eau');
+    if(LAYERS.velo) kinds.push('velo');
+    if(!kinds.length){ m._dayState[day]=''; paintDay(day); if(done) done(false); return; }
+
+    var ki = 0, anyFail = false;
+    (function nextKind(){
+      if(ki >= kinds.length){
+        m._dayState[day] = anyFail ? 'fail' : 'ok';
+        paintDay(day); tally();
+        note(anyFail ? ('J'+day+' : échec, retouche le bouton pour réessayer')
+                     : ('J'+day+' chargé \u00b7 conservé hors ligne'));
+        if(done) done(!anyFail);
+        return;
+      }
+      var kind = kinds[ki], KEY = dayKey(kind, st);
+      var cached = null;
+      try{ cached = JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
+      if(cached){
+        cached.forEach(kind==='eau' ? drawEau : drawVelo);
+        ki++; nextKind(); return;
+      }
+      note('J'+day+' \u2014 '+(kind==='eau'?'points d\u2019eau':'vélocistes')+'\u2026');
+      withRoute(st, function(){
+        var line = routeLine(st);
+        var bb = bboxOf(line, kind==='eau' ? 0.03 : 0.06).join(',');
+        var q = (kind==='eau')
+          ? ('[out:json][timeout:45];('
+             + 'node["amenity"="drinking_water"]('+bb+');'
+             + 'node["man_made"="water_tap"]["drinking_water"!="no"]('+bb+');'
+             + 'node["amenity"="water_point"]('+bb+');'
+             + 'nwr["landuse"="cemetery"]('+bb+');'
+             + ');out center 250;')
+          : ('[out:json][timeout:45];('
+             + 'nwr["shop"="bicycle"]('+bb+');'
+             + 'nwr["name"~"Decathlon",i]('+bb+');'
+             + ');out center 120;');
+        overpassQuery(q, function(j){
+          if(!j){ anyFail = true; ki++; setTimeout(nextKind, 500); return; }
+          var out = [], seen = {};
+          var maxM = (kind==='eau') ? WATER_MAX_M : VELO_MAX_M;
+          (j.elements||[]).forEach(function(e){
+            var la = e.lat!=null ? e.lat : (e.center && e.center.lat);
+            var lo = e.lon!=null ? e.lon : (e.center && e.center.lon);
+            if(la==null || lo==null) return;
+            var t = e.tags||{};
+            var rec = null;
+            if(kind==='eau'){
+              var k2 = (t.amenity==='drinking_water' || t.man_made==='water_tap') ? 'tap'
+                     : (t.amenity==='water_point' ? 'point'
+                     : (t.landuse==='cemetery' ? 'cim' : null));
+              if(!k2) return;
+              rec = [+la.toFixed(5), +lo.toFixed(5), k2, (t.name||'').replace(/[<>&"]/g,' ').slice(0,40)];
+            }else{
+              var nm = (t.name||'').trim();
+              var isD = /decathlon/i.test(nm) || /decathlon/i.test(t.brand||'');
+              if(!isD && t.shop!=='bicycle') return;
+              rec = [+la.toFixed(5), +lo.toFixed(5), isD?'deca':'bike',
+                     nm.replace(/[<>&"]/g,' ').slice(0,40),
+                     (t.phone||t['contact:phone']||'').replace(/[<>&"]/g,' ').slice(0,20)];
+            }
+            var id = la.toFixed(4)+','+lo.toFixed(4);
+            if(seen[id]) return;
+            if(distToLine([la,lo], line) > maxM) return;
+            seen[id] = 1;
+            out.push(rec);
+          });
+          try{ localStorage.setItem(KEY, JSON.stringify(out)); }catch(e){}
+          out.forEach(kind==='eau' ? drawEau : drawVelo);
+          tally();
+          ki++;
+          setTimeout(nextKind, 800);
+        }, note);
+      });
+    })();
+  };
+
+  /* Charge toutes les journées à la file, en s'arrêtant si ça bloque. */
+  m._loadAllDays = function(){
+    var i = 0, consecFail = 0;
+    var stat = document.getElementById('eau-stat');
+    (function next(){
+      if(i >= rides.length){
+        if(stat){ stat.style.display='block'; stat.textContent = 'Chargement terminé.'; }
+        return;
+      }
+      var day = rides[i].day;
+      if(m._dayState[day]==='ok'){ i++; next(); return; }
+      m._loadDay(day, false, function(okDay){
+        consecFail = okDay ? 0 : consecFail+1;
+        i++;
+        if(consecFail >= 2){
+          if(stat){ stat.style.display='block';
+            stat.textContent = 'Interrompu : les serveurs refusent. Reprends jour par jour dans un moment.'; }
           return;
         }
-        var line = blockLine(blocks[bi]);
-        var bb = bboxOf(line, 0.07).join(',');
-        var q = '[out:json][timeout:90];('
-          + 'nwr["shop"="bicycle"]('+bb+');'
-          + 'nwr["name"~"Decathlon",i]('+bb+');'
-          + ');out center 300;';
-        note('V\u00e9locistes \u2014 secteur '+(bi+1)+'/'+blocks.length+'\u2026');
-        overpassQuery(q, function(j){
-          if(!j){ failed++; }
-          else{
-            (j.elements||[]).forEach(function(e){
-              var la = e.lat!=null ? e.lat : (e.center && e.center.lat);
-              var lo = e.lon!=null ? e.lon : (e.center && e.center.lon);
-              if(la==null || lo==null) return;
-              var t = e.tags||{}, nm = (t.name||'').trim();
-              var isDeca = /decathlon/i.test(nm) || /decathlon/i.test(t.brand||'');
-              if(!isDeca && t.shop!=='bicycle') return;
-              var id = la.toFixed(4)+','+lo.toFixed(4);
-              if(seen[id]) return;
-              if(distToLine([la,lo], line) > VELO_MAX_M) return;
-              seen[id] = 1;
-              var vp = [+la.toFixed(5), +lo.toFixed(5), isDeca?'deca':'bike',
-                        nm.replace(/[<>&"]/g,' ').slice(0,40),
-                        (t.phone||t['contact:phone']||'').replace(/[<>&"]/g,' ').slice(0,20)];
-              all.push(vp); drawOne(vp);
-            });
-            count();
-          }
-          bi++;
-          setTimeout(nextBlock, 4000);
-        }, note);
-      })();
-    });
+        setTimeout(next, 2500);
+      });
+    })();
   };
 
   if(LAYERS.camps)  gCamps.addTo(m);
   if(LAYERS.bains)  gBains.addTo(m);
-  if(LAYERS.eau){ gEau.addTo(m); m._loadEau(); }
-  if(LAYERS.velo){ gVelo.addTo(m); setTimeout(function(){ m._loadVelo(); }, LAYERS.eau ? 2500 : 0); }
+  if(LAYERS.eau)  gEau.addTo(m);
+  if(LAYERS.velo) gVelo.addTo(m);
+  setTimeout(function(){
+    /* réaffiche sans réseau tout ce qui est déjà en cache */
+    rides.forEach(function(st){
+      if(LAYERS.eau){
+        try{ var ce=JSON.parse(localStorage.getItem(dayKey('eau',st))||'null'); if(ce) ce.forEach(drawEau); }catch(e){}
+      }
+      if(LAYERS.velo){
+        try{ var cv=JSON.parse(localStorage.getItem(dayKey('velo',st))||'null'); if(cv) cv.forEach(drawVelo); }catch(e){}
+      }
+    });
+    tally(); m._tallyDays();
+  }, 60);
 
   var cc = document.getElementById('cnt-camps'); if(cc) cc.textContent = nCamps;
   var cb = document.getElementById('cnt-bains'); if(cb) cb.textContent = nBains;
@@ -1573,9 +1624,9 @@ function toggleLayer(key, on){
   if(!g) return;
   if(on){
     g.addTo(m);
-    var rr = document.getElementById('retry-row'); if(rr) rr.style.display='flex';
-    if(key==='eau' && m._loadEau){ m._loadEau(); }
-    if(key==='velo' && m._loadVelo){ m._loadVelo(); }
+    var dw = document.getElementById('day-wrap');
+    if(dw){ dw.style.display = (LAYERS.eau || LAYERS.velo) ? 'block' : 'none'; }
+    if(m._tallyDays) m._tallyDays();
   } else {
     m.removeLayer(g);
     var st1 = document.getElementById('eau-stat');
@@ -2034,10 +2085,21 @@ function layerBox(){
     + chip('eau','\ud83d\udeb0','Eau', true)
     + chip('velo','\ud83d\udd27','Vélocistes', true)
     +'</div>'
-    +'<div class="btn-row" id="retry-row" style="display:none"><button class="retry-osm">\u21bb Réessayer le chargement OpenStreetMap</button></div>'
-    +'<p class="mapstatus2" id="eau-stat" style="display:none"></p>'
-    +'<p class="mapstatus2" id="velo-stat" style="display:none"></p>'
-;
+    + dayGrid()
+    +'<p class="mapstatus2" id="eau-stat" style="display:none"></p>';
+}
+function dayGrid(){
+  /* toujours rendue, simplement masquée : la bascule d'une couche ne doit pas
+     reconstruire la carte, sinon on perdrait les marqueurs déjà chargés */
+  var vis = (LAYERS.eau || LAYERS.velo);
+  var rides = RUN.stages.filter(function(s){ return s.type==='ride'; });
+  var h = '<div id="day-wrap" style="display:'+(vis?'block':'none')+'">'
+    +'<div class="dgrid-lab">Charger par journée \u2014 une petite requête à la fois</div><div class="dgrid">';
+  rides.forEach(function(st){
+    h += '<button class="dbtn" data-day="'+st.day+'" title="'+esc(st.from.n+' \u2192 '+st.to.n)+'">'+st.day+'</button>';
+  });
+  h += '</div><div class="btn-row"><button class="loadall-osm">\u21bb Tout charger (lent)</button></div></div>';
+  return h;
 }
 function sejourHtml(){
   var rides = RUN.stages.filter(function(s){ return s.type==='ride'; });
@@ -2462,6 +2524,31 @@ mainEl.addEventListener('click', function(ev){
   }
   if(t.closest && t.closest('.reset-btn')){ resetDays(); recompute(); return; }
   if(t.closest && t.closest('.undone-btn')){ resetDone(); recompute(); return; }
+  var db = t.closest ? t.closest('.dbtn') : null;
+  if(db){
+    var mm0 = maps.apercu;
+    if(mm0 && mm0._loadDay){
+      var dnum2 = parseInt(db.getAttribute('data-day'),10);
+      if(mm0._dayState[dnum2]==='ok'){
+        /* déjà chargé : on force un rechargement de cette journée */
+        var rr2 = RUN.stages.filter(function(x){ return x.type==='ride' && x.day===dnum2; })[0];
+        if(rr2){
+          try{
+            localStorage.removeItem('bourgday-eau-'+(rr2.from.n+'_'+rr2.to.n).replace(/[^A-Za-z0-9_]/g,'').slice(0,50));
+            localStorage.removeItem('bourgday-velo-'+(rr2.from.n+'_'+rr2.to.n).replace(/[^A-Za-z0-9_]/g,'').slice(0,50));
+          }catch(e){}
+        }
+        mm0._dayState[dnum2] = '';
+      }
+      mm0._loadDay(dnum2, false);
+    }
+    return;
+  }
+  if(t.closest && t.closest('.loadall-osm')){
+    var mm1 = maps.apercu;
+    if(mm1 && mm1._loadAllDays) mm1._loadAllDays();
+    return;
+  }
   if(t.closest && t.closest('.retry-osm')){
     try{
       var kill=[];
