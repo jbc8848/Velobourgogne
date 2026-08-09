@@ -418,6 +418,16 @@ footer{
 .addrow input:focus{outline:none;border-color:rgba(240,184,96,.55)}
 .addrow button{flex:none;background:var(--gold);color:#08252e;border:none;border-radius:10px;
   padding:9px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
+.addrow select{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:9px 11px;font:400 .82rem/1.3 'Spline Sans',sans-serif}
+.pbar{height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--line)}
+.pbar i{display:block;height:100%;background:linear-gradient(90deg,#6fd6c9,#f0b860)}
+.okmsg{font-size:.84rem;line-height:1.5;color:var(--sage);background:rgba(159,196,143,.10);
+  border:1px solid rgba(159,196,143,.4);border-radius:10px;padding:10px 12px}
+.chain li.okday{background:rgba(159,196,143,.09)}
+.chain li.okday .dj{color:var(--sage)}
+.valid-btn{width:100%;background:var(--sage);color:#08252e;border:none;border-radius:10px;
+  padding:11px 14px;font:600 .84rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .ckprog{font-family:'Spline Sans Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:4px}
 .svc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .svc span{font-family:'Spline Sans Mono',monospace;font-size:.66rem;padding:3px 8px;border-radius:6px;
@@ -467,7 +477,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v2.6.0</span>
+      <span class="ver" id="app-version">v3.2.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne · itinérance 17 jours</div>
@@ -487,14 +497,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v2.6.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v3.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v2.6.0
+   Tour de Bourgogne à vélo — PWA · v3.2.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    14–27 août 2026 · 2 adultes + 2 enfants (3 ans) en remorques
    -------------------------------------------------------
@@ -508,7 +518,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'b4';
+var GEN = 'b5';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -518,7 +528,7 @@ try{
     var kill = [];
     for(var ki=0; ki<localStorage.length; ki++){
       var kk = localStorage.key(ki);
-      if(kk && (kk.indexOf('bourgrt')===0 || kk.indexOf('bourgreal')===0)){ kill.push(kk); }
+      if(kk && (kk.indexOf('bourgrt')===0 || kk.indexOf('bourgreal')===0 || kk.indexOf('bourgbivo')===0)){ kill.push(kk); }
     }
     kill.forEach(function(kk){ localStorage.removeItem(kk); });
     localStorage.setItem('bourggen', GEN);
@@ -798,20 +808,12 @@ var CHAIN = [
 /* Options globales (pas des variations quotidiennes) */
 var OPTIONS = [
  {id:'bouclage', label:'Refermer la boucle à vélo (Dijon → Saint-Jean-de-Losne)',
-  desc:'+35 km le dernier jour, au lieu du TER de 15 minutes.', on:false}
+  desc:'Le dernier tronçon, 35 km le long du canal, pour revenir à la voiture sans prendre le train. Décoche si tu préfères finir à Dijon et rentrer en TER (15 min).', on:true}
 ];
 
-var RHYTHMS = [
- {key:'flanerie',  name:'Flânerie',   rest:0, shape:'regulier',   cap:56,
-  desc:'Dix-sept journées quasi identiques, autour de 41 km. On roule le matin, on est arrivé pour le déjeuner tous les jours \u2014 le profil le plus doux possible sur ce parcours.'},
- {key:'progressif',name:'Progressif', rest:0, shape:'progressif', cap:58,
-  desc:'Démarrage très tranquille pendant que les jambes se font, journées un peu plus pleines vers la fin. Idéal si la première semaine sert de rodage.'},
- {key:'canicule',  name:'Canicule',   rest:0, shape:'alterne',    cap:62,
-  desc:'Alternance voulue court / long : une grosse journée sur les tronçons plats et ombragés, suivie d\u2019une toute petite pour récupérer et profiter de l\u2019eau.'},
- {key:'souple',    name:'Souple',     rest:0, shape:'regulier',   cap:68,
-  desc:'Mêmes journées régulières, mais avec un plafond plus haut : c\u2019est le rythme à choisir pour pouvoir vraiment allonger une étape quand l\u2019envie vient, sans que l\u2019app refuse.'}
-];
-
+/* UN SEUL itinéraire : les 690 km découpés en 17 journées pédalées,
+   soit environ 41 km par jour. Pas de rythme à choisir. */
+var PLAN = {cap:56, name:'Itinéraire unique'};
 
 /* Points d'eau du parcours : baignades naturelles, plans d'eau et piscines.
    Chaque entrée reprend ce qui est décrit dans la fiche « refuge » du lieu.
@@ -868,6 +870,15 @@ try{
   if(lsv){ ['camps','bains','etapes','eau'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v3.2.0) */
+try{
+  var oldK = [];
+  for(var oi=0; oi<localStorage.length; oi++){
+    var ok2 = localStorage.key(oi);
+    if(ok2 && ok2.indexOf('bourgbivo')===0){ oldK.push(ok2); }
+  }
+  oldK.forEach(function(k){ localStorage.removeItem(k); });
+}catch(e){}
 
 var TOTAL_DAYS = 17;
 var DATE0 = new Date(2026, 7, 13); /* jeudi 13 août 2026 */
@@ -875,23 +886,22 @@ var JOURS = ['dim','lun','mar','mer','jeu','ven','sam'];
 var MOIS = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
 
 /* ---------- état ---------- */
-var STATE = {rhythm:0, opts:{}, days:{}};
+var STATE = {opts:{}, days:{}, done:{}};
 OPTIONS.forEach(function(o){ STATE.opts[o.id] = o.on; });
 try{
   var sv = JSON.parse(localStorage.getItem('bourg-state2')||'null');
   if(sv){
-    if(typeof sv.rhythm==='number' && sv.rhythm>=0 && sv.rhythm<RHYTHMS.length){ STATE.rhythm = sv.rhythm; }
     if(sv.opts){ OPTIONS.forEach(function(o){ if(typeof sv.opts[o.id]==='boolean'){ STATE.opts[o.id]=sv.opts[o.id]; } }); }
     if(sv.days){ STATE.days = sv.days; }
+    if(sv.done){ STATE.done = sv.done; }
   }
 }catch(e){}
 function saveState(){ try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
 function resetDays(){ STATE.days = {}; saveState(); }
+function resetDone(){ STATE.done = {}; saveState(); }
 
 (function(){
   var h = location.hash||'', got=false;
-  var mr = /[#&]r=(\d)/.exec(h);
-  if(mr){ var r=+mr[1]; if(r>=0&&r<RHYTHMS.length){ STATE.rhythm=r; got=true; } }
   var mb = /[#&]b=(\d)/.exec(h);
   if(mb){ STATE.opts.bouclage = mb[1]==='1'; got=true; }
   var md = /[#&]d=([0-9\-,]*)/.exec(h);
@@ -930,31 +940,8 @@ function computeStages(){
   var chain = buildChain();
   var cum = chainCum(chain);
   var M = chain.length, T = cum[M-1];
-  var R = RHYTHMS[STATE.rhythm];
-  /* Un jour de repos se paie sur les autres. Si le rythme demandé imposerait
-     plus de 60 km/jour de moyenne — irréaliste avec deux remorques et deux
-     enfants de 3 ans — on retire un repos et on le dit clairement. */
-  var rest = 0;              /* aucun jour de pause : les 17 jours sont pédalés */
-  var restReduced = 0;
-  var rideDays = TOTAL_DAYS - rest;
+  var rideDays = TOTAL_DAYS;
 
-  /* poids du profil de rythme */
-  var w=[];
-  for(var d=0; d<rideDays; d++){
-    var x = rideDays>1 ? d/(rideDays-1) : .5, v;
-    if(R.shape==='progressif'){ v = 0.84 + 0.32*x; }
-    else if(R.shape==='alterne'){ v = (d%2===0) ? 0.78 : 1.22; }
-    else { v = 1; }
-    w.push(v);
-  }
-
-  /* Marge de sécurité adaptative : large quand le séjour est confortable,
-     réduite quand la moyenne obligatoire frôle déjà le plafond — sinon
-     aucun choix ne serait jamais jugé faisable. */
-  /* Faisabilité exacte : pour chaque maillon, le nombre minimal et maximal
-     de journées nécessaires pour rejoindre l'arrivée sous plafond. Un maillon
-     n'est proposé que si le nombre de jours restants tombe dans cet intervalle
-     — c'est ce qui rend structurellement impossible de se peindre dans un coin. */
   function bounds(cap, minSeg){
     var mn = new Array(M).fill(Infinity), mx = new Array(M).fill(-Infinity);
     mn[M-1] = 0; mx[M-1] = 0;
@@ -968,143 +955,130 @@ function computeStages(){
     }
     return {mn:mn, mx:mx};
   }
-  /* Le découpage doit être possible en exactement `rideDays` journées. Si le
-     plafond du rythme l'interdit (trop bas pour la distance), on le desserre
-     par paliers ; si au contraire les villages sont trop rapprochés pour
-     remplir tous les jours, on abaisse la longueur minimale d'une étape.
-     Dans les deux cas l'app le signale au lieu de produire une aberration. */
-  var CAP = R.cap, MINSEG = 12, capRaised = 0, segLowered = 0, B = bounds(CAP, MINSEG);
-  var guard = 0;
-  while(B.mn[0] > rideDays && CAP < 95 && guard++ < 20){ CAP += 4; capRaised += 4; B = bounds(CAP, MINSEG); }
-  guard = 0;
-  while(B.mx[0] < rideDays && MINSEG > 0 && guard++ < 20){ MINSEG = Math.max(0, MINSEG-3); segLowered++; B = bounds(CAP, MINSEG); }
-  var minD = B.mn, maxD = B.mx;
-  var globalAvg = T / rideDays;
-  var margin = Math.max(0, Math.min(10, CAP - globalAvg - 4));
-  var LIMIT = CAP - margin;
 
-  var stages = [], at = 0;
+  /* index du maillon confirmé pour un jour donné, ou -1 */
+  function doneIdx(day){
+    var nm = STATE.done['d'+day];
+    if(!nm) return -1;
+    for(var i=0;i<M;i++){ if(chain[i].n===nm) return i; }
+    return -1;
+  }
+
+  /* Passe 1 : où sommes-nous réellement après la dernière journée validée ?
+     La réalité prime sur le plan — on adapte le plafond au reste à parcourir. */
+  var lastDone = 0, lastDoneDay = 0;
+  for(var dd=1; dd<=rideDays; dd++){
+    var di = doneIdx(dd);
+    if(di > lastDone){ lastDone = di; lastDoneDay = dd; }
+  }
+  var remainKm = T - cum[lastDone], remainDays = rideDays - lastDoneDay;
+  var needAvg = remainDays > 0 ? remainKm/remainDays : 0;
+  var CAP = Math.max(PLAN.cap, Math.ceil(needAvg*1.3/2)*2);
+  var MINSEG = 12, capRaised = Math.max(0, CAP - PLAN.cap);
+  var B = bounds(CAP, MINSEG), guard = 0;
+  while(B.mn[0] > rideDays && CAP < 110 && guard++ < 25){ CAP += 4; capRaised += 4; B = bounds(CAP, MINSEG); }
+  guard = 0;
+  while(B.mx[0] < rideDays && MINSEG > 0 && guard++ < 20){ MINSEG = Math.max(0, MINSEG-3); B = bounds(CAP, MINSEG); }
+  var minD = B.mn, maxD = B.mx;
+  var LIMIT = Math.max(needAvg + 6, CAP - 10);
+
+  /* Passe 2 : le déroulé, jour après jour */
+  var stages = [], at = 0, behind = false;
   for(var day=1; day<=rideDays; day++){
     var left = rideDays - day + 1;
-    var remain = T - cum[at];
-    /* objectif du jour, pondéré par le profil restant */
-    var wl = w.slice(day-1), wsum = wl.reduce(function(a,b){return a+b;},0);
-    var target = remain * wl[0] / wsum;
+    var to, forced = false, confirmed = false;
+    var opts = {court:null, normal:null, long:null};
 
-    var choice = 0;
-    var ck = 'd'+day;
-    if(STATE.days[ck]===-1 || STATE.days[ck]===1){ choice = STATE.days[ck]; }
-
-    var to;
-    if(day===rideDays){
+    var fixed = doneIdx(day);
+    if(fixed > at || (fixed === at && day <= lastDoneDay)){
+      /* journée validée : le point d'arrivée est un fait, pas un calcul */
+      to = Math.max(fixed, at);
+      if(to === at && to < M-1){ to = at; }
+      confirmed = true;
+      opts = {court:null, normal:to, long:null};
+    }else if(day === rideDays){
       to = M-1;
+      opts = {court:null, normal:M-1, long:null};
     }else{
-      /* Candidats atteignables. Un choix n'est proposé que s'il laisse le
-         voyage terminable : c'est ce qui empêche d'enchaîner « plus court »
-         jusqu'à se retrouver avec une étape finale monstrueuse. */
-      var hard = [], soft = [], forced = false;
+      var remain = T - cum[at];
+      var target = remain / left;
+      var choice = (STATE.days['d'+day]===-1 || STATE.days['d'+day]===1) ? STATE.days['d'+day] : 0;
+
+      var hard = [], soft = [];
       for(var j=at+1; j<=M-1-(left-1); j++){
         var seg = cum[j]-cum[at];
         if(seg > CAP) break;
         if(seg < MINSEG && left>1) continue;
-        var restKm = T-cum[j], restDays = left-1;
-        /* INVARIANT DUR, jamais relâché : depuis ce maillon, l'arrivée doit
-           rester atteignable en exactement le nombre de jours restants. */
+        var restDays = left-1;
         if(restDays > 0 && !(minD[j] <= restDays && restDays <= maxD[j])) continue;
-        if(restDays === 0 && j !== M-1) continue;
         hard.push(j);
-        if(restDays === 0 || restKm/restDays <= LIMIT){ soft.push(j); }
+        if(restDays === 0 || (T-cum[j])/restDays <= LIMIT){ soft.push(j); }
       }
       var cands = soft.length ? soft : hard;
       if(!cands.length){
-        /* ne devrait plus arriver grâce à l'invariant ; sécurité de dernier
-           recours : le maillon le plus lointain qui garde l'arrivée atteignable */
-        forced = true;
+        forced = true; behind = true;
         var far = -1;
         for(var j2=at+1; j2<M; j2++){
           if(cum[j2]-cum[at] > CAP) break;
           if(minD[j2] <= left-1) far = j2;
         }
+        if(far < 0){ for(var j3=at+1; j3<M; j3++){ if(cum[j3]-cum[at] <= CAP) far = j3; } }
         cands = [far>0 ? far : Math.min(at+1, M-1)];
       }else if(!soft.length){
-        /* on est en retard : le choix du jour est neutralisé, on rattrape */
         forced = true;
         cands = [hard[hard.length-1]];
       }
-      /* le « normal » = le plus proche de l'objectif */
       var best = cands[0], bd = Infinity;
-      cands.forEach(function(j3){
-        var dd = Math.abs((cum[j3]-cum[at]) - target);
-        if(dd < bd){ bd = dd; best = j3; }
+      cands.forEach(function(k){
+        var dv = Math.abs((cum[k]-cum[at]) - target);
+        if(dv < bd){ bd = dv; best = k; }
       });
       var pos = cands.indexOf(best);
-      var pick = forced ? pos : pos + choice;
-      if(pick < 0) pick = 0;
-      if(pick > cands.length-1) pick = cands.length-1;
+      var pick = forced ? pos : Math.min(cands.length-1, Math.max(0, pos + choice));
       to = cands[pick];
-      /* options réellement disponibles ce jour-là */
-      var opts = {court: pos>0 ? cands[pos-1] : null,
-                  normal: cands[pos],
-                  long: pos<cands.length-1 ? cands[pos+1] : null,
-                  forced: forced};
-      var applied = (to === opts.normal) ? 0 : (to === opts.court ? -1 : (to === opts.long ? 1 : 0));
-      stages.push({_opts:opts, _applied:applied});
+      opts = {court: pos>0 ? cands[pos-1] : null,
+              normal: cands[pos],
+              long: pos<cands.length-1 ? cands[pos+1] : null};
     }
-    var st = (day===rideDays) ? {_opts:{court:null,normal:M-1,long:null}, _applied:0} : stages.pop();
+    if(to <= at && at < M-1){ to = Math.min(at+1, M-1); }
+
     var via = [];
-    for(var v2=at+1; v2<to; v2++){ via.push(chain[v2]); }
+    for(var v=at+1; v<to; v++){ via.push(chain[v]); }
     var surfs = {};
-    for(var s2=at+1; s2<=to; s2++){ surfs[chain[s2].surf] = (surfs[chain[s2].surf]||0)+chain[s2].km; }
+    for(var sf=at+1; sf<=to; sf++){ surfs[chain[sf].surf] = (surfs[chain[sf].surf]||0)+chain[sf].km; }
     stages.push({
       type:'ride', from:chain[at], to:chain[to], via:via,
       km: cum[to]-cum[at], pts:[chain[at]].concat(via,[chain[to]]),
-      opts:st._opts, applied:st._applied, forced:!!(st._opts&&st._opts.forced), chain:chain, cum:cum, surfs:surfs,
-      kmCourt: st._opts.court!=null ? cum[st._opts.court]-cum[at] : null,
-      kmLong:  st._opts.long!=null  ? cum[st._opts.long]-cum[at]  : null
+      opts:opts, applied:(to===opts.normal?0:(to===opts.court?-1:(to===opts.long?1:0))),
+      forced:forced, confirmed:confirmed, chain:chain, cum:cum, surfs:surfs,
+      kmCourt: opts.court!=null ? cum[opts.court]-cum[at] : null,
+      kmLong:  opts.long!=null  ? cum[opts.long]-cum[at]  : null
     });
     at = to;
-  }
-
-  /* Jours de repos : répartis sur l'ensemble du séjour, posés de préférence
-     là où il y a de quoi se rafraîchir toute une journée. */
-  if(rest>0){
-    var refuges = {'Étangs de Baye':5,'Clamecy':5,'Bourbon-Lancy':5,'Decize':4,'Digoin':4,
-                   'Auxerre':4,'Tonnerre':4,'Montbard':3,'Vincelles':3,'Corbigny':3,
-                   'Coulanges-sur-Yonne':3,'Chalon-sur-Saône':3,'Montceau-les-Mines':3,
-                   'Paray-le-Monial':3,'Cercy-la-Tour':2,'Mailly-le-Château':2,'Châtel-Censoir':2};
-    var used = {};
-    for(var k=1; k<=rest; k++){
-      var target = Math.round(k*(rideDays+rest)/(rest+1)) - 1;   /* position visée */
-      var bestI = -1, bestScore = -1e9;
-      for(var si=0; si<stages.length; si++){
-        if(stages[si].type!=='ride' || used[si]) continue;
-        if(stages[si+1] && stages[si+1].type==='rest') continue;
-        var nm = stages[si].to.n;
-        var score = (refuges[nm]||0)*3 - Math.abs(si-target);
-        if(score > bestScore){ bestScore = score; bestI = si; }
+    if(at >= M-1 && day < rideDays){
+      /* arrivée atteinte avant la fin : les jours restants sont libres */
+      for(var extra=day+1; extra<=rideDays; extra++){
+        stages.push({type:'free', at:chain[M-1]});
       }
-      if(bestI<0) break;
-      stages.splice(bestI+1, 0, {type:'rest', at:stages[bestI].to});
-      used[bestI] = true;
-      var shifted = {};
-      Object.keys(used).forEach(function(u){ shifted[+u > bestI ? +u+1 : +u] = true; });
-      used = shifted; used[bestI] = true;
+      break;
     }
   }
 
-  /* dates */
   var rideNo = 0;
-  stages.forEach(function(st2,i){
+  stages.forEach(function(st,i){
     var dt = new Date(DATE0.getTime());
     dt.setDate(dt.getDate()+i);
-    st2.day = i+1;
-    st2.date = dt;
-    st2.dstr = JOURS[dt.getDay()]+' '+dt.getDate()+' '+MOIS[dt.getMonth()];
-    st2.id = 'e'+(i+1);
-    st2.color = DAYCOLORS[i%DAYCOLORS.length];
-    if(st2.type==='ride'){ rideNo++; st2.rideNo = rideNo; }
+    st.day = i+1;
+    st.date = dt;
+    st.dstr = JOURS[dt.getDay()]+' '+dt.getDate()+' '+MOIS[dt.getMonth()];
+    st.id = 'e'+(i+1);
+    st.color = DAYCOLORS[i%DAYCOLORS.length];
+    if(st.type==='ride'){ rideNo++; st.rideNo = rideNo; }
   });
-  return {stages:stages, chain:chain, total:T, rhythm:R, rideDays:rideDays, rest:rest, restReduced:restReduced, cap:CAP, capRaised:capRaised, segLowered:segLowered};
+  return {stages:stages, chain:chain, total:T, rideDays:rideDays, rest:0, restReduced:0,
+          cap:CAP, capRaised:capRaised, behind:behind,
+          lastDoneDay:lastDoneDay, doneKm:cum[lastDone], remainKm:remainKm, remainDays:remainDays,
+          needAvg:needAvg};
 }
 
 /* =========================================================
@@ -1400,11 +1374,12 @@ function initOverviewMap(){
 
   var all = [];
   var rides = RUN.stages.filter(function(s){ return s.type==='ride'; });
+  var sketch = {};                      /* trait provisoire, effacé dès le routage */
   rides.forEach(function(st){
     var raw = st.pts.map(function(p){ return p.ll; });
     all = all.concat(raw);
-    L.polyline(raw,{color:st.color,weight:3,opacity:.8}).addTo(gTrace)
-     .bindTooltip('J'+st.day+' \u00b7 '+st.from.n+' \u2192 '+st.to.n+' \u00b7 '+kmLabel(st));
+    sketch[st.id] = L.polyline(raw,{color:st.color,weight:2,opacity:.5,dashArray:'5 7'}).addTo(gTrace)
+     .bindTooltip('J'+st.day+' \u00b7 '+st.from.n+' \u2192 '+st.to.n+' \u00b7 '+kmLabel(st)+' (tracé en cours de calcul)');
   });
   L.marker(START,{icon:startIcon()}).addTo(gTrace).bindPopup(START_POPUP);
 
@@ -1494,7 +1469,10 @@ function initOverviewMap(){
     getRoute(rides[i], function(co){
       if(co){
         ROUTED[rides[i].id] = co;
-        L.polyline(co.map(function(c){return [c[0],c[1]];}),{color:rides[i].color,weight:3,opacity:.95}).addTo(gTrace);
+        /* le tracé réel remplace le trait provisoire : un seul trait à l'écran */
+        if(sketch[rides[i].id]){ gTrace.removeLayer(sketch[rides[i].id]); delete sketch[rides[i].id]; }
+        L.polyline(co.map(function(c){return [c[0],c[1]];}),{color:rides[i].color,weight:3,opacity:.95}).addTo(gTrace)
+         .bindTooltip('J'+rides[i].day+' \u00b7 '+rides[i].from.n+' \u2192 '+rides[i].to.n+' \u00b7 '+kmLabel(rides[i]));
       }
       setTimeout(function(){ next(i+1); }, co ? 120 : 900);
     });
@@ -1512,8 +1490,8 @@ function toggleLayer(key, on){
     if(key==='eau' && m._loadEau){ m._loadEau(); }
   } else {
     m.removeLayer(g);
-    var stat = document.getElementById('eau-stat');
-    if(key==='eau' && stat){ stat.style.display='none'; }
+    var st1 = document.getElementById('eau-stat');
+    if(key==='eau' && st1){ st1.style.display='none'; }
   }
 }
 
@@ -1593,6 +1571,7 @@ function getWater(st, cb){
    .catch(function(){ cb(null,'fail'); });
 }
 
+
 /* ---------- mode guidon ---------- */
 var GUIDON = {active:false, id:null, wl:null};
 function enterGuidon(sid){
@@ -1644,15 +1623,21 @@ function statHtml(st){
     +'<div class="stat"><b>'+(st.via.length+2)+'</b><span>lieux</span></div>'
     +'</div>';
 }
-function rhythmSlider(){
-  var R = RHYTHMS[STATE.rhythm];
-  var marks = RHYTHMS.map(function(r){ return r.name; });
-  return '<div class="slider-box">'
-    +'<div class="slider-head"><span>Rythme du séjour</span><b id="slider-rythme-val">'+R.name+'</b></div>'
-    +'<input type="range" id="slider-rythme" class="km-slider" min="0" max="'+(RHYTHMS.length-1)+'" step="1" value="'+STATE.rhythm+'" aria-label="Rythme du séjour">'
-    +'<div class="slider-marks"><span>'+marks.join('</span><span>')+'</span></div>'
-    +'</div>'
-    +'<p class="muted" style="margin-top:10px;font-size:.82rem">'+R.desc+'</p>';
+function progressBox(){
+  var d = RUN.lastDoneDay;
+  if(!d){
+    return '<div class="vbox"><h4>Avancement</h4>'
+      +'<p style="font-size:.82rem;line-height:1.5">Aucune journée validée pour l\u2019instant. Sur la route, ouvre la fiche du jour et indique où vous avez réellement dormi : <b>tout le reste du voyage se recalcule aussitôt</b>.</p></div>';
+  }
+  var pct = Math.round(RUN.doneKm/RUN.total*100);
+  return '<div class="vbox"><h4>Avancement réel</h4>'
+    +'<div class="pbar"><i style="width:'+pct+'%"></i></div>'
+    +'<p style="font-size:.82rem;line-height:1.5;margin-top:8px"><b>'+d+' journée'+(d>1?'s':'')+' validée'+(d>1?'s':'')+'</b> \u00b7 '
+    +Math.round(RUN.doneKm)+' km parcourus sur '+Math.round(RUN.total)+' ('+pct+' %).<br>'
+    +'Reste <b>'+Math.round(RUN.remainKm)+' km en '+RUN.remainDays+' jour'+(RUN.remainDays>1?'s':'')+'</b>, soit '+Math.round(RUN.needAvg)+' km/jour.</p>'
+    +(RUN.needAvg>52 ? '<div class="warnbox" style="margin-top:8px">\u26a0 <b>'+Math.round(RUN.needAvg)+' km/jour pour tenir les délais.</b> C\u2019est beaucoup avec les remorques : envisage un saut en train, ou accepte d\u2019arrêter le voyage à une gare avant Dijon.</div>' : '')
+    +'<div class="btn-row"><button class="undone-btn">\u21ba Annuler toutes les validations</button></div>'
+    +'</div>';
 }
 function officialBox(){
   return '<div class="vbox"><h4>Fidélité au tracé officiel</h4>'
@@ -1678,6 +1663,12 @@ function surfBar(surfs, total){
 function chainList(){
   var h = '<ul class="chain">';
   RUN.stages.forEach(function(st){
+    if(st.type==='free'){
+      h += '<li class="repos"><span class="dj">J'+st.day+'<i>'+st.dstr+'</i></span>'
+        +'<span class="nm">Journée libre \u2014 arrivée déjà atteinte<i>'+esc(st.at.n)+'</i></span>'
+        +'<span class="st">\u2014</span></li>';
+      return;
+    }
     if(st.type==='rest'){
       h += '<li class="repos" data-stage=""><span class="dj">J'+st.day+'<i>'+st.dstr+'</i></span>'
         +'<span class="nm">Journée de repos \u2014 '+esc(st.at.n)+'<i>'+esc(st.at.voir||'')+'</i></span>'
@@ -1685,13 +1676,14 @@ function chainList(){
       return;
     }
     var via = st.via.length ? st.via.map(function(p){return p.n;}).join(' · ') : 'sans arrêt intermédiaire';
-    h += '<li data-stage="'+st.id+'" role="button" tabindex="0">'
+    h += '<li class="'+(st.confirmed?'okday':'')+'" data-stage="'+st.id+'" role="button" tabindex="0">'
       +'<span class="dj">J'+st.day+'<i>'+st.dstr+'</i></span>'
       +'<span class="nm">'+esc(st.from.n)+' \u2192 '+esc(st.to.n)+'<i>'+esc(via)+'</i></span>'
       +'<span class="st">'+kmLabel(st)
         +(st.applied===-1?'<br><span style="color:var(--aqua)">plus court</span>':'')
         +(st.applied===1?'<br><span style="color:var(--gold)">plus long</span>':'')
         +(st.forced?'<br><span style="color:var(--danger)">rattrapage</span>':'')
+        +(st.confirmed?'<br><span style="color:var(--sage)">\u2713 fait</span>':'')
       +'</span></li>';
   });
   h += '</ul>';
@@ -1708,7 +1700,8 @@ function layerBox(){
     + chip('camps','\ud83c\udfd5','Campings', true)
     + chip('bains','\ud83d\udca7','Baignades', true)
     + chip('eau','\ud83d\udeb0','Eau potable', true)
-    +'</div><p class="mapstatus2" id="eau-stat" style="display:none"></p>';
+    +'</div><p class="mapstatus2" id="eau-stat" style="display:none"></p>'
+;
 }
 function sejourHtml(){
   var rides = RUN.stages.filter(function(s){ return s.type==='ride'; });
@@ -1725,7 +1718,7 @@ function sejourHtml(){
     +'<div class="stat"><b>'+moy+' km</b><span>moyenne</span></div>'
     +'<div class="stat"><b>'+mx+' km</b><span>plus longue</span></div>'
     +'</div>'
-    + rhythmSlider()
+    + progressBox()
     /* --- la carte, juste sous le curseur : elle se redessine à chaque réglage --- */
     +'<div class="map" id="map-apercu" style="position:relative;margin-top:14px"></div>'
     + layerBox()
@@ -1739,7 +1732,7 @@ function sejourHtml(){
   h += officialBox();
   h += '</div>';
   h += '<div class="card"><h3>Le déroulé du séjour</h3>'
-    +'<p class="muted" style="margin-bottom:6px;font-size:.8rem">Touche une étape pour l\u2019ouvrir : carte, profil, hébergement, refuge canicule, gare de secours.</p>'
+    +'<p class="muted" style="margin-bottom:6px;font-size:.8rem">Dix-sept journées, un seul itinéraire. Touche une étape pour l\u2019ouvrir : carte, profil, hébergement, refuge canicule, gare de secours \u2014 et pour valider la journée une fois faite.</p>'
     + chainList()
     +'<div class="btn-row"><button class="reset-btn">\u21ba Tout remettre en « normal »</button></div>'
     +'<div class="btn-row"><button class="allgpx-btn">\u2b07\ufe0f GPX du parcours complet</button>'
@@ -1765,6 +1758,7 @@ function stageHtml(st){
     return {km: Math.round(cum[idx]-cum[i0]), n: chain[idx].n};
   }
   var oc = optLabel(st.opts.court), on2 = optLabel(st.opts.normal), ol = optLabel(st.opts.long);
+  if(!STATE.done['d'+st.day]){
   h += '<div class="vbox"><h4>Longueur de cette journée</h4>'
     +'<div class="seg">'
     +'<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1"'+(oc?'':' disabled')+'>Plus court'
@@ -1779,12 +1773,37 @@ function stageHtml(st){
       + (!oc && !ol ? 'Aucune alternative ce jour-là : ' : (!oc ? 'Pas d\u2019option plus courte : ' : 'Pas d\u2019option plus longue : '))
       + 'les villages où dormir sont trop espacés ici, ou raccourcir rendrait la suite du voyage infaisable. Ajuste une journée précédente pour retrouver de la marge.</p>';
   }
+  /* --- validation de la journée : la réalité prime sur le plan --- */
+  var doneName = STATE.done['d'+st.day] || null;
+  var i0 = st.chain.indexOf(st.from);
+  var alts = [];
+  for(var q=i0+1; q<st.chain.length; q++){
+    var dk = st.cum[q]-st.cum[i0];
+    if(dk > 95) break;
+    alts.push({i:q, n:st.chain[q].n, km:Math.round(dk)});
+  }
+  h += '<div class="vbox"><h4>Où avez-vous dormi ce soir-là ?</h4>';
+  if(doneName){
+    h += '<p class="okmsg">\u2713 Journée validée : <b>'+esc(doneName)+'</b> \u00b7 '+Math.round(st.km)+' km. Les jours suivants ont été recalculés.</p>'
+      +'<div class="btn-row"><button class="unvalid-btn" data-day="'+st.day+'">\u21ba Annuler cette validation</button></div>';
+  }else{
+    h += '<div class="btn-row"><button class="valid-btn" data-day="'+st.day+'" data-node="'+esc(st.to.n)+'">\u2713 Fait comme prévu \u2014 '+esc(st.to.n)+'</button></div>'
+      +'<div class="addrow" style="margin-top:8px">'
+      +'<select class="done-sel" data-day="'+st.day+'">'
+      + alts.map(function(a){ return '<option value="'+esc(a.n)+'"'+(a.n===st.to.n?' selected':'')+'>'+esc(a.n)+' \u00b7 '+a.km+' km</option>'; }).join('')
+      +'</select><button class="valid-other" data-day="'+st.day+'">Valider</button></div>'
+      +'<p class="muted" style="font-size:.76rem;margin-top:8px">Arrêtés plus tôt ou poussés plus loin ? Choisis le vrai lieu de nuit : <b>les 17 jours se réorganisent instantanément</b> sur la distance et les jours restants.</p>';
+  }
+  h += '</div>';
+
   if(st.forced){
     h += '<div class="warnbox" style="margin-top:10px">\u26a0 <b>Choix neutralisé aujourd\u2019hui.</b> Le retard accumulé impose cette étape pour que la suite reste faisable. Repasse une journée précédente en « plus long » pour retrouver de la marge.</div>';
   }else{
     h += '<div class="cascade"><span>\u21bb</span><span>Changer la longueur de cette journée <b>décale la nuitée et recalcule toutes les étapes suivantes</b>, dates comprises.</span></div>';
   }
-  h += '</div></div>';
+  h += '</div>';
+  }
+  h += '</div>';
 
   h += '<div class="card"><h3>Carte</h3><div class="map" id="map-'+st.id+'" style="position:relative"></div>'
     +'<p class="map-note" id="rt-'+st.id+'">Chargement…</p>'
@@ -1854,7 +1873,7 @@ function pratiqueHtml(){
     +'<p>Le 15 août tombe un <b>samedi</b> : c\u2019est le week-end le plus chargé de l\u2019été sur les campings, et il tombe sur vos journées 1 à 3. Réserver dès maintenant les nuits des <b>13, 14, 15 et 16 août</b>. Le reste peut se réserver à J-2 en route. Beaucoup de commerces seront fermés le samedi 15 : faire le plein de ravitaillement le vendredi 14.</p>'
     +'</div>'
     +'<div class="card"><h3>\ud83d\udd17 Ressources</h3><ul class="tl">'
-    +'<li><span class="h">Spots</span><span class="t"><b>Park4Night</b> · <b>Welcome To My Garden</b> (jardins gratuits, réservés aux voyageurs à vélo) · HomeCamper · Gamping · Warmshowers · France Passion</span></li>'
+    +'<li><span class="h">Spots</span><span class="t"><b>Park4Night</b> — l\u2019outil de référence pour les emplacements de bivouac : avis, photos et spots repérés par les voyageurs, des données que l\u2019on ne trouve nulle part ailleurs. Cette app ne les référence volontairement pas : Park4Night fait ça mieux.<br style="margin-top:4px"><b>Welcome To My Garden</b> (jardins gratuits, réservés aux voyageurs à vélo) · HomeCamper · Gamping · Warmshowers · France Passion</span></li>'
     +'<li><span class="h">Tracés</span><span class="t"><b>francevelotourisme.com</b> (GPX officiels du Tour de Bourgogne) · af3v.org · cycle.travel · komoot</span></li>'
     +'<li><span class="h">Trains</span><span class="t"><b>viamobigo.fr</b> \u2014 horaires et réservation vélo</span></li>'
     +'</ul></div>';
@@ -2035,7 +2054,7 @@ function toggleShare(){
    ========================================================= */
 var TABS = [
   {id:'sejour', lab:'Séjour', sub:'Réglage'},
-  {id:'etapes', lab:'Étapes', sub:'14 jours'},
+  {id:'etapes', lab:'Étapes', sub:TOTAL_DAYS+' jours'},
   {id:'pratique', lab:'Pratique', sub:'Infos'},
   {id:'materiel', lab:'Matériel', sub:'Checklist'}
 ];
@@ -2046,7 +2065,7 @@ function etapesHtml(){
     openStage = null;
   }
   return '<div class="card"><h2><small>Toucher pour ouvrir</small>Les '+RUN.stages.length+' journées</h2>'
-    +'<p class="muted" style="margin-top:8px;font-size:.83rem">Découpage recalculé pour le rythme <b>'+RHYTHMS[STATE.rhythm].name+'</b>. Modifier le rythme dans l\u2019onglet Séjour, ou la longueur d\u2019une journée dans sa fiche, réorganise tout ce qui suit.</p>'
+    +'<p class="muted" style="margin-top:8px;font-size:.83rem">Un seul itinéraire, découpé en 17 journées. Valider une journée ou changer sa longueur réorganise instantanément tout ce qui suit.</p>'
     + chainList() +'</div>';
 }
 function render(){
@@ -2148,6 +2167,20 @@ mainEl.addEventListener('click', function(ev){
     return;
   }
   if(t.closest && t.closest('.reset-btn')){ resetDays(); recompute(); return; }
+  if(t.closest && t.closest('.undone-btn')){ resetDone(); recompute(); return; }
+  var vb = t.closest ? t.closest('.valid-btn') : null;
+  if(vb){ validateDay(vb.getAttribute('data-day'), vb.getAttribute('data-node')); return; }
+  var vo = t.closest ? t.closest('.valid-other') : null;
+  if(vo){
+    var sel = document.querySelector('.done-sel[data-day="'+vo.getAttribute('data-day')+'"]');
+    if(sel){ validateDay(vo.getAttribute('data-day'), sel.value); }
+    return;
+  }
+  var ub = t.closest ? t.closest('.unvalid-btn') : null;
+  if(ub){
+    delete STATE.done['d'+ub.getAttribute('data-day')];
+    saveState(); RUN = computeStages(); render(); window.scrollTo(0,0); return;
+  }
 
   /* ----- édition de la liste de matériel ----- */
   if(t.closest && t.closest('.gear-edit')){ GEAREDIT = !GEAREDIT; renderGear(); return; }
@@ -2175,6 +2208,17 @@ mainEl.addEventListener('click', function(ev){
   if(t.closest && t.closest('.share-btn')){ toggleShare(); return; }
 });
 
+function validateDay(day, nodeName){
+  if(!nodeName) return;
+  STATE.done['d'+day] = nodeName;
+  delete STATE.days['d'+day];          /* le fait remplace le choix théorique */
+  saveState();
+  RUN = computeStages();
+  openStage = null;
+  currentTab = 'etapes';
+  render();
+  window.scrollTo(0,0);
+}
 function addGearItem(cat){
   var inp = document.querySelector('.gear-in[data-cat="'+cat+'"]');
   if(!inp) return;
