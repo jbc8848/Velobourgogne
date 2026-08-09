@@ -1,0 +1,1884 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tour de Bourgogne à vélo — 17 jours en famille</title>
+<meta name="description" content="Itinérance vélo 14 jours en famille au départ de Saint-Jean-de-Losne — 14 au 27 août 2026">
+<meta name="theme-color" content="#08252e" id="meta-theme">
+<script>try{if(localStorage.getItem('bourg-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}</script>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Spline+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+
+:root{
+  --deep:#08252e; --deep2:#0c313d; --panel:#10394a; --line:#1c4a5c;
+  --aqua:#6fd6c9; --gold:#f0b860; --ocre:#d98a4e; --sage:#9fc48f;
+  --ink:#eaf4f2; --muted:#8fb3ad; --danger:#e58a7a;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Spline Sans',system-ui,sans-serif;
+  background:var(--deep); color:var(--ink);
+  min-height:100vh; padding-bottom:90px;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+
+/* ---------- header ---------- */
+header{
+  padding:26px 0 18px;
+  background:linear-gradient(180deg,#0a2b36 0%,var(--deep) 100%);
+  border-bottom:1px solid var(--line);
+}
+.eyebrow{
+  font-family:'Spline Sans Mono',monospace; font-size:.72rem; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--aqua); margin-bottom:8px;
+}
+h1{
+  font-family:'Bricolage Grotesque',sans-serif; font-weight:800;
+  font-size:clamp(1.7rem,6vw,2.6rem); line-height:1.05; letter-spacing:-.01em;
+}
+h1 .gold{color:var(--gold)}
+.subline{color:var(--muted); font-size:.95rem; margin-top:10px; line-height:1.5}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.badge{
+  font-family:'Spline Sans Mono',monospace; font-size:.72rem;
+  border:1px solid var(--line); border-radius:999px; padding:5px 11px;
+  color:var(--aqua); background:rgba(111,214,201,.06);
+}
+
+/* ---------- tabs ---------- */
+nav.tabs{
+  position:fixed; bottom:0; left:0; right:0; z-index:1000;
+  background:rgba(8,37,46,.92); backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);
+  display:flex; justify-content:center; gap:4px; padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+nav.tabs button{
+  flex:1; max-width:200px; border:none; cursor:pointer;
+  background:transparent; color:var(--muted);
+  font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:.78rem;
+  padding:10px 4px; border-radius:12px; transition:.2s;
+}
+nav.tabs button .d{display:block;font-family:'Spline Sans Mono',monospace;font-weight:400;font-size:.56rem;margin-top:2px;letter-spacing:.04em}
+nav.tabs button.on{background:var(--panel); color:var(--gold)}
+
+/* curseur de distance (accueil) */
+.slider-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px}
+.slider-head .lbl{font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:.9rem}
+.slider-head .val{font-family:'Spline Sans Mono',monospace; font-size:.95rem; color:var(--gold); font-weight:500}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:3px;
+  background:linear-gradient(90deg,var(--aqua),var(--gold)); outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:50%;
+  background:var(--gold); border:3px solid var(--deep); cursor:pointer; box-shadow:0 1px 5px rgba(0,0,0,.5);
+}
+input[type=range]::-moz-range-thumb{
+  width:22px; height:22px; border-radius:50%;
+  background:var(--gold); border:3px solid var(--deep); cursor:pointer;
+}
+.slider-ticks{display:flex; justify-content:space-between; margin-top:6px;
+  font-family:'Spline Sans Mono',monospace; font-size:.62rem; color:var(--muted)}
+
+/* paliers d'une journée */
+.paliers{display:flex; gap:6px; margin:12px 0 0; flex-wrap:wrap}
+.paliers button{
+  border:1px solid var(--line); background:transparent; color:var(--muted);
+  font-family:'Spline Sans Mono',monospace; font-size:.72rem;
+  padding:7px 11px; border-radius:999px; cursor:pointer; transition:.2s;
+}
+.paliers button.on{border-color:var(--gold); color:var(--gold); background:rgba(240,184,96,.08)}
+
+/* légende vue d'ensemble */
+.slider-box{background:var(--panel); border-radius:12px; padding:14px 16px; margin-bottom:12px}
+.slider-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px}
+.slider-head span{font-size:.85rem; color:var(--muted)}
+.slider-head b{font-family:'Spline Sans Mono',monospace; font-size:1.15rem; color:var(--gold)}
+.km-slider{
+  width:100%; -webkit-appearance:none; appearance:none; height:6px; border-radius:3px;
+  background:linear-gradient(90deg,var(--aqua),var(--gold)); outline:none; cursor:pointer;
+}
+.km-slider::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:50%;
+  background:var(--gold); border:3px solid var(--deep); box-shadow:0 1px 5px rgba(0,0,0,.5);
+}
+.km-slider::-moz-range-thumb{
+  width:22px; height:22px; border-radius:50%;
+  background:var(--gold); border:3px solid var(--deep); box-shadow:0 1px 5px rgba(0,0,0,.5);
+}
+.km-slider:focus-visible{outline:2px solid var(--aqua); outline-offset:4px}
+.slider-marks{display:flex; justify-content:space-between; margin-top:6px;
+  font-family:'Spline Sans Mono',monospace; font-size:.62rem; color:var(--muted)}
+.legend{display:grid; gap:8px; margin-top:12px}
+.lrow[data-day]{cursor:pointer; transition:.15s}
+.lrow[data-day]:active{transform:scale(.99); background:rgba(240,184,96,.10)}
+.lrow .go{flex:none; margin-left:6px; color:var(--muted); font-size:1.3rem; line-height:1}
+.lrow{display:grid; grid-template-columns:26px 1fr auto; gap:10px; align-items:center;
+  background:var(--panel); border-radius:10px; padding:9px 12px}
+.lrow .sw{width:22px; height:6px; border-radius:3px}
+.lrow .nm{font-size:.85rem; font-weight:600}
+.lrow .st{font-family:'Spline Sans Mono',monospace; font-size:.7rem; color:var(--muted); white-space:nowrap}
+
+/* ---------- sections / cards ---------- */
+section.day{display:none; padding-top:20px}
+section.day.on{display:block; animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{
+  background:var(--deep2); border:1px solid var(--line); border-radius:var(--r);
+  padding:16px; margin-bottom:16px;
+}
+h2{
+  font-family:'Bricolage Grotesque',sans-serif; font-weight:800;
+  font-size:1.35rem; line-height:1.15;
+}
+h2 small{display:block;font-family:'Spline Sans Mono',monospace;font-weight:400;font-size:.72rem;color:var(--aqua);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+h3{
+  font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:1rem;
+  color:var(--gold); margin-bottom:10px;
+}
+p{line-height:1.55; font-size:.93rem}
+.muted{color:var(--muted)}
+
+/* stats */
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px}
+.stat{
+  background:var(--panel); border-radius:10px; padding:10px 6px; text-align:center;
+}
+.stat b{
+  display:block; font-family:'Spline Sans Mono',monospace; font-weight:500;
+  font-size:1.02rem; color:var(--ink);
+}
+.stat span{font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted)}
+
+/* variant switcher */
+.variants{display:flex; gap:6px; margin:14px 0 0}
+.variants button{
+  flex:1; border:1px solid var(--line); background:transparent; color:var(--muted);
+  font-family:'Spline Sans',sans-serif; font-weight:600; font-size:.8rem;
+  padding:9px 4px; border-radius:10px; cursor:pointer; transition:.2s;
+}
+.variants button.on{border-color:var(--aqua); color:var(--aqua); background:rgba(111,214,201,.08)}
+.variant-desc{margin-top:12px; font-size:.88rem; line-height:1.5; color:var(--muted)}
+.variant-desc b{color:var(--ink)}
+
+/* map */
+.map{height:340px; border-radius:var(--r); border:1px solid var(--line); overflow:hidden}
+.leaflet-container{background:#0a2b36; font:inherit}
+.vlab{
+  background:rgba(8,37,46,.85)!important; border:1px solid var(--line)!important;
+  color:var(--ink)!important; font-family:'Spline Sans Mono',monospace!important;
+  font-size:.62rem!important; padding:2px 6px!important; border-radius:6px!important;
+  box-shadow:none!important;
+}
+.vlab::before{display:none!important}
+.locate-btn{font-size:15px; line-height:30px; text-align:center; text-decoration:none}
+.locate-btn.on{background:#4a9df0!important; }
+.loc-dot{
+  width:16px; height:16px; border-radius:50%;
+  background:#4a9df0; border:3px solid #fff;
+  box-shadow:0 0 0 0 rgba(74,157,240,.55);
+  animation:locpulse 2s infinite;
+}
+@keyframes locpulse{
+  0%{box-shadow:0 0 0 0 rgba(74,157,240,.55)}
+  70%{box-shadow:0 0 0 14px rgba(74,157,240,0)}
+  100%{box-shadow:0 0 0 0 rgba(74,157,240,0)}
+}
+.gpx-btn{
+  display:block; width:100%; margin-top:12px; padding:12px;
+  border:1.5px solid var(--gold); border-radius:12px; background:transparent;
+  color:var(--gold); font-family:'Bricolage Grotesque',sans-serif; font-weight:600;
+  font-size:.9rem; cursor:pointer; transition:.2s;
+}
+.gpx-btn:active{background:rgba(240,184,96,.12); transform:scale(.99)}
+.btn-row{display:flex; gap:8px; margin-top:12px}
+.btn-row .gpx-btn, .btn-row .guidon-btn{margin-top:0; flex:1}
+.guidon-btn{
+  display:block; padding:12px; border:1.5px solid var(--aqua); border-radius:12px;
+  background:transparent; color:var(--aqua);
+  font-family:'Bricolage Grotesque',sans-serif; font-weight:600; font-size:.9rem; cursor:pointer; transition:.2s;
+}
+.guidon-btn:active{background:rgba(111,214,201,.12); transform:scale(.99)}
+.guidon-fs{
+  position:fixed!important; inset:0!important; z-index:3000!important;
+  height:100vh!important; height:100dvh!important; width:100vw!important;
+  border-radius:0!important; border:none!important;
+}
+body.noscroll{overflow:hidden}
+.guidon-bar{
+  position:absolute; z-index:1200; left:10px; right:10px; bottom:calc(12px + env(safe-area-inset-bottom));
+  background:rgba(8,37,46,.92); border:1px solid var(--line); border-radius:14px;
+  padding:12px 14px; display:flex; align-items:center; gap:10px;
+}
+.guidon-bar .gstep{flex:1; font-size:.92rem; line-height:1.35; color:#eaf4f2}
+.guidon-bar .gexit{
+  flex:none; width:38px; height:38px; border-radius:50%; border:1px solid var(--line);
+  background:rgba(255,255,255,.08); color:#eaf4f2; font-size:1rem; cursor:pointer;
+}
+[data-theme="light"] .guidon-bar{background:rgba(255,255,255,.94)}
+[data-theme="light"] .guidon-bar .gstep{color:var(--ink)}
+[data-theme="light"] .guidon-bar .gexit{background:rgba(0,0,0,.05); color:var(--ink)}
+.off-toggle{
+  display:flex; align-items:flex-start; gap:10px; margin-top:14px;
+  background:var(--panel); border-radius:12px; padding:12px 14px; cursor:pointer;
+  font-size:.88rem; line-height:1.45;
+}
+.off-toggle input{width:20px; height:20px; margin-top:1px; accent-color:var(--gold); flex:none; cursor:pointer}
+.off-toggle i{color:var(--muted); font-style:normal; font-size:.8em}
+.off-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.off-chip{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:'Spline Sans Mono',monospace; font-size:.68rem; color:var(--muted);
+  border:1px solid var(--line); border-radius:999px; padding:5px 11px;
+}
+.off-chip .sw{width:16px; height:4px; border-radius:2px}
+.qr-box{background:#fff; padding:14px; border-radius:14px; width:max-content; margin:14px auto 4px}
+.tile-warn{
+  position:absolute; z-index:800; left:10px; right:10px; bottom:10px;
+  background:rgba(8,37,46,.9); border:1px solid var(--line); border-radius:10px;
+  padding:8px 12px; font-family:'Spline Sans Mono',monospace; font-size:.68rem;
+  color:var(--muted); line-height:1.4;
+}
+.map-note{font-family:'Spline Sans Mono',monospace; font-size:.68rem; color:var(--muted); margin-top:8px; line-height:1.5}
+
+/* profile */
+.profile svg{width:100%; height:auto; display:block}
+
+/* timeline */
+.tl{list-style:none}
+.tl li{
+  display:grid; grid-template-columns:64px 1fr; gap:12px;
+  padding:9px 0; border-bottom:1px dashed var(--line);
+}
+.tl li:last-child{border-bottom:none}
+.tl .h{
+  font-family:'Spline Sans Mono',monospace; font-size:.8rem; color:var(--aqua);
+  padding-top:1px; white-space:nowrap;
+}
+.tl .t{font-size:.9rem; line-height:1.45}
+.tl .t b{color:var(--gold); font-weight:600}
+.tl li.pic .h{color:var(--gold)}
+
+/* météo */
+.meteo{display:grid; gap:10px}
+.mrow{
+  display:grid; grid-template-columns:38px 1fr; gap:10px; align-items:start;
+  background:var(--panel); border-radius:10px; padding:11px 12px;
+}
+.mrow .ico{font-size:1.3rem; line-height:1.2}
+.mrow .txt{font-size:.87rem; line-height:1.5}
+.mrow .txt b{color:var(--aqua)}
+
+/* pratique */
+ul.plain{list-style:none}
+ul.plain li{
+  padding:8px 0 8px 22px; position:relative; font-size:.9rem; line-height:1.5;
+  border-bottom:1px dashed var(--line);
+}
+ul.plain li:last-child{border:none}
+ul.plain li::before{content:"◆"; position:absolute; left:2px; color:var(--gold); font-size:.6rem; top:12px}
+.warn{border-left:3px solid var(--danger); background:rgba(229,138,122,.07); border-radius:0 10px 10px 0; padding:11px 13px; font-size:.87rem; line-height:1.5; margin-top:12px}
+.warn b{color:var(--danger)}
+
+footer{
+  text-align:center; padding:30px 16px 10px;
+  font-family:'Spline Sans Mono',monospace; font-size:.68rem; color:var(--muted);
+}
+@media (max-width:480px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .map{height:290px}
+}
+/* ---------- ligne version + thème ---------- */
+/* popup ouvert : les contrôles s'effacent (ils reviennent à la fermeture) */
+.leaflet-container.popup-open .leaflet-top.leaflet-left{opacity:0; pointer-events:none; transition:opacity .15s}
+.leaflet-container .leaflet-top.leaflet-left{transition:opacity .15s}
+.leaflet-popup-content{font-size:.95rem; line-height:1.45}
+
+/* POI en menus déroulants dans le déroulé */
+.tl-poi{
+  display:block; margin-top:8px; border:1px solid var(--line); border-left:3.5px solid var(--gold);
+  border-radius:10px; background:var(--panel); overflow:hidden;
+}
+.tl-poi.walk{border-left-color:#e0492e}
+.tl-poi summary{
+  padding:9px 12px; cursor:pointer; font-size:.86rem; font-weight:600;
+  list-style:none; display:flex; align-items:center; gap:7px;
+}
+.tl-poi summary::-webkit-details-marker{display:none}
+.tl-poi summary::after{content:'\25BE'; margin-left:auto; color:var(--muted); font-size:.8em; transition:.2s}
+.tl-poi[open] summary::after{transform:rotate(180deg)}
+.tl-poi p{margin:0; padding:0 13px 11px; font-size:.85rem; line-height:1.55; color:var(--muted)}
+.tl-more .t b{display:block; margin-bottom:2px}
+.install-bar{
+  position:sticky; top:0; z-index:4000;
+  display:flex; align-items:center; gap:12px;
+  background:var(--deep2); border-bottom:2.5px solid var(--gold);
+  padding:14px 14px; padding-top:calc(14px + env(safe-area-inset-top));
+  font-size:1rem; line-height:1.4; box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.ib-ico{font-size:1.5rem; flex:none}
+.ib-txt{flex:1; min-width:0}
+.ib-go{
+  flex:none; background:var(--gold); color:#08252e; border:none; border-radius:12px;
+  padding:12px 18px; font-family:'Bricolage Grotesque',sans-serif; font-weight:700;
+  font-size:1rem; cursor:pointer;
+}
+.ib-go:active{transform:scale(.97)}
+.ib-close{
+  flex:none; width:42px; height:42px; border-radius:50%;
+  border:1.5px solid var(--line); background:transparent; color:var(--muted);
+  font-size:1.05rem; cursor:pointer;
+}
+.topline{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
+.ver{
+  font-family:'Spline Sans Mono',monospace; font-size:.7rem; letter-spacing:.1em;
+  color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:4px 10px;
+}
+#theme-toggle{
+  border:1px solid var(--line); background:var(--deep2); color:var(--ink);
+  width:38px; height:38px; border-radius:50%; cursor:pointer; font-size:1.05rem;
+  display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+#theme-toggle:active{transform:scale(.92)}
+
+/* ---------- mode clair ---------- */
+[data-theme="light"]{
+  --deep:#f4efe6; --deep2:#ffffff; --panel:#ece5d8; --line:#d8cfbc;
+  --aqua:#0c7a6d; --gold:#a8720f; --ocre:#b45f22; --sage:#4d7a3f;
+  --ink:#15292e; --muted:#5c6f6b; --danger:#b7402c;
+}
+[data-theme="light"] header{background:linear-gradient(180deg,#efe7d8 0%,var(--deep) 100%)}
+[data-theme="light"] nav.tabs{background:rgba(244,239,230,.94)}
+[data-theme="light"] .leaflet-container{background:#dfe8e6}
+[data-theme="light"] .vlab{background:rgba(255,255,255,.92)!important; border-color:var(--line)!important; color:var(--ink)!important}
+[data-theme="light"] .tile-warn{background:rgba(255,255,255,.94); color:var(--muted)}
+[data-theme="light"] .stat b{color:var(--ink)}
+[data-theme="light"] .badge{background:rgba(12,122,109,.08)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+
+/* ---- ajouts Bourgogne : itinérance, cascade, matériel ---- */
+.chain{list-style:none;margin-top:6px}
+.chain li{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;
+  padding:11px 8px;border-bottom:1px solid var(--line);cursor:pointer;transition:.15s;border-radius:8px}
+.chain li:active{transform:scale(.99);background:rgba(240,184,96,.10)}
+.chain li:last-child{border-bottom:none}
+.chain .dj{font-family:'Spline Sans Mono',monospace;font-size:.66rem;color:var(--gold);line-height:1.25}
+.chain .dj i{display:block;font-style:normal;color:var(--muted);font-size:.6rem}
+.chain .nm{font-size:.84rem;font-weight:600;line-height:1.3}
+.chain .nm i{display:block;font-style:normal;font-weight:400;font-size:.68rem;color:var(--muted);margin-top:2px}
+.chain .st{font-family:'Spline Sans Mono',monospace;font-size:.7rem;color:var(--muted);white-space:nowrap;text-align:right}
+.chain li.repos{background:rgba(111,214,201,.07)}
+.chain li.repos .dj{color:var(--aqua)}
+.chain li.train .st{color:var(--aqua)}
+.vbox{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(0,0,0,.13)}
+.vbox h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:8px;font-weight:600}
+.vopt{display:flex;gap:10px;align-items:flex-start;padding:8px 4px;border-radius:8px;cursor:pointer}
+.vopt:active{background:rgba(240,184,96,.08)}
+.vopt input{margin-top:3px;accent-color:var(--gold);width:18px;height:18px;flex:none}
+.vopt .vt{font-size:.8rem;line-height:1.35}
+.vopt .vt b{color:var(--ink)}
+.vopt .vk{font-family:'Spline Sans Mono',monospace;font-size:.68rem;color:var(--gold);margin-left:4px}
+.vopt .vk.neg{color:var(--aqua)}
+.vopt .vd{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
+.cascade{margin-top:10px;font-size:.72rem;color:var(--aqua);display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+.backbar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.backbar button{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+  padding:8px 13px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
+.backbar .ttl{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:.9rem}
+.ckcat{margin-bottom:6px}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:8px 5px;border-radius:8px;cursor:pointer;font-size:.82rem;line-height:1.4}
+.ck:active{background:rgba(240,184,96,.08)}
+.ck input{margin-top:3px;accent-color:var(--aqua);width:18px;height:18px;flex:none}
+.ck.done{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--aqua)}
+.ckprog{font-family:'Spline Sans Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:4px}
+.svc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.svc span{font-family:'Spline Sans Mono',monospace;font-size:.66rem;padding:3px 8px;border-radius:6px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+.svc span.on{color:var(--gold);border-color:rgba(240,184,96,.4)}
+.warnbox{border:1px solid rgba(229,138,122,.4);background:rgba(229,138,122,.09);border-radius:12px;
+  padding:11px 13px;margin-top:12px;font-size:.78rem;line-height:1.45}
+.warnbox b{color:var(--danger)}
+.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px}
+.seg button{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:10px;
+  padding:9px 6px;font:600 .78rem/1.25 'Spline Sans',sans-serif;cursor:pointer;text-align:center}
+.seg button b{display:block;font-family:'Spline Sans Mono',monospace;font-size:.72rem;color:inherit;margin-top:3px;font-weight:500}
+.seg button.on{background:var(--gold);color:#08252e;border-color:var(--gold)}
+.seg button:disabled{opacity:.35;cursor:not-allowed}
+.surfbar{display:flex;height:9px;border-radius:5px;overflow:hidden;margin:12px 0 6px;border:1px solid var(--line)}
+.surfbar i{display:block;height:100%}
+.surflegend{display:flex;flex-wrap:wrap;gap:10px;font-family:'Spline Sans Mono',monospace;font-size:.66rem;color:var(--muted)}
+.surflegend b{font-weight:500}
+.refuge{border:1px solid rgba(111,214,201,.35);background:rgba(111,214,201,.08);border-radius:12px;padding:11px 13px;margin-top:10px;font-size:.82rem;line-height:1.45}
+.refuge h4{font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;color:var(--aqua);margin-bottom:6px;font-weight:600}
+.camp{border-bottom:1px solid var(--line);padding:9px 2px}
+.camp:last-child{border-bottom:none}
+.camp b{font-size:.85rem}
+.camp .ct{font-family:'Spline Sans Mono',monospace;font-size:.66rem;color:var(--gold);margin-left:6px}
+.camp .cc{display:block;font-size:.76rem;color:var(--muted);margin-top:3px}
+.vv{font-family:'Spline Sans Mono',monospace;font-size:.64rem;color:var(--muted)}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="topline">
+      <span class="ver" id="app-version">v2.2.0</span>
+      <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
+    </div>
+    <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne · itinérance 17 jours</div>
+    <h1>Tour de Bourgogne à vélo<br><span class="gold">17 jours en famille</span></h1>
+    <p class="subline">Jeudi 13 → samedi 29 août 2026 · 17 jours disponibles · 2 adultes et 2 enfants de 3 ans en remorques · une seule boucle continue, sens horaire · camping et bivouac en autonomie.</p>
+    <div class="badges">
+      <span class="badge">Tracé officiel V50/V51/EV6</span>
+      <span class="badge">Canaux &amp; voies vertes</span>
+      <span class="badge">Court · normal · long, chaque jour</span>
+      <span class="badge">17 jours de vélo · sans pause</span>
+      <span class="badge">Trains de secours partout</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<nav class="tabs" id="tabs"></nav>
+
+<footer>Tour de Bourgogne à vélo · v2.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+'use strict';
+/* =========================================================
+   Tour de Bourgogne à vélo — PWA · v2.2.0
+   Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
+   14–27 août 2026 · 2 adultes + 2 enfants (3 ans) en remorques
+   -------------------------------------------------------
+   v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
+   vélo » (V50 canal du Centre, EV6/Loire, V51 Nivernais puis
+   canal de Bourgogne). Chaque maillon porte la nature de la
+   voie (voie verte / halage aménagé / halage nu / petite route).
+   SEULE variation quotidienne : plus court · normal · plus long.
+   Chaque choix décale la nuitée ET recalcule tous les jours
+   suivants (moteur de cascade sequentiel).
+   ========================================================= */
+
+var VER = '2.0.0';
+var GEN = 'b4';
+var START = [47.1013, 5.2632];
+var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
+var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
+
+try{
+  if(localStorage.getItem('bourggen') !== GEN){
+    var kill = [];
+    for(var ki=0; ki<localStorage.length; ki++){
+      var kk = localStorage.key(ki);
+      if(kk && (kk.indexOf('bourgrt')===0 || kk.indexOf('bourgreal')===0)){ kill.push(kk); }
+    }
+    kill.forEach(function(kk){ localStorage.removeItem(kk); });
+    localStorage.setItem('bourggen', GEN);
+  }
+}catch(e){}
+
+/* Nature de la voie — repris des fiches officielles.
+   vv     = voie verte ou halage aménagé, sans voiture
+   halage = chemin de halage roulant mais non revêtu par endroits
+   route  = petite route à faible trafic (jonction officielle) */
+var SURF = {
+  vv:     {lab:'Voie verte', ico:'\ud83d\udfe2', cls:'ok'},
+  halage: {lab:'Halage non revêtu', ico:'\ud83d\udfe1', cls:'warn'},
+  route:  {lab:'Petite route', ico:'\ud83d\udfe0', cls:'warn'}
+};
+
+/* =========================================================
+   LA CHAÎNE — suit le Tour de Bourgogne officiel, sens horaire
+   km = distance depuis le maillon précédent
+   surf = nature de la voie sur le segment qui y mène
+   camps = hébergements, avec leur atout anti-canicule
+   ========================================================= */
+var CHAIN = [
+ {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:0, surf:'vv', vr:'Départ · V50',
+  gare:'Gare de St-Jean-de-Losne (ligne Dijon–Dole)', svc:['eau','commerces','boulangerie'],
+  voir:'Le plus grand port fluvial de France intérieure : gare d\u2019eau, quais, péniches.',
+  refuge:'Piscine municipale et Saône pour se baigner ; les halles du port font de l\u2019ombre toute la journée.',
+  camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking', c:'Ombragé, à côté du plan d\u2019eau'},
+         {n:'Chambres d\u2019hôtes du port', t:'repli', c:'Solution en dur si la nuit est étouffante'}]},
+ {n:'Seurre', ll:[46.9951,5.1503], km:22, surf:'vv', vr:'La Voie Bleue · Saône',
+  gare:'Gare de Seurre', svc:['eau','commerces','boulangerie','pharmacie'],
+  voir:'Maisons à pans de bois, écomusée de la Saône, plage fluviale surveillée.',
+  refuge:'Plage aménagée sur la Saône + piscine découverte. L\u2019écomusée est frais l\u2019après-midi.',
+  camps:[{n:'Camping municipal de Seurre', t:'★★ · bord de Saône', c:'Grands arbres, accès direct à la plage'},
+         {n:'Gîtes d\u2019étape de Seurre', t:'repli', c:'Chambres en pierre, fraîches'}]},
+ {n:'Verdun-sur-le-Doubs', ll:[46.8977,5.0221], km:16, surf:'route', vr:'Jonction · petites routes',
+  gare:'—', svc:['eau','commerces'],
+  voir:'La confluence du Doubs et de la Saône ; patrie de la pochouse.',
+  refuge:'Confluence idéale pour la baignade familiale, berges très ombragées.',
+  camps:[{n:'Camping municipal La Plage', t:'★★ · confluence', c:'Baignade au pied des tentes'}]},
+ {n:'Chalon-sur-Saône', ll:[46.7806,4.8539], km:16, surf:'vv', vr:'V50 · début canal du Centre',
+  gare:'Gare de Chalon (Dijon–Mâcon, fréquente)', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
+  voir:'Île Saint-Laurent, musée Nicéphore-Niépce (berceau de la photo), quais animés.',
+  refuge:'Musée Niépce climatisé et gratuit le 1er dimanche ; piscine olympique ; l\u2019île Saint-Laurent est un couloir d\u2019ombre.',
+  camps:[{n:'Camping du Pont de Bourgogne', t:'★★★ · bord de Saône', c:'Piscine sur place, très ombragé'},
+         {n:'Auberge de jeunesse de Chalon', t:'repli', c:'Dortoirs familiaux climatisés'}]},
+ {n:'Fragnes', ll:[46.8272,4.8322], km:9, surf:'vv', vr:'V50 · canal du Centre',
+  gare:'—', svc:['eau','commerces'],
+  voir:'Premier port de plaisance du canal du Centre, écluses en enfilade.',
+  refuge:'Halte fluviale ombragée, buvette ; base de loisirs de la Marina à 2 km.',
+  camps:[{n:'Aire de la halte fluviale', t:'aire vélo', c:'Sanitaires, ombre des platanes'}]},
+ {n:'Chagny', ll:[46.9099,4.7508], km:11, surf:'vv', vr:'V50 · jonction Voie des Vignes',
+  gare:'Gare de Chagny', svc:['eau','supermarché','boulangerie','pharmacie'],
+  voir:'Carrefour du canal du Centre et de la Voie des Vignes ; marché du dimanche.',
+  refuge:'Piscine intercommunale ; les caves de dégustation sont à 14 °C toute l\u2019année.',
+  camps:[{n:'Camping du Pâquier Fané', t:'★★★ · centre', c:'Piscine chauffée, pelouses arborées'},
+         {n:'Camping de Santenay (7 km)', t:'★★★ · thermal', c:'Grande piscine, parc thermal ombragé'}]},
+ {n:'Saint-Léger-sur-Dheune', ll:[46.8472,4.6331], km:18, surf:'vv', vr:'V50 · canal du Centre',
+  gare:'Gare de Saint-Léger', svc:['eau','commerces','boulangerie'],
+  voir:'Port de plaisance, écluses, capitainerie.',
+  refuge:'Plan d\u2019eau de Saint-Sernin à 4 km, baignade surveillée en août.',
+  camps:[{n:'Halte nautique &amp; camping de St-Léger', t:'★★ · port', c:'Bord de canal, ombre continue'},
+         {n:'Camping du lac de Saint-Sernin', t:'★★ · 4 km', c:'Baignade surveillée au pied du camp'}]},
+ {n:'Montchanin', ll:[46.7480,4.4670], km:16, surf:'vv', vr:'V50 · bief de partage',
+  gare:'Gare de Montchanin (TGV Le Creusot à 8 km)', svc:['eau','commerces','pharmacie'],
+  voir:'Le point haut du canal du Centre et ses réservoirs.',
+  refuge:'Étangs du bief de partage : baignade et pédalos, forêt tout autour.',
+  camps:[{n:'Camping des étangs de Montchanin', t:'★★ · plan d\u2019eau', c:'Sous les pins, baignade directe'}]},
+ {n:'Montceau-les-Mines', ll:[46.6772,4.3654], km:12, surf:'vv', vr:'V50 · canal du Centre',
+  gare:'Gare de Montceau-les-Mines', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
+  voir:'Ville-canal, musée de la Mine à Blanzy : chevalement et galerie souterraine.',
+  refuge:'La galerie de mine reconstituée est à 13 °C — la meilleure heure creuse anti-canicule du parcours. Lac de la Sorme pour la baignade.',
+  camps:[{n:'Camping du Lac de la Sorme', t:'★★★ · 5 km', c:'Lac de baignade, sous-bois'},
+         {n:'Hôtels du centre', t:'repli', c:'Chambres climatisées si nuit tropicale'}]},
+ {n:'Génelard', ll:[46.5773,4.2394], km:20, surf:'vv', vr:'V50 · canal du Centre',
+  gare:'—', svc:['eau','commerces'],
+  voir:'Centre d\u2019interprétation de la ligne de démarcation (1940-1943).',
+  refuge:'Le centre d\u2019interprétation est climatisé ; port ombragé.',
+  camps:[{n:'Camping municipal de Génelard', t:'★★ · port', c:'Petit, calme, platanes du canal'}]},
+ {n:'Paray-le-Monial', ll:[46.4524,4.1213], km:25, surf:'vv', vr:'V50 · canal du Centre',
+  gare:'Gare de Paray-le-Monial', svc:['eau','supermarché','pharmacie','boulangerie'],
+  voir:'Basilique romane du XIe siècle, sœur cadette de Cluny.',
+  refuge:'La basilique reste à ~20 °C en plein après-midi : la sieste des enfants y est mémorable. Piscine et plan d\u2019eau du Val d\u2019Or.',
+  camps:[{n:'Camping de Mambré', t:'★★★ · bord de Bourbince', c:'Piscine, grands arbres'},
+         {n:'Hébergements de pèlerinage', t:'repli', c:'Chambres simples en dur, très abondantes'}]},
+ {n:'Digoin', ll:[46.4810,3.9793], km:15, surf:'vv', vr:'V50 → EV6 · pont-canal',
+  gare:'Gare de Digoin', svc:['eau','supermarché','pharmacie','baignade'],
+  voir:'Le pont-canal de 243 m qui enjambe la Loire — on pédale au-dessus du fleuve.',
+  refuge:'Plan d\u2019eau surveillé et piscine ; l\u2019observatoire du pont-canal est ventilé par le fleuve.',
+  camps:[{n:'Camping de la Chevrette', t:'★★★ · bord de Loire', c:'Piscine, baignade surveillée à côté'},
+         {n:'Camping de Bourbon-Lancy (35 km)', t:'★★★ · thermal', c:'Bassin thermal, si on pousse plus loin'}]},
+ {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:35, surf:'vv', vr:'EV6 · canal latéral à la Loire',
+  gare:'—', svc:['eau','commerces','thermes','piscine'],
+  voir:'Ville thermale médiévale : beffroi, maisons à colombages, sources chaudes.',
+  refuge:'Le meilleur refuge du parcours : bassin thermal couvert, piscine municipale, parc arboré.',
+  camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal', c:'Piscine, ombre dense, accès thermes'}]},
+ {n:'Decize', ll:[46.8283,3.4624], km:35, surf:'vv', vr:'EV6 → V51 · Loire &amp; Nivernais',
+  gare:'Gare de Decize (Nevers–Dijon)', svc:['eau','supermarché','pharmacie','baignade'],
+  voir:'Ville insulaire entre Loire et canal ; promenade des Halles sous les tilleuls.',
+  refuge:'Plage surveillée sur la Loire, piscine découverte, et la promenade des Halles est une voûte d\u2019ombre.',
+  camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île', c:'Cerné par l\u2019eau, très ombragé'}]},
+ {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:25, surf:'vv', vr:'V51 · canal du Nivernais',
+  gare:'Gare de Cercy-la-Tour', svc:['eau','commerces','baignade'],
+  voir:'Statue monumentale de la Vierge dominant la vallée de l\u2019Aron.',
+  refuge:'Plage sur l\u2019Aron, base de loisirs, camping en sous-bois.',
+  camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal', c:'Baignade surveillée, arbres partout'}]},
+ {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:27, surf:'vv', vr:'V51 · canal du Nivernais',
+  gare:'—', svc:['eau','commerces','boulangerie'],
+  voir:'Château sur l\u2019eau, port fluvial, cœur du Bazois bocager.',
+  refuge:'Bief ombragé, halte fluviale avec buvette ; peu d\u2019options en dur, prévoir.',
+  camps:[{n:'Camping municipal du Bazois', t:'★★ · port', c:'Calme, bordure de canal ombragée'},
+         {n:'Bivouac du Bazois', t:'bivouac', c:'Prairies d\u2019éclusiers, demander à la maison éclusière'}]},
+ {n:'Étangs de Baye', ll:[47.1903,3.6553], km:22, surf:'vv', vr:'V51 · 16 écluses de la Collancelle',
+  gare:'—', svc:['eau','baignade','buvette'],
+  voir:'Les réservoirs qui alimentent le canal, après l\u2019échelle des 16 écluses.',
+  refuge:'LE refuge canicule du voyage : plage surveillée, pédalos, forêt, buvette. Journée entière possible sans bouger.',
+  camps:[{n:'Camping de la base de loisirs de Baye', t:'★★ · plage', c:'Baignade à 20 m des tentes, pinède'},
+         {n:'Bivouac autour des étangs', t:'bivouac', c:'Toléré en discrétion, vérifier sur place'}]},
+ {n:'Corbigny', ll:[47.2564,3.6831], km:13, surf:'vv', vr:'V51 · canal du Nivernais',
+  gare:'Gare de Corbigny (terminus ligne du Nivernais)', svc:['eau','supermarché','pharmacie','boulangerie'],
+  voir:'Abbaye Saint-Léonard, porte du Morvan.',
+  refuge:'Abbaye et halles fraîches ; piscine municipale découverte.',
+  camps:[{n:'Camping municipal de Corbigny', t:'★★ · centre', c:'Ombragé, piscine à côté'}]},
+ {n:'Chitry-les-Mines', ll:[47.2830,3.6520], km:6, surf:'vv', vr:'V51 · Yonne canalisée',
+  gare:'Halte de Chitry', svc:['eau'],
+  voir:'Le village de Jules Renard, château et écluses.',
+  refuge:'Petit, très ombragé, baignade en rivière possible.',
+  camps:[{n:'Aire naturelle de Chitry', t:'aire', c:'Simple, sous les arbres, au bord de l\u2019eau'}]},
+ {n:'Tannay', ll:[47.3661,3.5903], km:12, surf:'vv', vr:'V51 · canal du Nivernais',
+  gare:'Gare de Tannay', svc:['eau','commerces'],
+  voir:'Village vigneron perché, chardonnay de Tannay, collégiale Saint-Léger.',
+  refuge:'Caves de dégustation fraîches ; le camping est en hauteur, plus ventilé.',
+  camps:[{n:'Camping du Bois de Tannay', t:'★★ · hauteur', c:'En sous-bois, ventilé, vue'}]},
+ {n:'Clamecy', ll:[47.4600,3.5192], km:22, surf:'vv', vr:'V51 · Yonne',
+  gare:'Gare de Clamecy', svc:['eau','supermarché','pharmacie','baignade','laverie'],
+  voir:'Musée du flottage du bois, vieille ville médiévale, collégiale Saint-Martin.',
+  refuge:'Baignade aménagée sur l\u2019Yonne, piscine, musée climatisé et vieille ville aux ruelles étroites (donc ombragées).',
+  camps:[{n:'Camping du Pont Picot', t:'★★ · entre Yonne et canal', c:'Cerné d\u2019eau, baignade directe'},
+         {n:'Hôtels de la vieille ville', t:'repli', c:'Murs épais, frais l\u2019après-midi'}]},
+ {n:'Coulanges-sur-Yonne', ll:[47.5210,3.5580], km:14, surf:'vv', vr:'V51 · Yonne',
+  gare:'Gare de Coulanges', svc:['eau','commerces','baignade'],
+  voir:'Port de plaisance, plage sur l\u2019Yonne.',
+  refuge:'Plage municipale surveillée en août, très bon plan de mi-journée.',
+  camps:[{n:'Camping municipal de Coulanges', t:'★★ · bord d\u2019Yonne', c:'Plage attenante, peupliers'}]},
+ {n:'Châtel-Censoir', ll:[47.5347,3.6338], km:8, surf:'vv', vr:'V51 · rochers du Saussois',
+  gare:'Gare de Châtel-Censoir', svc:['eau','commerces','baignade'],
+  voir:'Collégiale perchée ; rochers du Saussois à 3 km (école d\u2019escalade réputée).',
+  refuge:'Baignade au port ; la falaise du Saussois donne de l\u2019ombre le matin.',
+  camps:[{n:'Camping du Petit Port', t:'★★ · canal', c:'Petit, ombragé, accès baignade'}]},
+ {n:'Mailly-le-Château', ll:[47.5901,3.6503], km:15, surf:'vv', vr:'V51 · Yonne',
+  gare:'—', svc:['eau','commerces','baignade'],
+  voir:'Village haut et village bas reliés par un pont médiéval ; falaises calcaires.',
+  refuge:'Belle plage de rivière au village bas, sous les frondaisons.',
+  camps:[{n:'Camping le Pré du Roi', t:'★★ · bord d\u2019Yonne', c:'Baignade au pied, grands arbres'}]},
+ {n:'Vincelles', ll:[47.7003,3.6303], km:18, surf:'vv', vr:'V51 · Yonne',
+  gare:'Gare de Cravant-Bazarnes (3 km)', svc:['eau','commerces','baignade'],
+  voir:'Port de plaisance ; vignobles d\u2019Irancy et Saint-Bris à deux pas.',
+  refuge:'Base nautique et baignade ; caves d\u2019Irancy à 14 °C.',
+  camps:[{n:'Camping les Ceriselles', t:'★★★ · port', c:'Piscine, très arboré, label Accueil Vélo'}]},
+ {n:'Auxerre', ll:[47.7980,3.5731], km:14, surf:'vv', vr:'V51 · fin du Nivernais',
+  gare:'Gare d\u2019Auxerre-Saint-Gervais', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
+  voir:'Cathédrale Saint-Étienne, abbaye Saint-Germain et ses cryptes carolingiennes.',
+  refuge:'Les cryptes de Saint-Germain sont le point le plus frais d\u2019Auxerre ; piscine du stade nautique ; quais ombragés.',
+  camps:[{n:'Camping municipal d\u2019Auxerre', t:'★★★ · bord d\u2019Yonne', c:'Piscine municipale mitoyenne, platanes'},
+         {n:'Hôtels du centre', t:'repli', c:'Nombreux, utile à mi-parcours'}]},
+ {n:'Migennes', ll:[47.9650,3.5172], km:20, surf:'vv', vr:'V51 · départ canal de Bourgogne',
+  gare:'Gare de Laroche-Migennes (grande ligne)', svc:['eau','supermarché','pharmacie'],
+  voir:'Confluence Yonne–canal de Bourgogne ; le point de bascule du voyage.',
+  refuge:'Piscine et base de loisirs ; port ombragé.',
+  camps:[{n:'Camping du Confluent', t:'★★ · port', c:'Bord de l\u2019eau, ombre correcte'}]},
+ {n:'Brienon-sur-Armançon', ll:[47.9860,3.6180], km:9, surf:'halage', vr:'V51 · halage non revêtu',
+  gare:'Gare de Brienon', svc:['eau','commerces'],
+  voir:'Halles du XVIIIe et lavoir circulaire.',
+  refuge:'Halles couvertes très fraîches, plan d\u2019eau à proximité.',
+  camps:[{n:'Camping municipal de Brienon', t:'★★ · Armançon', c:'Petit, calme, ombragé'}]},
+ {n:'Saint-Florentin', ll:[48.0004,3.7208], km:13, surf:'halage', vr:'V51 · halage non revêtu',
+  gare:'Gare de Saint-Florentin-Vergigny', svc:['eau','commerces','boulangerie','fromagerie'],
+  voir:'Le fromage de Saint-Florentin, vitraux Renaissance de l\u2019église.',
+  refuge:'Base de loisirs avec baignade, église fraîche.',
+  camps:[{n:'Camping municipal de l\u2019Armançon', t:'★★ · rivière', c:'Baignade proche, saules'}]},
+ {n:'Flogny-la-Chapelle', ll:[47.9290,3.8880], km:15, surf:'halage', vr:'V51 · halage non revêtu',
+  gare:'Halte de Flogny', svc:['eau','commerces'],
+  voir:'Village-étape du Tonnerrois, bief calme.',
+  refuge:'Peu d\u2019équipements : c\u2019est une étape de repli, pas un objectif.',
+  camps:[{n:'Aire communale de Flogny', t:'aire', c:'Ombre, eau, sanitaires simples'}]},
+ {n:'Tonnerre', ll:[47.8562,3.9734], km:11, surf:'halage', vr:'V51 · canal de Bourgogne',
+  gare:'Gare de Tonnerre', svc:['eau','supermarché','pharmacie','boulangerie'],
+  voir:'La Fosse Dionne : source turquoise en pleine ville, lavoir circulaire.',
+  refuge:'La Fosse Dionne reste à 15 °C toute l\u2019année ; l\u2019Hôtel-Dieu médiéval est glacial et magnifique. Piscine découverte.',
+  camps:[{n:'Camping de la Cascade', t:'★★ · Armançon', c:'Bord de rivière, ombre dense'},
+         {n:'Hôtels de Tonnerre', t:'repli', c:'Bâtis anciens, frais'}]},
+ {n:'Tanlay', ll:[47.8402,4.0903], km:12, surf:'vv', vr:'V51 · canal de Bourgogne',
+  gare:'Halte de Tanlay', svc:['eau','commerces'],
+  voir:'Château Renaissance et ses douves, l\u2019un des plus beaux de Bourgogne.',
+  refuge:'Douves et parc du château ; la galerie peinte est fraîche.',
+  camps:[{n:'Camping municipal de Tanlay', t:'★★ · canal', c:'Petit, au bord de l\u2019eau, ombragé'}]},
+ {n:'Ancy-le-Franc', ll:[47.7752,4.1626], km:10, surf:'vv', vr:'V51 · canal de Bourgogne',
+  gare:'—', svc:['eau','commerces'],
+  voir:'Château Renaissance italienne de Serlio, décors peints exceptionnels.',
+  refuge:'Le château : salles de pierre à 19 °C, visite parfaite entre 14 h et 16 h.',
+  camps:[{n:'Camping municipal d\u2019Ancy', t:'★★ · canal', c:'Face au château, arboré'}]},
+ {n:'Ravières', ll:[47.7360,4.2280], km:9, surf:'vv', vr:'V51 · canal de Bourgogne',
+  gare:'Gare de Nuits-sous-Ravières', svc:['eau','commerces'],
+  voir:'Bief calme, carrières de pierre de Bourgogne.',
+  refuge:'Halte simple, baignade en Armançon possible.',
+  camps:[{n:'Aire de Ravières', t:'aire', c:'Ombre, point d\u2019eau, gare à côté'}]},
+ {n:'Aisy-sur-Armançon', ll:[47.6660,4.2760], km:10, surf:'vv', vr:'V51 · canal de Bourgogne',
+  gare:'Halte d\u2019Aisy', svc:['eau','commerces'],
+  voir:'Bief tranquille de l\u2019Armançon, écluses et maisons éclusières.',
+  refuge:'Baignade en Armançon, ombre continue du halage. Étape simple mais bien placée.',
+  camps:[{n:'Aire naturelle d\u2019Aisy', t:'aire', c:'Au bord de l\u2019eau, sous les frênes'}]},
+ {n:'Montbard', ll:[47.6233,4.3371], km:14, surf:'vv', vr:'V51 · canal de Bourgogne',
+  gare:'Gare de Montbard (TGV + TER)', svc:['eau','supermarché','pharmacie','piscine'],
+  voir:'Parc Buffon en terrasses ; abbaye de Fontenay à 6 km (UNESCO).',
+  refuge:'Piscine municipale ; l\u2019abbatiale de Fontenay et son dortoir de moines sont un havre de fraîcheur.',
+  camps:[{n:'Camping municipal des Treilles', t:'★★★ · piscine mitoyenne', c:'Accès piscine inclus, ombragé'}]},
+ {n:'Venarey-les-Laumes', ll:[47.5424,4.4619], km:13, surf:'vv', vr:'V51 · canal de Bourgogne',
+  gare:'Gare des Laumes-Alésia', svc:['eau','commerces','boulangerie'],
+  voir:'MuséoParc Alésia : le site de la bataille de -52, reconstitutions grandeur nature.',
+  refuge:'Le MuséoParc est climatisé et passionne les enfants — l\u2019après-midi caniculaire idéal.',
+  camps:[{n:'Camping municipal de Venarey', t:'★★ · canal', c:'Calme, arboré, piscine à proximité'}]},
+ {n:'Pouillenay', ll:[47.5020,4.4470], km:7, surf:'vv', vr:'V51 · canal de Bourgogne',
+  gare:'Halte de Pouillenay', svc:['eau'],
+  voir:'Échelle d\u2019écluses vers le bief de partage.',
+  refuge:'Étape technique, peu de services : à n\u2019utiliser qu\u2019en dépannage.',
+  camps:[{n:'Bivouac d\u2019écluse', t:'bivouac', c:'Demander à la maison éclusière, ombre des frênes'}]},
+ {n:'Marigny-le-Cahouët', ll:[47.4400,4.4900], km:16, surf:'vv', vr:'V51 · vallée de la Brenne',
+  gare:'—', svc:['eau'],
+  voir:'Château fort sur motte et échelle d\u2019écluses de l\u2019Auxois.',
+  refuge:'Étape de dépannage : ombre des frênes du bief, point d\u2019eau à l\u2019écluse.',
+  camps:[{n:'Bivouac d\u2019écluse de Marigny', t:'bivouac', c:'Demander à la maison éclusière, ombre continue'}]},
+ {n:'Vandenesse-en-Auxois', ll:[47.2360,4.6250], km:16, surf:'vv', vr:'V51 · sous Châteauneuf',
+  gare:'—', svc:['eau','commerces'],
+  voir:'Le port sous la forteresse de Châteauneuf-en-Auxois, un des plus beaux villages de France.',
+  refuge:'Port ombragé, plan d\u2019eau de Panthier à 3 km (baignade surveillée, voile).',
+  camps:[{n:'Camping du lac de Panthier', t:'★★★ · 3 km', c:'Piscine + lac de baignade, très arboré'},
+         {n:'Halte fluviale de Vandenesse', t:'aire', c:'Simple, sous les arbres du port'}]},
+ {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:8, surf:'vv', vr:'V51 · point culminant',
+  gare:'—', svc:['eau','commerces','boulangerie'],
+  voir:'Le sommet du canal : voûte souterraine de 3 333 m, toueur électrique du musée.',
+  refuge:'Le musée du toueur et l\u2019entrée de la voûte sont frais ; à 390 m d\u2019altitude, les nuits sont plus respirables.',
+  camps:[{n:'Camping du Vert Auxois', t:'★★ · centre', c:'Altitude = nuits fraîches, ombragé'}]},
+ {n:'Pont-d\u2019Ouche', ll:[47.2130,4.6900], km:12, surf:'vv', vr:'V51 · entrée vallée de l\u2019Ouche',
+  gare:'—', svc:['eau','commerces'],
+  voir:'Jonction du canal et de l\u2019Ouche, port de plaisance au pied des collines.',
+  refuge:'Rivière fraîche accessible, halte ombragée, buvette du port en saison.',
+  camps:[{n:'Camping du Pont d\u2019Ouche', t:'★★ · rivière', c:'Bord d\u2019Ouche, très ombragé'}]},
+ {n:'La Bussière-sur-Ouche', ll:[47.2298,4.7702], km:14, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
+  gare:'—', svc:['eau','commerces'],
+  voir:'Abbaye cistercienne du XIIe, vallée encaissée et ombragée.',
+  refuge:'La vallée de l\u2019Ouche est la section la plus ombragée du voyage ; rivière pour se rafraîchir.',
+  camps:[{n:'Camping de la vallée de l\u2019Ouche', t:'★★ · rivière', c:'Encaissé, ombre permanente, eau vive'}]},
+ {n:'Fleurey-sur-Ouche', ll:[47.3080,4.8800], km:16, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
+  gare:'Halte de Fleurey', svc:['eau','commerces','boulangerie'],
+  voir:'Dernier village avant Dijon, écluses en descente continue.',
+  refuge:'Bord d\u2019Ouche ombragé, commerces pour le dernier ravitaillement.',
+  camps:[{n:'Aire de Fleurey', t:'aire', c:'Ombragée, au bord de l\u2019eau'}]},
+ {n:'Velars-sur-Ouche', ll:[47.3160,4.9250], km:9, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
+  gare:'Gare de Velars-sur-Ouche', svc:['eau','commerces','boulangerie'],
+  voir:'Dernier village avant Dijon, sous la roche de Notre-Dame d\u2019Étang.',
+  refuge:'Lac du Chat à proximité, bord d\u2019Ouche ombragé, train direct pour Dijon en 10 min.',
+  camps:[{n:'Aire de Velars', t:'aire', c:'Simple, ombragée, gare à 300 m'}]},
+ {n:'Dijon', ll:[47.3220,5.0415], km:10, surf:'vv', vr:'V51 · fin du canal de Bourgogne',
+  gare:'Gare de Dijon-Ville (TER direct St-Jean-de-Losne, 15 min)',
+  svc:['eau','supermarché','pharmacie','vélociste','laverie','baignade'],
+  voir:'Palais des Ducs, parcours de la Chouette, halles de Rude ; lac Kir.',
+  refuge:'Lac Kir : plage surveillée à l\u2019arrivée. Les caves du palais et le musée des Beaux-Arts (gratuit, climatisé) sont des refuges parfaits.',
+  camps:[{n:'Camping du Lac Kir', t:'★★★ · plage', c:'Baignade surveillée sur place, ombragé'},
+         {n:'Hôtels de Dijon', t:'repli', c:'Récompense de fin de voyage'}]},
+ {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:35, surf:'vv', vr:'V50 · retour au parking',
+  gare:'Gare de St-Jean-de-Losne', svc:['eau','commerces'],
+  voir:'La boucle refermée à la force des mollets.',
+  refuge:'Retour à la voiture.',
+  camps:[{n:'Camping des Herlequins', t:'★★ · départ', c:'Dernière nuit avant la route'}]}
+];
+
+/* Options globales (pas des variations quotidiennes) */
+var OPTIONS = [
+ {id:'bouclage', label:'Refermer la boucle à vélo (Dijon → Saint-Jean-de-Losne)',
+  desc:'+35 km le dernier jour, au lieu du TER de 15 minutes.', on:false}
+];
+
+var RHYTHMS = [
+ {key:'flanerie',  name:'Flânerie',   rest:0, shape:'regulier',   cap:56,
+  desc:'Dix-sept journées quasi identiques, autour de 41 km. On roule le matin, on est arrivé pour le déjeuner tous les jours \u2014 le profil le plus doux possible sur ce parcours.'},
+ {key:'progressif',name:'Progressif', rest:0, shape:'progressif', cap:58,
+  desc:'Démarrage très tranquille pendant que les jambes se font, journées un peu plus pleines vers la fin. Idéal si la première semaine sert de rodage.'},
+ {key:'canicule',  name:'Canicule',   rest:0, shape:'alterne',    cap:62,
+  desc:'Alternance voulue court / long : une grosse journée sur les tronçons plats et ombragés, suivie d\u2019une toute petite pour récupérer et profiter de l\u2019eau.'},
+ {key:'souple',    name:'Souple',     rest:0, shape:'regulier',   cap:68,
+  desc:'Mêmes journées régulières, mais avec un plafond plus haut : c\u2019est le rythme à choisir pour pouvoir vraiment allonger une étape quand l\u2019envie vient, sans que l\u2019app refuse.'}
+];
+
+var TOTAL_DAYS = 17;
+var DATE0 = new Date(2026, 7, 13); /* jeudi 13 août 2026 */
+var JOURS = ['dim','lun','mar','mer','jeu','ven','sam'];
+var MOIS = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+
+/* ---------- état ---------- */
+var STATE = {rhythm:0, opts:{}, days:{}};
+OPTIONS.forEach(function(o){ STATE.opts[o.id] = o.on; });
+try{
+  var sv = JSON.parse(localStorage.getItem('bourg-state2')||'null');
+  if(sv){
+    if(typeof sv.rhythm==='number' && sv.rhythm>=0 && sv.rhythm<RHYTHMS.length){ STATE.rhythm = sv.rhythm; }
+    if(sv.opts){ OPTIONS.forEach(function(o){ if(typeof sv.opts[o.id]==='boolean'){ STATE.opts[o.id]=sv.opts[o.id]; } }); }
+    if(sv.days){ STATE.days = sv.days; }
+  }
+}catch(e){}
+function saveState(){ try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
+function resetDays(){ STATE.days = {}; saveState(); }
+
+(function(){
+  var h = location.hash||'', got=false;
+  var mr = /[#&]r=(\d)/.exec(h);
+  if(mr){ var r=+mr[1]; if(r>=0&&r<RHYTHMS.length){ STATE.rhythm=r; got=true; } }
+  var mb = /[#&]b=(\d)/.exec(h);
+  if(mb){ STATE.opts.bouclage = mb[1]==='1'; got=true; }
+  var md = /[#&]d=([0-9\-,]*)/.exec(h);
+  if(md && md[1]){
+    STATE.days = {};
+    md[1].split(',').forEach(function(pair){
+      var p = pair.split('-');
+      if(p.length===2){ STATE.days[p[0]] = parseInt(p[1],10)||0; }
+    });
+    got = true;
+  }
+  if(got){ saveState(); try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+})();
+
+/* =========================================================
+   MOTEUR DE CASCADE — séquentiel, jour après jour
+   Chaque journée : plus court (-1) · normal (0) · plus long (+1)
+   Le choix décale la nuitée, et TOUT ce qui suit est recalculé
+   sur la distance et les jours restants.
+   ========================================================= */
+function buildChain(){
+  var chain = [];
+  for(var i=0;i<CHAIN.length;i++){
+    var n = CHAIN[i];
+    if(n.n==='Saint-Jean-de-Losne' && i>0 && !STATE.opts.bouclage) continue;
+    chain.push(Object.assign({}, n, {i:chain.length}));
+  }
+  return chain;
+}
+function chainCum(chain){
+  var cum=[0];
+  for(var i=1;i<chain.length;i++){ cum.push(cum[i-1]+chain[i].km); }
+  return cum;
+}
+function computeStages(){
+  var chain = buildChain();
+  var cum = chainCum(chain);
+  var M = chain.length, T = cum[M-1];
+  var R = RHYTHMS[STATE.rhythm];
+  /* Un jour de repos se paie sur les autres. Si le rythme demandé imposerait
+     plus de 60 km/jour de moyenne — irréaliste avec deux remorques et deux
+     enfants de 3 ans — on retire un repos et on le dit clairement. */
+  var rest = 0;              /* aucun jour de pause : les 17 jours sont pédalés */
+  var restReduced = 0;
+  var rideDays = TOTAL_DAYS - rest;
+
+  /* poids du profil de rythme */
+  var w=[];
+  for(var d=0; d<rideDays; d++){
+    var x = rideDays>1 ? d/(rideDays-1) : .5, v;
+    if(R.shape==='progressif'){ v = 0.84 + 0.32*x; }
+    else if(R.shape==='alterne'){ v = (d%2===0) ? 0.78 : 1.22; }
+    else { v = 1; }
+    w.push(v);
+  }
+
+  /* Marge de sécurité adaptative : large quand le séjour est confortable,
+     réduite quand la moyenne obligatoire frôle déjà le plafond — sinon
+     aucun choix ne serait jamais jugé faisable. */
+  /* Faisabilité exacte : pour chaque maillon, le nombre minimal et maximal
+     de journées nécessaires pour rejoindre l'arrivée sous plafond. Un maillon
+     n'est proposé que si le nombre de jours restants tombe dans cet intervalle
+     — c'est ce qui rend structurellement impossible de se peindre dans un coin. */
+  function bounds(cap, minSeg){
+    var mn = new Array(M).fill(Infinity), mx = new Array(M).fill(-Infinity);
+    mn[M-1] = 0; mx[M-1] = 0;
+    for(var q=M-2; q>=0; q--){
+      for(var k2=q+1; k2<M; k2++){
+        var sg = cum[k2]-cum[q];
+        if(sg > cap) break;
+        if(mn[k2]!==Infinity){ mn[q] = Math.min(mn[q], 1+mn[k2]); }
+        if(mx[k2]!==-Infinity && (sg >= minSeg || k2===M-1)){ mx[q] = Math.max(mx[q], 1+mx[k2]); }
+      }
+    }
+    return {mn:mn, mx:mx};
+  }
+  /* Le découpage doit être possible en exactement `rideDays` journées. Si le
+     plafond du rythme l'interdit (trop bas pour la distance), on le desserre
+     par paliers ; si au contraire les villages sont trop rapprochés pour
+     remplir tous les jours, on abaisse la longueur minimale d'une étape.
+     Dans les deux cas l'app le signale au lieu de produire une aberration. */
+  var CAP = R.cap, MINSEG = 12, capRaised = 0, segLowered = 0, B = bounds(CAP, MINSEG);
+  var guard = 0;
+  while(B.mn[0] > rideDays && CAP < 95 && guard++ < 20){ CAP += 4; capRaised += 4; B = bounds(CAP, MINSEG); }
+  guard = 0;
+  while(B.mx[0] < rideDays && MINSEG > 0 && guard++ < 20){ MINSEG = Math.max(0, MINSEG-3); segLowered++; B = bounds(CAP, MINSEG); }
+  var minD = B.mn, maxD = B.mx;
+  var globalAvg = T / rideDays;
+  var margin = Math.max(0, Math.min(10, CAP - globalAvg - 4));
+  var LIMIT = CAP - margin;
+
+  var stages = [], at = 0;
+  for(var day=1; day<=rideDays; day++){
+    var left = rideDays - day + 1;
+    var remain = T - cum[at];
+    /* objectif du jour, pondéré par le profil restant */
+    var wl = w.slice(day-1), wsum = wl.reduce(function(a,b){return a+b;},0);
+    var target = remain * wl[0] / wsum;
+
+    var choice = 0;
+    var ck = 'd'+day;
+    if(STATE.days[ck]===-1 || STATE.days[ck]===1){ choice = STATE.days[ck]; }
+
+    var to;
+    if(day===rideDays){
+      to = M-1;
+    }else{
+      /* Candidats atteignables. Un choix n'est proposé que s'il laisse le
+         voyage terminable : c'est ce qui empêche d'enchaîner « plus court »
+         jusqu'à se retrouver avec une étape finale monstrueuse. */
+      var hard = [], soft = [], forced = false;
+      for(var j=at+1; j<=M-1-(left-1); j++){
+        var seg = cum[j]-cum[at];
+        if(seg > CAP) break;
+        if(seg < MINSEG && left>1) continue;
+        var restKm = T-cum[j], restDays = left-1;
+        /* INVARIANT DUR, jamais relâché : depuis ce maillon, l'arrivée doit
+           rester atteignable en exactement le nombre de jours restants. */
+        if(restDays > 0 && !(minD[j] <= restDays && restDays <= maxD[j])) continue;
+        if(restDays === 0 && j !== M-1) continue;
+        hard.push(j);
+        if(restDays === 0 || restKm/restDays <= LIMIT){ soft.push(j); }
+      }
+      var cands = soft.length ? soft : hard;
+      if(!cands.length){
+        /* ne devrait plus arriver grâce à l'invariant ; sécurité de dernier
+           recours : le maillon le plus lointain qui garde l'arrivée atteignable */
+        forced = true;
+        var far = -1;
+        for(var j2=at+1; j2<M; j2++){
+          if(cum[j2]-cum[at] > CAP) break;
+          if(minD[j2] <= left-1) far = j2;
+        }
+        cands = [far>0 ? far : Math.min(at+1, M-1)];
+      }else if(!soft.length){
+        /* on est en retard : le choix du jour est neutralisé, on rattrape */
+        forced = true;
+        cands = [hard[hard.length-1]];
+      }
+      /* le « normal » = le plus proche de l'objectif */
+      var best = cands[0], bd = Infinity;
+      cands.forEach(function(j3){
+        var dd = Math.abs((cum[j3]-cum[at]) - target);
+        if(dd < bd){ bd = dd; best = j3; }
+      });
+      var pos = cands.indexOf(best);
+      var pick = forced ? pos : pos + choice;
+      if(pick < 0) pick = 0;
+      if(pick > cands.length-1) pick = cands.length-1;
+      to = cands[pick];
+      /* options réellement disponibles ce jour-là */
+      var opts = {court: pos>0 ? cands[pos-1] : null,
+                  normal: cands[pos],
+                  long: pos<cands.length-1 ? cands[pos+1] : null,
+                  forced: forced};
+      var applied = (to === opts.normal) ? 0 : (to === opts.court ? -1 : (to === opts.long ? 1 : 0));
+      stages.push({_opts:opts, _applied:applied});
+    }
+    var st = (day===rideDays) ? {_opts:{court:null,normal:M-1,long:null}, _applied:0} : stages.pop();
+    var via = [];
+    for(var v2=at+1; v2<to; v2++){ via.push(chain[v2]); }
+    var surfs = {};
+    for(var s2=at+1; s2<=to; s2++){ surfs[chain[s2].surf] = (surfs[chain[s2].surf]||0)+chain[s2].km; }
+    stages.push({
+      type:'ride', from:chain[at], to:chain[to], via:via,
+      km: cum[to]-cum[at], pts:[chain[at]].concat(via,[chain[to]]),
+      opts:st._opts, applied:st._applied, forced:!!(st._opts&&st._opts.forced), chain:chain, cum:cum, surfs:surfs,
+      kmCourt: st._opts.court!=null ? cum[st._opts.court]-cum[at] : null,
+      kmLong:  st._opts.long!=null  ? cum[st._opts.long]-cum[at]  : null
+    });
+    at = to;
+  }
+
+  /* Jours de repos : répartis sur l'ensemble du séjour, posés de préférence
+     là où il y a de quoi se rafraîchir toute une journée. */
+  if(rest>0){
+    var refuges = {'Étangs de Baye':5,'Clamecy':5,'Bourbon-Lancy':5,'Decize':4,'Digoin':4,
+                   'Auxerre':4,'Tonnerre':4,'Montbard':3,'Vincelles':3,'Corbigny':3,
+                   'Coulanges-sur-Yonne':3,'Chalon-sur-Saône':3,'Montceau-les-Mines':3,
+                   'Paray-le-Monial':3,'Cercy-la-Tour':2,'Mailly-le-Château':2,'Châtel-Censoir':2};
+    var used = {};
+    for(var k=1; k<=rest; k++){
+      var target = Math.round(k*(rideDays+rest)/(rest+1)) - 1;   /* position visée */
+      var bestI = -1, bestScore = -1e9;
+      for(var si=0; si<stages.length; si++){
+        if(stages[si].type!=='ride' || used[si]) continue;
+        if(stages[si+1] && stages[si+1].type==='rest') continue;
+        var nm = stages[si].to.n;
+        var score = (refuges[nm]||0)*3 - Math.abs(si-target);
+        if(score > bestScore){ bestScore = score; bestI = si; }
+      }
+      if(bestI<0) break;
+      stages.splice(bestI+1, 0, {type:'rest', at:stages[bestI].to});
+      used[bestI] = true;
+      var shifted = {};
+      Object.keys(used).forEach(function(u){ shifted[+u > bestI ? +u+1 : +u] = true; });
+      used = shifted; used[bestI] = true;
+    }
+  }
+
+  /* dates */
+  var rideNo = 0;
+  stages.forEach(function(st2,i){
+    var dt = new Date(DATE0.getTime());
+    dt.setDate(dt.getDate()+i);
+    st2.day = i+1;
+    st2.date = dt;
+    st2.dstr = JOURS[dt.getDay()]+' '+dt.getDate()+' '+MOIS[dt.getMonth()];
+    st2.id = 'e'+(i+1);
+    st2.color = DAYCOLORS[i%DAYCOLORS.length];
+    if(st2.type==='ride'){ rideNo++; st2.rideNo = rideNo; }
+  });
+  return {stages:stages, chain:chain, total:T, rhythm:R, rideDays:rideDays, rest:rest, restReduced:restReduced, cap:CAP, capRaised:capRaised, segLowered:segLowered};
+}
+
+/* =========================================================
+   4. RENDU · CARTES · ROUTAGE · GPX · MODE GUIDON
+   ========================================================= */
+var RUN = computeStages();
+var maps = {};
+var ROUTED = {};
+var REAL = {};
+try{ REAL = JSON.parse(localStorage.getItem('bourgreal-'+GEN)||'{}'); }catch(e){ REAL = {}; }
+function saveReal(){ try{ localStorage.setItem('bourgreal-'+GEN, JSON.stringify(REAL)); }catch(e){} }
+
+var mainEl = document.getElementById('main');
+var tabsEl = document.getElementById('tabs');
+var currentTab = 'sejour';
+var openStage = null;
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function distM(a,b){
+  var R=6371000, dLat=(b[0]-a[0])*Math.PI/180, dLon=(b[1]-a[1])*Math.PI/180;
+  var la1=a[0]*Math.PI/180, la2=b[0]*Math.PI/180;
+  var x=Math.sin(dLat/2), y=Math.sin(dLon/2);
+  var h=x*x+Math.cos(la1)*Math.cos(la2)*y*y;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function stageKey(st){
+  return 'bourgrt-'+GEN+'-'+st.pts.map(function(p){return p.n;}).join('_').replace(/[^A-Za-z0-9_]/g,'').slice(0,90);
+}
+function realKm(st){ var r = REAL[stageKey(st)]; return (typeof r==='number') ? r : null; }
+function kmLabel(st){
+  if(st.type==='rest') return 'repos';
+  var r = realKm(st);
+  return r!==null ? (r+' km') : ('\u2248 '+Math.round(st.km)+' km');
+}
+
+/* ---------- routage BRouter ---------- */
+function getRoute(st, cb){
+  var key = stageKey(st);
+  try{
+    var c = localStorage.getItem(key);
+    if(c){ cb(JSON.parse(c), 'cache'); return; }
+  }catch(e){}
+  var wps = st.pts.map(function(p){ return p.ll[1].toFixed(5)+','+p.ll[0].toFixed(5); });
+  var url = 'https://brouter.de/brouter?lonlats='+wps.join('|')+'&profile=trekking&alternativeidx=0&format=geojson';
+  function attempt(left){
+    fetch(url).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(function(gj){
+      var f = gj && gj.features && gj.features[0];
+      if(!f) throw new Error('vide');
+      var co = f.geometry.coordinates.map(function(q){
+        return [ +q[1].toFixed(5), +q[0].toFixed(5), (q.length>2 && q[2]!=null) ? Math.round(q[2]) : null ];
+      });
+      if(co.length > 900){
+        var step = Math.ceil(co.length/900), o=[];
+        for(var i=0;i<co.length;i+=step){ o.push(co[i]); }
+        if(o[o.length-1]!==co[co.length-1]) o.push(co[co.length-1]);
+        co = o;
+      }
+      try{ localStorage.setItem(key, JSON.stringify(co)); }catch(e){}
+      cb(co, 'live');
+    }).catch(function(){
+      if(left>0){ setTimeout(function(){ attempt(left-1); }, 1500); }
+      else{ cb(null,'fail'); }
+    });
+  }
+  attempt(2);
+}
+function buildProfile(co){
+  if(!co || co.length<2 || co[0][2]==null) return null;
+  var km=[0], el=[co[0][2]];
+  for(var i=1;i<co.length;i++){
+    km.push(km[i-1]+distM(co[i-1],co[i])/1000);
+    el.push(co[i][2]==null?el[i-1]:co[i][2]);
+  }
+  var sm=[], W=3;
+  for(var i2=0;i2<el.length;i2++){
+    var a=0,c=0;
+    for(var j=Math.max(0,i2-W);j<=Math.min(el.length-1,i2+W);j++){ a+=el[j]; c++; }
+    sm.push(a/c);
+  }
+  var dp=0;
+  for(var i3=1;i3<sm.length;i3++){ var d=sm[i3]-sm[i3-1]; if(d>0) dp+=d; }
+  var prof=[], N=Math.min(120, sm.length);
+  for(var i4=0;i4<N;i4++){
+    var idx=Math.round(i4*(sm.length-1)/(N-1));
+    prof.push([+km[idx].toFixed(1), Math.round(sm[idx])]);
+  }
+  return {prof:prof, dplus:Math.round(dp/10)*10, totalKm:Math.round(km[km.length-1])};
+}
+function profileSvg(prof){
+  if(!prof || prof.length<2){ return '<p class="map-note">Profil disponible dès le chargement de la carte.</p>'; }
+  var W=600,H=130,padL=34,padR=8,padT=10,padB=22;
+  var maxKm=prof[prof.length-1][0]||1;
+  var alts=prof.map(function(p){return p[1];});
+  var minA=Math.min.apply(null,alts), maxA=Math.max.apply(null,alts);
+  if(maxA-minA<40){ maxA=minA+40; }
+  function X(k){ return padL+(k/maxKm)*(W-padL-padR); }
+  function Y(a){ return padT+(1-(a-minA)/(maxA-minA))*(H-padT-padB); }
+  var d='M'+X(prof[0][0]).toFixed(1)+','+Y(prof[0][1]).toFixed(1);
+  for(var i=1;i<prof.length;i++){ d+='L'+X(prof[i][0]).toFixed(1)+','+Y(prof[i][1]).toFixed(1); }
+  var area=d+'L'+X(maxKm)+','+(H-padB)+'L'+X(0)+','+(H-padB)+'Z';
+  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Profil de dénivelé">'
+    +'<path d="'+area+'" fill="rgba(240,184,96,.16)"></path>'
+    +'<path d="'+d+'" fill="none" stroke="#f0b860" stroke-width="2"></path>'
+    +'<text x="2" y="'+(Y(maxA)+4)+'" fill="#8fb3ad" font-size="11">'+Math.round(maxA)+'</text>'
+    +'<text x="2" y="'+(Y(minA)+4)+'" fill="#8fb3ad" font-size="11">'+Math.round(minA)+'</text>'
+    +'<text x="'+(W-40)+'" y="'+(H-6)+'" fill="#8fb3ad" font-size="11">'+Math.round(maxKm)+' km</text>'
+    +'</svg>';
+}
+
+/* ---------- GPX ---------- */
+function toGpx(name, co){
+  var pts = co.map(function(c){
+    return '      <trkpt lat="'+c[0]+'" lon="'+c[1]+'">'+(c[2]!=null?'<ele>'+c[2]+'</ele>':'')+'</trkpt>';
+  }).join('\n');
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Tour de Bourgogne" xmlns="http://www.topografix.com/GPX/1/1">\n'
+    +'  <metadata><name>'+name+'</name></metadata>\n  <trk>\n    <name>'+name+'</name>\n    <trkseg>\n'
+    +pts+'\n    </trkseg>\n  </trk>\n</gpx>\n';
+}
+function downloadGpx(sid){
+  var st = RUN.stages.find(function(s){ return s.id===sid; });
+  if(!st) return;
+  var co = ROUTED[sid] || (st.pts||[]).map(function(p){ return [p.ll[0],p.ll[1],null]; });
+  var nm = 'J'+st.day+' '+st.from.n+' - '+st.to.n;
+  var blob = new Blob([toGpx(nm, co)], {type:'application/gpx+xml'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nm.replace(/[^A-Za-z0-9 -]/g,'').replace(/\s+/g,'-')+'.gpx';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function downloadAllGpx(){
+  var co = [];
+  RUN.stages.forEach(function(st){
+    if(st.type!=='ride') return;
+    var c = ROUTED[st.id];
+    if(c){ co = co.concat(c); }
+    else{ st.pts.forEach(function(p){ co.push([p.ll[0],p.ll[1],null]); }); }
+  });
+  var blob = new Blob([toGpx('Tour de Bourgogne 2026 - parcours complet', co)], {type:'application/gpx+xml'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Tour-de-Bourgogne-2026-complet.gpx';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ---------- cartes ---------- */
+function startIcon(){
+  return L.divIcon({className:'', iconSize:[30,30], iconAnchor:[15,15],
+    html:'<div style="width:30px;height:30px;border-radius:50%;background:#f0b860;border:3px solid #08252e;'
+      +'display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.5)">\u2605</div>'});
+}
+function dotIcon(txt, col){
+  return L.divIcon({className:'', iconSize:[24,24], iconAnchor:[12,12],
+    html:'<div style="width:24px;height:24px;border-radius:50%;background:'+col+';border:2px solid #08252e;'
+      +'display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.45)">'+txt+'</div>'});
+}
+function makeMap(elId){
+  var m = L.map(elId, {scrollWheelZoom:false, zoomControl:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:17, attribution:'&copy; OpenStreetMap · routage BRouter'}).addTo(m);
+  return m;
+}
+function addLocate(m){
+  var btn = L.control({position:'topright'});
+  btn.onAdd = function(){
+    var a = L.DomUtil.create('a','loc-btn');
+    a.href='#'; a.title='Ma position'; a.innerHTML='\ud83d\udccd';
+    a.style.cssText='width:34px;height:34px;display:flex;align-items:center;justify-content:center;'
+      +'background:#10394a;border:1px solid #1c4a5c;border-radius:8px;font-size:17px;text-decoration:none';
+    L.DomEvent.on(a,'click',function(ev){
+      L.DomEvent.stop(ev);
+      if(m._locating){ m.stopLocate(); m._locating=false; a.style.background='#10394a'; if(m._lm){ m.removeLayer(m._lm); m._lm=null; } return; }
+      m._locating = true; a.style.background='#f0b860';
+      m.locate({watch:true, enableHighAccuracy:true});
+    });
+    return a;
+  };
+  btn.addTo(m);
+  m.on('locationfound', function(e){
+    if(m._lm){ m.removeLayer(m._lm); }
+    m._lm = L.circleMarker(e.latlng,{radius:8,color:'#fff',weight:2,fillColor:'#4a9eff',fillOpacity:1}).addTo(m);
+    if(m._follow){ m.setView(e.latlng, Math.max(m.getZoom(),14)); }
+  });
+  m._locBtn = btn;
+}
+
+function initStageMap(st){
+  if(maps[st.id]){ setTimeout(function(){ maps[st.id].invalidateSize(); },60); return; }
+  var el = document.getElementById('map-'+st.id);
+  if(!el || typeof L==='undefined') return;
+  var m = makeMap('map-'+st.id);
+  maps[st.id] = m;
+  addLocate(m);
+  var raw = st.pts.map(function(p){ return p.ll; });
+  var line = L.polyline(raw, {color:st.color, weight:3, opacity:.75, dashArray:'6 8'}).addTo(m);
+  st.pts.forEach(function(p,i){
+    var isEnd = (i===0 || i===st.pts.length-1);
+    L.marker(p.ll, {icon: i===0 ? dotIcon('\u25b6','#f0b860') : (isEnd ? dotIcon('\ud83c\udfd5','#6fd6c9') : dotIcon(''+i,'#9fc48f'))})
+     .addTo(m)
+     .bindPopup('<b>'+esc(p.n)+'</b>'+(p.voir?'<br><span style="font-size:.8em">'+p.voir+'</span>':'')
+       +(isEnd&&i>0&&p.camp?'<br><br>\ud83c\udfd5 '+esc(p.camp):''));
+  });
+  m.fitBounds(line.getBounds(), {padding:[26,26]});
+  setTimeout(function(){ m.invalidateSize(); },140);
+
+  var note = document.getElementById('rt-'+st.id);
+  if(note){ note.textContent = 'Tracé schématique — affinage par routage en cours…'; }
+  getRoute(st, function(co, src){
+    if(!co){
+      if(note){ note.textContent = 'Routage indisponible — tracé schématique conservé. Recharge pour réessayer.'; }
+      return;
+    }
+    ROUTED[st.id] = co;
+    m.removeLayer(line);
+    var ll = co.map(function(c){ return [c[0],c[1]]; });
+    L.polyline(ll,{color:'#08252e',weight:6,opacity:.45}).addTo(m);
+    L.polyline(ll,{color:st.color,weight:3,opacity:.95}).addTo(m);
+    var pr = buildProfile(co);
+    if(pr){
+      var pe = document.getElementById('prof-'+st.id);
+      if(pe){ pe.innerHTML = profileSvg(pr.prof); }
+      var pn = document.getElementById('profnote-'+st.id);
+      if(pn){ pn.textContent = 'Profil réel : '+pr.totalKm+' km · '+pr.dplus+' m de dénivelé positif (altitudes du routage).'; }
+      if(pr.totalKm>0){
+        var est = st.km, ok = Math.abs(pr.totalKm-est)/Math.max(est,1) < 0.40;
+        if(ok){ REAL[stageKey(st)] = pr.totalKm; saveReal(); }
+        var ke = document.getElementById('km-'+st.id);
+        if(ke && ok){ ke.textContent = pr.totalKm+' km'; }
+        var de = document.getElementById('dp-'+st.id);
+        if(de){ de.textContent = pr.dplus+' m'; }
+      }
+    }
+    if(note){ note.textContent = 'Tracé réel (routage vélo BRouter'+(src==='cache'?', en cache':'')+') — suit chemins de halage et petites routes.'; }
+  });
+}
+
+function initOverviewMap(){
+  if(maps.apercu){ setTimeout(function(){ maps.apercu.invalidateSize(); },60); return; }
+  var el = document.getElementById('map-apercu');
+  if(!el || typeof L==='undefined') return;
+  var m = makeMap('map-apercu');
+  maps.apercu = m;
+  var all = [];
+  RUN.stages.forEach(function(st){
+    if(st.type!=='ride') return;
+    var raw = st.pts.map(function(p){ return p.ll; });
+    all = all.concat(raw);
+    L.polyline(raw,{color:st.color,weight:3,opacity:.8}).addTo(m)
+     .bindTooltip('J'+st.day+' · '+st.from.n+' → '+st.to.n);
+  });
+  L.marker(START,{icon:startIcon()}).addTo(m).bindPopup(START_POPUP);
+  RUN.stages.forEach(function(st){
+    if(st.type!=='ride') return;
+    L.circleMarker(st.to.ll,{radius:5,color:'#08252e',weight:2,fillColor:'#6fd6c9',fillOpacity:1})
+     .addTo(m).bindTooltip('\ud83c\udfd5 J'+st.day+' · '+st.to.n);
+  });
+  if(all.length){ m.fitBounds(L.latLngBounds(all),{padding:[24,24]}); }
+  setTimeout(function(){ m.invalidateSize(); },140);
+  /* affinage progressif, séquentiel pour ménager le serveur */
+  var rides = RUN.stages.filter(function(s){ return s.type==='ride'; });
+  (function next(i){
+    if(i>=rides.length) return;
+    getRoute(rides[i], function(co){
+      if(co){
+        ROUTED[rides[i].id] = co;
+        L.polyline(co.map(function(c){return [c[0],c[1]];}),{color:rides[i].color,weight:3,opacity:.95}).addTo(m);
+      }
+      setTimeout(function(){ next(i+1); }, co ? 120 : 900);
+    });
+  })(0);
+}
+
+/* ---------- mode guidon ---------- */
+var GUIDON = {active:false, id:null, wl:null};
+function enterGuidon(sid){
+  var st = RUN.stages.find(function(s){ return s.id===sid; });
+  var box = document.getElementById('map-'+sid), m = maps[sid];
+  if(!st || !box || !m) return;
+  GUIDON.active = true; GUIDON.id = sid;
+  box.classList.add('guidon-fs');
+  document.body.classList.add('noscroll');
+  if(box.requestFullscreen){ box.requestFullscreen().catch(function(){}); }
+  if('wakeLock' in navigator){
+    navigator.wakeLock.request('screen').then(function(w){ GUIDON.wl=w; }).catch(function(){});
+  }
+  m._follow = true;
+  if(!m._locating){ m._locating=true; m.locate({watch:true, enableHighAccuracy:true}); }
+  var bar = document.createElement('div');
+  bar.className = 'guidon-bar';
+  bar.innerHTML = '<span class="gstep">J'+st.day+' · '+esc(st.from.n)+' \u2192 '+esc(st.to.n)+' · '+kmLabel(st)+'</span>'
+    +'<button class="gexit" aria-label="Quitter le mode guidon">\u2715</button>';
+  box.appendChild(bar);
+  bar.querySelector('.gexit').addEventListener('click', exitGuidon);
+  setTimeout(function(){ m.invalidateSize(); },250);
+}
+function exitGuidon(){
+  if(!GUIDON.active) return;
+  var box = document.getElementById('map-'+GUIDON.id), m = maps[GUIDON.id];
+  if(box){
+    box.classList.remove('guidon-fs');
+    var b = box.querySelector('.guidon-bar'); if(b) b.remove();
+  }
+  document.body.classList.remove('noscroll');
+  if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
+  if(m){ m._follow=false; setTimeout(function(){ m.invalidateSize(); },250); }
+  if(GUIDON.wl){ try{ GUIDON.wl.release(); }catch(e){} GUIDON.wl=null; }
+  GUIDON.active=false; GUIDON.id=null;
+}
+document.addEventListener('fullscreenchange', function(){
+  if(GUIDON.active && !document.fullscreenElement){ exitGuidon(); }
+});
+
+/* =========================================================
+   5. VUES
+   ========================================================= */
+function statHtml(st){
+  return '<div class="stats">'
+    +'<div class="stat"><b id="km-'+st.id+'">'+kmLabel(st)+'</b><span>distance</span></div>'
+    +'<div class="stat"><b id="dp-'+st.id+'">\u2014</b><span>D+</span></div>'
+    +'<div class="stat"><b>'+Math.round(st.km/13*10)/10+' h</b><span>selle \u2248</span></div>'
+    +'<div class="stat"><b>'+(st.via.length+2)+'</b><span>lieux</span></div>'
+    +'</div>';
+}
+function rhythmSlider(){
+  var R = RHYTHMS[STATE.rhythm];
+  var marks = RHYTHMS.map(function(r){ return r.name; });
+  return '<div class="slider-box">'
+    +'<div class="slider-head"><span>Rythme du séjour</span><b id="slider-rythme-val">'+R.name+'</b></div>'
+    +'<input type="range" id="slider-rythme" class="km-slider" min="0" max="'+(RHYTHMS.length-1)+'" step="1" value="'+STATE.rhythm+'" aria-label="Rythme du séjour">'
+    +'<div class="slider-marks"><span>'+marks.join('</span><span>')+'</span></div>'
+    +'</div>'
+    +'<p class="muted" style="margin-top:10px;font-size:.82rem">'+R.desc+'</p>';
+}
+function officialBox(){
+  return '<div class="vbox"><h4>Fidélité au tracé officiel</h4>'
+    +'<p style="font-size:.8rem;line-height:1.5">Le parcours suit le <b>Tour de Bourgogne à vélo</b> officiel : canal du Centre (V50) de Saint-Jean-de-Losne à Digoin, canal latéral à la Loire et EuroVelo 6 jusqu\u2019à Decize, canal du Nivernais (V51) jusqu\u2019à Auxerre, puis canal de Bourgogne jusqu\u2019à Dijon. La boucle officielle annonce environ 800 km ; notre découpage en fait '+Math.round(RUN.total)+' km parce qu\u2019il ne repasse pas par Nevers et coupe quelques méandres.</p>'
+    +'<div class="warnbox" style="margin-top:10px">\u26a0 <b>Deux réserves à connaître :</b> le Tour de Bourgogne est ouvert à environ 83 % dans les deux sens, des tronçons restant en cours d\u2019aménagement sur le Nivernais, le canal de Bourgogne et la Voie Bleue. Et le halage entre Migennes et Tonnerre n\u2019est <b>pas encore revêtu</b> : c\u2019est du chemin roulant mais irrégulier, à savoir avec deux remorques chargées. Ces segments sont signalés en jaune sur chaque étape.</div>'
+    +'<label class="vopt" style="margin-top:8px"><input type="checkbox" class="ochk" data-o="bouclage"'+(STATE.opts.bouclage?' checked':'')+'>'
+    +'<span class="vt"><b>Refermer la boucle à vélo</b><span class="vk">+35 km</span>'
+    +'<span class="vd">Rentrer de Dijon à Saint-Jean-de-Losne par le canal, au lieu du TER de 15 minutes.</span></span></label>'
+    +'</div>';
+}
+function surfBar(surfs, total){
+  var order = ['vv','halage','route'];
+  var cols = {vv:'#6fd6c9', halage:'#f0b860', route:'#d98a4e'};
+  var bar = '', leg = '';
+  order.forEach(function(k){
+    var v = surfs[k]||0;
+    if(!v) return;
+    bar += '<i style="width:'+(v/total*100).toFixed(1)+'%;background:'+cols[k]+'"></i>';
+    leg += '<span><b style="color:'+cols[k]+'">\u25ac</b> '+SURF[k].lab+' '+Math.round(v)+' km</span>';
+  });
+  return '<div class="surfbar">'+bar+'</div><div class="surflegend">'+leg+'</div>';
+}
+function chainList(){
+  var h = '<ul class="chain">';
+  RUN.stages.forEach(function(st){
+    if(st.type==='rest'){
+      h += '<li class="repos" data-stage=""><span class="dj">J'+st.day+'<i>'+st.dstr+'</i></span>'
+        +'<span class="nm">Journée de repos \u2014 '+esc(st.at.n)+'<i>'+esc(st.at.voir||'')+'</i></span>'
+        +'<span class="st">\u2014</span></li>';
+      return;
+    }
+    var via = st.via.length ? st.via.map(function(p){return p.n;}).join(' · ') : 'sans arrêt intermédiaire';
+    h += '<li data-stage="'+st.id+'" role="button" tabindex="0">'
+      +'<span class="dj">J'+st.day+'<i>'+st.dstr+'</i></span>'
+      +'<span class="nm">'+esc(st.from.n)+' \u2192 '+esc(st.to.n)+'<i>'+esc(via)+'</i></span>'
+      +'<span class="st">'+kmLabel(st)
+        +(st.applied===-1?'<br><span style="color:var(--aqua)">plus court</span>':'')
+        +(st.applied===1?'<br><span style="color:var(--gold)">plus long</span>':'')
+        +(st.forced?'<br><span style="color:var(--danger)">rattrapage</span>':'')
+      +'</span></li>';
+  });
+  h += '</ul>';
+  return h;
+}
+function sejourHtml(){
+  var rides = RUN.stages.filter(function(s){ return s.type==='ride'; });
+  var kms = rides.map(function(s){ var r=realKm(s); return r!==null?r:s.km; });
+  var tot = Math.round(kms.reduce(function(a,b){return a+b;},0));
+  var moy = Math.round(tot/rides.length);
+  var mx = Math.round(Math.max.apply(null,kms));
+  var h = '<div class="card">'
+    +'<h2><small>13 &ndash; 29 août 2026 · 17 jours</small>Tour de Bourgogne à vélo</h2>'
+    +'<p class="muted" style="margin-top:8px">Dix-sept journées de vélo d\u2019affilée, sans jour d\u2019arrêt : une seule boucle continue au départ de Saint-Jean-de-Losne, dans le sens horaire \u2014 la Saône, le canal du Centre, la Loire, le canal du Nivernais, puis le canal de Bourgogne et la descente finale de la vallée de l\u2019Ouche vers Dijon. Pas de boucles quotidiennes : chaque jour avance vers le suivant.</p>'
+    +'<div class="stats" style="margin-top:14px">'
+    +'<div class="stat"><b>'+tot+' km</b><span>total</span></div>'
+    +'<div class="stat"><b>17</b><span>jours vélo</span></div>'
+    +'<div class="stat"><b>'+moy+' km</b><span>moyenne</span></div>'
+    +'<div class="stat"><b>'+mx+' km</b><span>plus longue</span></div>'
+    +'</div>'
+    + rhythmSlider()
+    + officialBox();
+  if(RUN.capRaised>0){
+    h += '<div class="warnbox">\u26a0 <b>Plafond relevé à '+RUN.cap+' km.</b> Avec ces réglages, le parcours ne tient pas en 17 jours sous le plafond du rythme choisi : certaines journées seront plus longues que prévu. Décoche le bouclage à vélo ou passe à un rythme plus soutenu.</div>';
+  }
+  if(RUN.restReduced>0){
+    h += '<div class="warnbox">\u26a0 <b>'+RUN.restReduced+' jour'+(RUN.restReduced>1?'s':'')+' de repos retiré'+(RUN.restReduced>1?'s':'')+' automatiquement.</b> Avec ce parcours, le garder imposerait plus de 60 km par jour \u2014 irréaliste avec deux remorques. Il reste '+RUN.rest+' jour'+(RUN.rest>1?'s':'')+' sans vélo.</div>';
+  }
+  var capNote = (false) ?
+    '<div class="warnbox">\u26a0 Avec ces variantes, aucune découpe ne tient sous '+RUN.rhythm.cap+' km/jour : le plafond a été desserré à '+RUN.cap+' km. Décoche une variante longue ou coche un saut en train.</div>' : '';
+  h += capNote;
+  if(moy > 55){
+    h += '<div class="warnbox"><b>Attention rythme :</b> à '+moy+' km/jour de moyenne avec deux remorques et deux enfants de 3 ans en plein mois d\u2019août, les journées seront longues. Envisage un saut en train ci-dessus, ou passe au rythme « Régulier ».</div>';
+  }
+  h += '</div>';
+  h += '<div class="card"><h3>Le déroulé du séjour</h3>'
+    +'<p class="muted" style="margin-bottom:6px;font-size:.8rem">Dix-sept étapes d\u2019affilée, sans jour d\u2019arrêt. Touche une étape pour l\u2019ouvrir : carte, profil, hébergement, refuge canicule, gare de secours.</p>'
+    + chainList()
+    +'<div class="btn-row"><button class="reset-btn">\u21ba Tout remettre en « normal »</button></div>'
+    +'<div class="btn-row"><button class="allgpx-btn">\u2b07\ufe0f GPX du parcours complet</button>'
+    +'<button class="share-btn">\ud83d\udd17 Partager ce réglage</button></div>'
+    +'<div id="sharebox"></div>'
+    +'</div>';
+  h += '<div class="card"><h3>Vue d\u2019ensemble</h3><div class="map" id="map-apercu" style="position:relative"></div>'
+    +'<p class="map-note">\u2605 = parking Saint-Jacques (Saint-Usage) \u00b7 les pastilles turquoise sont les lieux de nuit calculés pour le rythme choisi. Les tracés s\u2019affinent par routage au fil du chargement.</p></div>';
+  return h;
+}
+function stageHtml(st){
+  var h = '<div class="backbar"><button class="back-btn">\u2039 Étapes</button>'
+    +'<span class="ttl">J'+st.day+' \u00b7 '+st.dstr+'</span></div>';
+  h += '<div class="card"><h2><small>Étape '+st.rideNo+' sur '+RUN.rideDays+'</small>'+esc(st.from.n)+' \u2192 '+esc(st.to.n)+'</h2>'
+    + statHtml(st);
+
+  /* ---- la seule variation quotidienne : plus court / normal / plus long ---- */
+  var ck = 'd'+st.day;
+  var cur = STATE.days[ck]===-1 ? -1 : (STATE.days[ck]===1 ? 1 : 0);
+  var chain = st.chain, cum = st.cum;
+  function optLabel(idx){
+    if(idx==null) return null;
+    var i0 = chain.indexOf(st.from);
+    return {km: Math.round(cum[idx]-cum[i0]), n: chain[idx].n};
+  }
+  var oc = optLabel(st.opts.court), on2 = optLabel(st.opts.normal), ol = optLabel(st.opts.long);
+  h += '<div class="vbox"><h4>Longueur de cette journée</h4>'
+    +'<div class="seg">'
+    +'<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1"'+(oc?'':' disabled')+'>Plus court'
+      +'<b>'+(oc?oc.km+' km · '+oc.n:'indisponible')+'</b></button>'
+    +'<button class="dch'+(cur===0?' on':'')+'" data-day="'+st.day+'" data-c="0">Normal'
+      +'<b>'+(on2?on2.km+' km · '+on2.n:'\u2014')+'</b></button>'
+    +'<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1"'+(ol?'':' disabled')+'>Plus long'
+      +'<b>'+(ol?ol.km+' km · '+ol.n:'indisponible')+'</b></button>'
+    +'</div>';
+  if(!oc || !ol){
+    h += '<p class="map-note" style="margin-top:9px">'
+      + (!oc && !ol ? 'Aucune alternative ce jour-là : ' : (!oc ? 'Pas d\u2019option plus courte : ' : 'Pas d\u2019option plus longue : '))
+      + 'les villages où dormir sont trop espacés ici, ou raccourcir rendrait la suite du voyage infaisable. Ajuste une journée précédente pour retrouver de la marge.</p>';
+  }
+  if(st.forced){
+    h += '<div class="warnbox" style="margin-top:10px">\u26a0 <b>Choix neutralisé aujourd\u2019hui.</b> Le retard accumulé impose cette étape pour que la suite reste faisable. Repasse une journée précédente en « plus long » pour retrouver de la marge.</div>';
+  }else{
+    h += '<div class="cascade"><span>\u21bb</span><span>Changer la longueur de cette journée <b>décale la nuitée et recalcule toutes les étapes suivantes</b>, dates comprises.</span></div>';
+  }
+  h += '</div></div>';
+
+  h += '<div class="card"><h3>Carte</h3><div class="map" id="map-'+st.id+'" style="position:relative"></div>'
+    +'<p class="map-note" id="rt-'+st.id+'">Chargement…</p>'
+    + surfBar(st.surfs, st.km)
+    +'<div class="btn-row"><button class="guidon-btn" data-stage="'+st.id+'">\ud83d\udeb4 Mode guidon</button>'
+    +'<button class="gpx-btn" data-stage="'+st.id+'">\u2b07\ufe0f GPX</button></div></div>';
+
+  h += '<div class="card"><h3>Profil de dénivelé</h3><div class="profile" id="prof-'+st.id+'"></div>'
+    +'<p class="map-note" id="profnote-'+st.id+'">Calculé sur le tracé réel dès le chargement de la carte.</p></div>';
+
+  h += '<div class="card"><h3>Sur la route</h3><ul class="tl">';
+  st.pts.forEach(function(p,i){
+    var role = i===0 ? 'Départ' : (i===st.pts.length-1 ? 'Arrivée' : 'Passage');
+    var sf = SURF[p.surf]||SURF.vv;
+    h += '<li><span class="h">'+role+'</span><span class="t"><b>'+esc(p.n)+'</b>'
+      +(i>0?' <span class="vv">'+sf.ico+' '+esc(p.vr||'')+'</span>':'')
+      +(p.voir?'<br>'+p.voir:'')
+      +'<div class="svc">'+(p.svc||[]).map(function(x){ return '<span class="on">'+esc(x)+'</span>'; }).join('')+'</div>'
+      +'</span></li>';
+  });
+  h += '</ul></div>';
+
+  /* ---- refuge canicule + options de camping ---- */
+  h += '<div class="card"><h3>\ud83c\udfd5 Dormir à '+esc(st.to.n)+'</h3>';
+  (st.to.camps||[]).forEach(function(c){
+    h += '<div class="camp"><b>'+c.n+'</b><span class="ct">'+c.t+'</span>'
+      +'<span class="cc">\u2600\ufe0f '+c.c+'</span></div>';
+  });
+  h += '<div class="refuge"><h4>Se réfugier en cas de forte chaleur</h4>'+st.to.refuge+'</div>';
+  h += '<p class="muted" style="margin-top:10px;font-size:.8rem"><b>Bivouac :</b> le halage est domaine public fluvial (VNF) et le camping y est officiellement interdit, mais le bivouac discret \u2014 tente montée tard, levée tôt, zéro trace \u2014 est largement toléré. Les éclusiers et les fermes voisines disent presque toujours oui à une famille.</p>';
+  h += '<p class="muted" style="margin-top:8px;font-size:.8rem"><b>Secours :</b> '+esc(st.to.gare)+'</p>';
+  h += '<p class="muted" style="margin-top:8px;font-size:.76rem">Noms et ouvertures à confirmer par téléphone : certains campings municipaux changent de statut d\u2019une saison à l\u2019autre.</p>';
+  h += '</div>';
+  return h;
+}
+
+function pratiqueHtml(){
+  return '<div class="card"><h2><small>Avant de partir</small>Accès &amp; parking</h2>'
+    +'<p><b>Route depuis Les Paccots</b> \u2014 environ 230 km, 3 h à 3 h 15 avec des pauses : Châtel-Saint-Denis, Vevey, Lausanne, Vallorbe, frontière de Jougne, Pontarlier, Levier, Salins-les-Bains, Poligny, Dole, Saint-Jean-de-Losne. Quasi tout en nationale gratuite après la frontière.</p>'
+    +'<p style="margin-top:10px"><b>Parking Saint-Jacques</b>, rue Saint-Jacques à Saint-Usage, accolé à la Gare d\u2019eau : 90 places dans un parc sécurisé, réservation en ligne, location à la journée ou au mois, bornes de recharge. À réserver avant le départ.</p>'
+    +'<p style="margin-top:10px"><b>Conseil de départ :</b> avec 17 jours disponibles, le plus confortable est de faire la route le <b>mercredi 12 août</b> en fin de journée et de dormir au camping des Herlequins, à 800 m du parking. Vous démarrez frais le jeudi 13 au matin, avec une première étape volontairement courte. Si vous partez le 13 au matin, comptez 3 h de route et une mise en selle en début d’après-midi — le rythme « Flânerie » est fait pour ça.</p>'
+    +'</div>'
+    +'<div class="card"><h3>Sens horaire \u2014 pourquoi</h3><ul class="tl">'
+    +'<li><span class="h">1</span><span class="t">Finir par la <b>descente</b> de la vallée de l\u2019Ouche vers Dijon plutôt que la grimper au départ.</span></li>'
+    +'<li><span class="h">2</span><span class="t">Monter vers le point culminant de Pouilly par le versant progressif de l\u2019Armançon, en fin de séjour quand les jambes sont faites.</span></li>'
+    +'<li><span class="h">3</span><span class="t">Placer le Nivernais, le tronçon le plus ombragé et le plus riche en baignades, au milieu du voyage \u2014 au pic probable de la canicule.</span></li>'
+    +'<li><span class="h">4</span><span class="t">Les vents dominants d\u2019ouest poussent légèrement sur le retour vers l\u2019est.</span></li>'
+    +'<li><span class="h">5</span><span class="t">Expédier les sections les plus exposées (Saône, canal latéral à la Loire) les premiers jours, quand la motivation est au maximum.</span></li>'
+    +'</ul></div>'
+    +'<div class="card"><h3>\ud83d\ude86 Le filet de sécurité ferroviaire</h3>'
+    +'<p>La boucle est doublée par le rail sur presque toute sa longueur. Les vélos voyagent <b>gratuitement</b> dans les TER Mobigo de Bourgogne-Franche-Comté, dans la limite des places disponibles \u2014 <b>sauf</b> sur l\u2019axe Paris\u2013Auxerre\u2013Clamecy\u2013Corbigny, où une réservation vélo gratuite est obligatoire pour tous.</p>'
+    +'<div class="svc" style="margin-top:12px">'
+    +['Seurre','Chalon','Chagny','Montceau','Paray','Digoin','Decize','Cercy','Corbigny','Tannay','Clamecy','Châtel-Censoir','Cravant','Auxerre','Migennes','St-Florentin','Tonnerre','Montbard','Les Laumes','Dijon']
+      .map(function(g){ return '<span class="on">'+g+'</span>'; }).join('')+'</div>'
+    +'<p class="muted" style="margin-top:12px;font-size:.82rem">Peu de trains au sud de Cravant : vérifier les horaires sur viamobigo.fr. Une navette privée vélo existe aussi sur le Nivernais. <b>Retour final :</b> TER Dijon \u2192 Saint-Jean-de-Losne, environ 15 minutes.</p>'
+    +'</div>'
+    +'<div class="card"><h3>\u26a1 Canicule \u2014 le protocole</h3><ul class="tl">'
+    +'<li><span class="h">7h</span><span class="t">Départ à l\u2019aube. Rouler jusqu\u2019à 12 h 30, monter le camp, sieste et baignade l\u2019après-midi.</span></li>'
+    +'<li><span class="h">\u26a0</span><span class="t"><b>Les remorques sont des fours potentiels</b> : moustiquaire ouverte, jamais la bâche plastique fermée, brumisateur à portée, contrôle des enfants toutes les 45 à 60 minutes. Ils ne pédalent pas, donc ils chauffent sans ventilation.</span></li>'
+    +'<li><span class="h">\ud83d\udca7</span><span class="t">2 L d\u2019eau par adulte au départ, recharge à chaque écluse et village. Sels de réhydratation dans la trousse.</span></li>'
+    +'<li><span class="h">\ud83c\udf6a</span><span class="t">Un encas par heure de roulage pour les enfants : c\u2019est le carburant de la paix sociale.</span></li>'
+    +'<li><span class="h">\ud83c\udf21</span><span class="t">Pas de jour d\u2019arrêt dans ce plan : la récupération se fait <b>dans</b> la journée. Chaque fiche d\u2019étape indique où se réfugier l\u2019après-midi \u2014 mine de Blanzy à 13 °C, Fosse Dionne de Tonnerre, cryptes d\u2019Auxerre, basilique de Paray, thermes de Bourbon-Lancy, plage des étangs de Baye.</span></li>'
+    +'<li><span class="h">\ud83d\ude86</span><span class="t">Journée vraiment impossible ? Une gare jalonne presque chaque étape : sauter un tronçon en TER reste la soupape, et l\u2019app recalcule la suite toute seule.</span></li>'
+    +'</ul></div>'
+    +'<div class="card"><h3>\u26d1 Le week-end du 15 août</h3>'
+    +'<p>Le 15 août tombe un <b>samedi</b> : c\u2019est le week-end le plus chargé de l\u2019été sur les campings, et il tombe sur vos journées 1 à 3. Réserver dès maintenant les nuits des <b>13, 14, 15 et 16 août</b>. Le reste peut se réserver à J-2 en route. Beaucoup de commerces seront fermés le samedi 15 : faire le plein de ravitaillement le vendredi 14.</p>'
+    +'</div>'
+    +'<div class="card"><h3>\ud83d\udd17 Ressources</h3><ul class="tl">'
+    +'<li><span class="h">Spots</span><span class="t"><b>Park4Night</b> · <b>Welcome To My Garden</b> (jardins gratuits, réservés aux voyageurs à vélo) · HomeCamper · Gamping · Warmshowers · France Passion</span></li>'
+    +'<li><span class="h">Tracés</span><span class="t"><b>francevelotourisme.com</b> (GPX officiels du Tour de Bourgogne) · af3v.org · cycle.travel · komoot</span></li>'
+    +'<li><span class="h">Trains</span><span class="t"><b>viamobigo.fr</b> \u2014 horaires et réservation vélo</span></li>'
+    +'</ul></div>';
+}
+
+/* ---------- matériel ---------- */
+var GEAR = [
+ ['\ud83d\udeb2 Vélos, remorques &amp; portage', [
+  'Vélos révisés (transmission, freins, roulements) \u2014 atelier 2 semaines avant, pas la veille',
+  'Pneus 40 mm+ anti-crevaison, quasi neufs',
+  'Remorques : pneus, roulements, timon + goupille de secours, drapeaux, moustiquaires',
+  'Harnais contrôlés + cale-têtes pour les siestes en roulant',
+  'Sacoches arrière étanches ×2 paires + sacoches de guidon',
+  'Tendeurs et sangles pour le volume du dessus',
+  'Antivol U + câble long (les 2 vélos et les remorques ensemble)',
+  'Éclairages avant/arrière rechargeables + feux sur les remorques',
+  'Rétroviseurs, béquilles doubles, sonnettes',
+  'Supports téléphone + GPX chargés hors-ligne + carte papier de secours'
+ ]],
+ ['\ud83d\udd27 Réparation', [
+  '2 chambres à air par taille \u2014 vélos ET remorques (tailles souvent différentes !)',
+  'Rustines + colle fraîche, 3 démonte-pneus',
+  'Vraie pompe avec manomètre',
+  'Multitool avec dérive-chaîne + 2 maillons rapides compatibles',
+  'Une patte de dérailleur de rechange PAR vélo (introuvable en route)',
+  'Câble de frein + câble de dérailleur universels',
+  'Lubrifiant chaîne, chiffon, gants nitrile',
+  'Colliers rilsan, duct tape enroulé sur la pompe, fil de fer',
+  'Visserie assortie (porte-bagages !), clé à rayons',
+  'Aiguille et fil épais (sacoches, harnais, tente)'
+ ]],
+ ['\u26fa Bivouac &amp; camping', [
+  'Tente 4 places avec grande abside \u2014 la 2 places de rando ne suffira pas',
+  'Bâche de sol, sardines de rechange, cordelette 10 m',
+  '4 matelas (mousse pour les enfants : increvables)',
+  '4 sacs de couchage été \u2014 les nuits d\u2019août descendent à 12\u201315 °C',
+  'Draps de soie + oreillers gonflables enfants',
+  '2 frontales + lanterne de camp',
+  'Réchaud à cartouche à valve (EN417, se trouve partout en France) + 2 cartouches',
+  'Popote : 2 casseroles gigognes, poêle, 4 bols, 4 gobelets, couverts, couteau',
+  'Éponge, savon biodégradable, torchon, briquets ×2',
+  'Sacs poubelle, sacs zip, sac étanche 20 L',
+  'Tarp léger = ombre du midi quand il n\u2019y a pas d\u2019arbre'
+ ]],
+ ['\ud83d\udca7 Eau &amp; nourriture', [
+  '2 gourdes par personne + poche à eau souple 6 L pour le camp',
+  'Pastilles de purification (secours)',
+  'Sels de réhydratation \u2014 non négociable en canicule avec des petits',
+  'Petit-déj : flocons d\u2019avoine, lait en poudre ou briquettes, miel, fruits secs',
+  'Dîner (1\u20132 jours max) : pâtes, semoule, lentilles corail, sauce tomate, huile d\u2019olive',
+  'Encas enfants en quantité : compotes à boire, biscuits, pain d\u2019épices',
+  'Le reste s\u2019achète chaque jour \u2014 un village par jour minimum sur toute la boucle',
+  'Petit sac isotherme souple'
+ ]],
+ ['\ud83d\udc55 Habits (rien en coton)', [
+  'Adultes : 2 cuissards, 3 t-shirts techniques, 1 manches longues anti-UV, polaire fine, veste pluie, pantalon léger, 4 sous-vêtements, 4 paires de chaussettes',
+  'Enfants : idem + 2 tenues de rechange supplémentaires + pyjama chaud',
+  'Casques ×4 ajustés',
+  'Chapeaux ×4 + lunettes de soleil cat. 3 (les enfants prennent la réverbération)',
+  'Maillots ×4 + 2 grandes serviettes microfibre',
+  'Chaussures fermées ×4 + sandales pour le camp',
+  'Gants vélo, buffs',
+  'Lessive en tube + 5 m de corde : lavage tous les 2 jours'
+ ]],
+ ['\ud83e\uddf4 Santé &amp; quotidien', [
+  'Crème solaire SPF50 ×2 tubes + stick lèvres',
+  'Savon multi-usage, brosses à dents, dentifrice, serviette microfibre',
+  'Crème anti-frottements (adultes) et crème change (enfants \u2014 sièges de remorque par 35 °C)',
+  'Pharmacie : paracétamol adulte et pédiatrique (doses au poids), antihistaminique, désinfectant, pansements, tire-tique, thermomètre, sérum physiologique, arnica, crème brûlures, réhydratation pédiatrique',
+  'Anti-moustiques (canaux au crépuscule !)',
+  'Lingettes, papier toilette, petite pelle',
+  'Cartes d\u2019identité ×4, cartes bancaires, ~150 € en espèces (campings municipaux souvent cash), assurances',
+  'Batteries externes 20 000 mAh ×2, chargeurs, adaptateur prises CH \u2192 FR',
+  'Doudous ×2 \u2014 l\u2019objet le plus critique de la liste. Vérifier À CHAQUE départ d\u2019étape',
+  'Livres, gommettes, crayons pour les fins d\u2019après-midi',
+  'Couteau suisse, jeu de cartes, carnet de bord'
+ ]]
+];
+function gearHtml(){
+  var done = 0, tot = 0;
+  GEAR.forEach(function(c){ tot += c[1].length; });
+  GEAR.forEach(function(c,ci){ c[1].forEach(function(_,ii){
+    try{ if(localStorage.getItem('bourg-ck-'+ci+'-'+ii)==='1') done++; }catch(e){}
+  });});
+  var h = '<div class="card"><h2><small>Autonomie 14 jours</small>Le matériel</h2>'
+    +'<p class="muted" style="margin-top:8px">Calibré pour 2 adultes et 2 enfants de 3 ans en remorques, camping et bivouac, canicule d\u2019août. Un village par jour minimum sur toute la boucle : inutile de porter plus de 24 à 36 h de nourriture. Viser 15 à 18 kg de bagages par vélo, remorques non comprises.</p>'
+    +'<p class="ckprog" style="margin-top:12px" id="ckprog">'+done+' / '+tot+' cochés</p></div>';
+  GEAR.forEach(function(c,ci){
+    h += '<div class="card"><h3>'+c[0]+'</h3><div class="ckcat">';
+    c[1].forEach(function(it,ii){
+      var on = false;
+      try{ on = localStorage.getItem('bourg-ck-'+ci+'-'+ii)==='1'; }catch(e){}
+      h += '<label class="ck'+(on?' done':'')+'"><input type="checkbox" class="gck" data-ck="'+ci+'-'+ii+'"'+(on?' checked':'')+'>'
+        +'<span>'+it+'</span></label>';
+    });
+    h += '</div></div>';
+  });
+  return h;
+}
+
+/* ---------- partage ---------- */
+function shareUrl(){
+  var d = Object.keys(STATE.days).filter(function(k){ return STATE.days[k]; })
+           .map(function(k){ return k.replace('d','')+'-'+STATE.days[k]; }).join(',');
+  return location.origin+location.pathname+'#r='+STATE.rhythm+'&b='+(STATE.opts.bouclage?1:0)+'&d='+d;
+}
+function toggleShare(){
+  var box = document.getElementById('sharebox');
+  if(!box) return;
+  if(box.innerHTML){ box.innerHTML=''; return; }
+  var u = shareUrl();
+  box.innerHTML = '<div style="margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px">'
+    +'<p class="muted" style="font-size:.78rem;margin-bottom:8px">Ce lien rouvre l\u2019app avec exactement ce rythme et ces variantes.</p>'
+    +'<div id="qr" style="display:flex;justify-content:center;padding:10px;background:#fff;border-radius:10px"></div>'
+    +'<p style="font-family:\'Spline Sans Mono\',monospace;font-size:.66rem;word-break:break-all;margin-top:10px;color:var(--muted)">'+esc(u)+'</p>'
+    +'</div>';
+  try{
+    if(window.QRCode){ new QRCode(document.getElementById('qr'), {text:u, width:150, height:150}); }
+  }catch(e){}
+}
+
+/* =========================================================
+   6. NAVIGATION
+   ========================================================= */
+var TABS = [
+  {id:'sejour', lab:'Séjour', sub:'Réglage'},
+  {id:'etapes', lab:'Étapes', sub:'14 jours'},
+  {id:'pratique', lab:'Pratique', sub:'Infos'},
+  {id:'materiel', lab:'Matériel', sub:'Checklist'}
+];
+function etapesHtml(){
+  if(openStage){
+    var st = RUN.stages.find(function(s){ return s.id===openStage; });
+    if(st && st.type==='ride'){ return stageHtml(st); }
+    openStage = null;
+  }
+  return '<div class="card"><h2><small>Toucher pour ouvrir</small>Les '+RUN.stages.length+' journées</h2>'
+    +'<p class="muted" style="margin-top:8px;font-size:.83rem">Découpage recalculé pour le rythme <b>'+RHYTHMS[STATE.rhythm].name+'</b>. Modifier le rythme dans l\u2019onglet Séjour, ou la longueur d\u2019une journée dans sa fiche, réorganise tout ce qui suit.</p>'
+    + chainList() +'</div>';
+}
+function render(){
+  Object.keys(maps).forEach(function(k){ try{ maps[k].remove(); }catch(e){} });
+  maps = {};
+  mainEl.innerHTML = '';
+  tabsEl.innerHTML = '';
+  TABS.forEach(function(t){
+    var sec = document.createElement('section');
+    sec.className = 'day'+(t.id===currentTab?' on':'');
+    sec.id = 'sec-'+t.id;
+    if(t.id==='sejour') sec.innerHTML = sejourHtml();
+    else if(t.id==='etapes') sec.innerHTML = etapesHtml();
+    else if(t.id==='pratique') sec.innerHTML = pratiqueHtml();
+    else sec.innerHTML = gearHtml();
+    mainEl.appendChild(sec);
+    var b = document.createElement('button');
+    b.setAttribute('data-tab', t.id);
+    b.innerHTML = t.lab+'<span class="d">'+t.sub+'</span>';
+    if(t.id===currentTab) b.className='on';
+    b.addEventListener('click', function(){ showTab(t.id); });
+    tabsEl.appendChild(b);
+  });
+  if(currentTab==='sejour'){ initOverviewMap(); }
+  if(currentTab==='etapes' && openStage){
+    var st = RUN.stages.find(function(s){ return s.id===openStage; });
+    if(st) initStageMap(st);
+  }
+}
+function showTab(id){
+  currentTab = id;
+  if(id!=='etapes'){ openStage = null; }
+  render();
+  window.scrollTo(0,0);
+}
+function recompute(){
+  RUN = computeStages();
+  openStage = null;
+  render();
+}
+
+/* délégation d'événements */
+mainEl.addEventListener('input', function(ev){
+  var el = ev.target;
+  if(el && el.id==='slider-rythme'){
+    var v = document.getElementById('slider-rythme-val');
+    if(v){ v.textContent = RHYTHMS[+el.value].name; }
+  }
+});
+mainEl.addEventListener('change', function(ev){
+  var el = ev.target;
+  if(el && el.id==='slider-rythme'){
+    STATE.rhythm = +el.value; saveState(); recompute(); return;
+  }
+  if(el && el.classList && el.classList.contains('ochk')){
+    STATE.opts[el.getAttribute('data-o')] = el.checked;
+    STATE.days = {};
+    saveState(); recompute(); return;
+  }
+  if(el && el.classList && el.classList.contains('gck')){
+    var k = 'bourg-ck-'+el.getAttribute('data-ck');
+    try{ localStorage.setItem(k, el.checked?'1':'0'); }catch(e){}
+    var lab = el.closest('label');
+    if(lab){ lab.classList.toggle('done', el.checked); }
+    var pr = document.getElementById('ckprog');
+    if(pr){
+      var d=0,t=0;
+      GEAR.forEach(function(c,ci){ c[1].forEach(function(_,ii){
+        t++; try{ if(localStorage.getItem('bourg-ck-'+ci+'-'+ii)==='1') d++; }catch(e){}
+      });});
+      pr.textContent = d+' / '+t+' cochés';
+    }
+    return;
+  }
+});
+mainEl.addEventListener('click', function(ev){
+  var t = ev.target;
+  var li = t.closest ? t.closest('li[data-stage]') : null;
+  if(li && li.getAttribute('data-stage')){
+    openStage = li.getAttribute('data-stage');
+    currentTab = 'etapes';
+    render(); window.scrollTo(0,0);
+    return;
+  }
+  if(t.closest && t.closest('.back-btn')){ openStage=null; render(); window.scrollTo(0,0); return; }
+  var dc = t.closest ? t.closest('.dch') : null;
+  if(dc && !dc.disabled){
+    var dnum = dc.getAttribute('data-day'), val = parseInt(dc.getAttribute('data-c'),10);
+    if(val===0){ delete STATE.days['d'+dnum]; } else { STATE.days['d'+dnum] = val; }
+    saveState();
+    RUN = computeStages();
+    var keep = openStage;
+    render();
+    if(keep){
+      var still = RUN.stages.find(function(x){ return x.id===keep && x.type==='ride'; });
+      if(still){ openStage = keep; currentTab='etapes'; render(); }
+    }
+    return;
+  }
+  if(t.closest && t.closest('.reset-btn')){ resetDays(); recompute(); return; }
+  var g = t.closest ? t.closest('.gpx-btn') : null;
+  if(g){ downloadGpx(g.getAttribute('data-stage')); return; }
+  var gd = t.closest ? t.closest('.guidon-btn') : null;
+  if(gd){ enterGuidon(gd.getAttribute('data-stage')); return; }
+  if(t.closest && t.closest('.allgpx-btn')){ downloadAllGpx(); return; }
+  if(t.closest && t.closest('.share-btn')){ toggleShare(); return; }
+});
+
+/* balayage vers la droite = retour */
+(function(){
+  var x0=null, y0=null;
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length!==1){ x0=null; return; }
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(x0===null || GUIDON.active) return;
+    var t=e.changedTouches[0];
+    var dx=t.clientX-x0, dy=Math.abs(t.clientY-y0);
+    if(dx>80 && dy<60){
+      if(openStage){ openStage=null; render(); window.scrollTo(0,0); }
+      else if(currentTab!=='sejour'){ showTab('sejour'); }
+    }
+    x0=null;
+  }, {passive:true});
+})();
+
+render();
+
+/* thème clair / sombre */
+(function(){
+  var btn = document.getElementById('theme-toggle');
+  function apply(th){
+    if(th==='light'){ document.documentElement.setAttribute('data-theme','light'); }
+    else{ document.documentElement.removeAttribute('data-theme'); }
+    if(btn){ btn.textContent = th==='light' ? '\ud83c\udf19' : '\u2600\ufe0f'; }
+    var mt = document.getElementById('meta-theme');
+    if(mt){ mt.setAttribute('content', th==='light' ? '#f5f1e8' : '#08252e'); }
+  }
+  var cur = 'dark';
+  try{ cur = localStorage.getItem('bourg-theme')||'dark'; }catch(e){}
+  apply(cur);
+  if(btn){
+    btn.addEventListener('click', function(){
+      cur = (cur==='light') ? 'dark' : 'light';
+      try{ localStorage.setItem('bourg-theme', cur); }catch(e){}
+      apply(cur);
+    });
+  }
+})();
+
+/* bandeau d'installation */
+(function(){
+  var deferred = null;
+  function bar(html, label, onClick){
+    if(document.querySelector('.install-bar')) return;
+    var d = document.createElement('div');
+    d.className = 'install-bar';
+    d.innerHTML = '<span>'+html+'</span>'
+      +(label ? '<button class="ib-go">'+label+'</button>' : '')
+      +'<button class="ib-x" aria-label="Fermer">\u2715</button>';
+    document.body.appendChild(d);
+    var x = d.querySelector('.ib-x');
+    x.addEventListener('click', function(){
+      d.remove();
+      try{ localStorage.setItem('bourg-install-hide','1'); }catch(e){}
+    });
+    var go = d.querySelector('.ib-go');
+    if(go && onClick){ go.addEventListener('click', function(){ onClick(d); }); }
+  }
+  var hidden = false;
+  try{ hidden = localStorage.getItem('bourg-install-hide')==='1'; }catch(e){}
+  var standalone = false;
+  try{ standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone; }catch(e){}
+  if(hidden || standalone) return;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); deferred = e;
+    bar('Installer l\u2019app sur l\u2019écran d\u2019accueil \u2014 elle fonctionne hors-ligne.', 'Installer', function(d){
+      d.remove();
+      deferred.prompt();
+    });
+  });
+  var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if(iOS){
+    setTimeout(function(){
+      bar('Pour installer : bouton <b>Partager</b> puis <b>Sur l\u2019écran d\u2019accueil</b>.', '', null);
+    }, 2500);
+  }
+})();
+
+/* service worker */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+
+</script>
+</body>
+</html>
