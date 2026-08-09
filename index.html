@@ -482,7 +482,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v4.1.0</span>
+      <span class="ver" id="app-version">v4.2.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -495,14 +495,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v4.1.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v4.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v4.1.0
+   Tour de Bourgogne à vélo — PWA · v4.2.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -515,7 +515,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'b5';
+var GEN = 'b6';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -525,7 +525,8 @@ try{
     var kill = [];
     for(var ki=0; ki<localStorage.length; ki++){
       var kk = localStorage.key(ki);
-      if(kk && (kk.indexOf('bourgrt')===0 || kk.indexOf('bourgreal')===0 || kk.indexOf('bourgbivo')===0)){ kill.push(kk); }
+      if(kk && (kk.indexOf('bourgrt')===0 || kk.indexOf('bourgreal')===0 || kk.indexOf('bourgbivo')===0
+         || kk.indexOf('bourgwater')===0 || kk.indexOf('bourgvelo')===0)){ kill.push(kk); }
     }
     kill.forEach(function(kk){ localStorage.removeItem(kk); });
     localStorage.setItem('bourggen', GEN);
@@ -820,7 +821,7 @@ try{
   if(lsv){ ['camps','bains','etapes','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.1.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.2.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1541,15 +1542,39 @@ function waterKey(st){ return 'bourgwater-'+GEN+'-'+st.id+'-'+Math.round(st.km);
 function routeLine(st){
   var co = ROUTED[st.id];
   if(co && co.length>1){ return co.map(function(c){ return [c[0],c[1]]; }); }
-  return st.pts.map(function(p){ return p.ll; });
+  /* Repli : les villages-étapes seuls ne suffisent pas — on interpole tous les
+     300 m, sinon la distance au « tracé » n'a aucun sens entre deux villages. */
+  return densify(st.pts.map(function(p){ return p.ll; }), 300);
+}
+function densify(line, stepM){
+  if(line.length < 2) return line;
+  var out = [line[0]];
+  for(var i=1;i<line.length;i++){
+    var a = line[i-1], b = line[i];
+    var n = Math.max(1, Math.ceil(distM(a,b)/stepM));
+    for(var k=1;k<=n;k++){
+      out.push([a[0]+(b[0]-a[0])*k/n, a[1]+(b[1]-a[1])*k/n]);
+    }
+  }
+  return out;
+}
+/* Garantit que le tracé routé est disponible avant d'interroger les POI :
+   sans lui, le corridor est faux et le résultat serait mis en cache tel quel. */
+function withRoute(st, cb){
+  if(ROUTED[st.id] && ROUTED[st.id].length>1){ cb(true); return; }
+  getRoute(st, function(co){
+    if(co){ ROUTED[st.id] = co; }
+    cb(!!co);
+  });
 }
 /* distance minimale d'un point au tracé, en mètres */
 function distToLine(pt, line){
-  var best = Infinity, step = Math.max(1, Math.floor(line.length/400));
-  for(var i=0;i<line.length;i+=step){
+  /* on parcourt TOUS les points : un pas trop grand faisait manquer des
+     portions entières de tracé et rejetait des points d'eau bien placés. */
+  var best = Infinity;
+  for(var i=0;i<line.length;i++){
     var d = distM(pt, line[i]);
-    if(d < best) best = d;
-    if(best < 60) return best;
+    if(d < best){ best = d; if(best < 40) return best; }
   }
   return best;
 }
@@ -1566,14 +1591,17 @@ function getWater(st, cb){
     var c = localStorage.getItem(key);
     if(c){ cb(JSON.parse(c), 'cache'); return; }
   }catch(e){}
+  withRoute(st, function(routed){ getWaterInner(st, key, routed, cb); });
+}
+function getWaterInner(st, key, routed, cb){
   var line = routeLine(st);
-  var bb = bboxOf(line, 0.03);
+  var bb = bboxOf(line, 0.04);
   var q = '[out:json][timeout:50];('
     + 'node["amenity"="drinking_water"]('+bb.join(',')+');'
     + 'node["man_made"="water_tap"]["drinking_water"!="no"]('+bb.join(',')+');'
     + 'node["amenity"="water_point"]('+bb.join(',')+');'
     + 'nwr["landuse"="cemetery"]('+bb.join(',')+');'
-    + ');out center 500;';
+    + ');out center 800;';
   fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))
    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
    .then(function(j){
@@ -1593,8 +1621,8 @@ function getWater(st, cb){
                  (t.name||'').replace(/[<>&"]/g,' ').slice(0,40)]);
      });
      out.sort(function(a,b){ return a[3]-b[3]; });
-     out = out.slice(0,120);
-     try{ localStorage.setItem(key, JSON.stringify(out)); }catch(e){}
+     out = out.slice(0,150);
+     if(routed){ try{ localStorage.setItem(key, JSON.stringify(out)); }catch(e){} }
      cb(out, 'live');
    })
    .catch(function(){ cb(null,'fail'); });
@@ -1620,8 +1648,11 @@ function getVelo(st, cb){
     var c = localStorage.getItem(key);
     if(c){ cb(JSON.parse(c), 'cache'); return; }
   }catch(e){}
+  withRoute(st, function(routed){ getVeloInner(st, key, routed, cb); });
+}
+function getVeloInner(st, key, routed, cb){
   var line = routeLine(st);
-  var bb = bboxOf(line, 0.06);
+  var bb = bboxOf(line, 0.07);
   var B = bb.join(',');
   var q = '[out:json][timeout:50];('
     + 'nwr["shop"="bicycle"]('+B+');'
@@ -1651,7 +1682,7 @@ function getVelo(st, cb){
      });
      out.sort(function(a,b){ return a[3]-b[3]; });
      out = out.slice(0,80);
-     try{ localStorage.setItem(key, JSON.stringify(out)); }catch(e){}
+     if(routed){ try{ localStorage.setItem(key, JSON.stringify(out)); }catch(e){} }
      cb(out, 'live');
    })
    .catch(function(){ cb(null,'fail'); });
