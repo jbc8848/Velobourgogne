@@ -420,6 +420,11 @@ footer{
   padding:9px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .addrow select{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);
   border-radius:10px;padding:9px 11px;font:400 .82rem/1.3 'Spline Sans',sans-serif}
+.kv{display:grid;grid-template-columns:82px 1fr;gap:10px;padding:7px 2px;border-bottom:1px solid var(--line);font-size:.82rem;align-items:baseline}
+.kv:last-child{border-bottom:none}
+.kv span{font-family:'Spline Sans Mono',monospace;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.kv b{font-weight:600;line-height:1.4}
+.kv a{color:var(--gold)}
 .pbar{height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--line)}
 .pbar i{display:block;height:100%;background:linear-gradient(90deg,#6fd6c9,#f0b860)}
 .okmsg{font-size:.84rem;line-height:1.5;color:var(--sage);background:rgba(159,196,143,.10);
@@ -477,36 +482,28 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v3.2.0</span>
+      <span class="ver" id="app-version">v4.1.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
-    <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne · itinérance 17 jours</div>
+    <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
     <h1>Tour de Bourgogne à vélo<br><span class="gold">17 jours en famille</span></h1>
-    <p class="subline">Jeudi 13 → samedi 29 août 2026 · 17 jours disponibles · 2 adultes et 2 enfants de 3 ans en remorques · une seule boucle continue, sens horaire · camping et bivouac en autonomie.</p>
-    <div class="badges">
-      <span class="badge">Tracé officiel V50/V51/EV6</span>
-      <span class="badge">Canaux &amp; voies vertes</span>
-      <span class="badge">Court · normal · long, chaque jour</span>
-      <span class="badge">17 jours de vélo · sans pause</span>
-      <span class="badge">Trains de secours partout</span>
-    </div>
-  </div>
+    <p class="subline">13 → 29 août 2026 · boucle fermée au départ de Saint-Jean-de-Losne · sens horaire.</p>
+      </div>
 </header>
 
 <main class="wrap" id="main"></main>
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v3.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v4.1.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v3.2.0
+   Tour de Bourgogne à vélo — PWA · v4.1.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
-   14–27 août 2026 · 2 adultes + 2 enfants (3 ans) en remorques
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
    vélo » (V50 canal du Centre, EV6/Loire, V51 Nivernais puis
@@ -549,260 +546,213 @@ var SURF = {
    LA CHAÎNE — suit le Tour de Bourgogne officiel, sens horaire
    km = distance depuis le maillon précédent
    surf = nature de la voie sur le segment qui y mène
-   camps = hébergements, avec leur atout anti-canicule
+   camps = hébergements référencés
    ========================================================= */
 var CHAIN = [
  {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:0, surf:'vv', vr:'Départ · V50',
   gare:'Gare de St-Jean-de-Losne (ligne Dijon–Dole)', svc:['eau','commerces','boulangerie'],
   voir:'Le plus grand port fluvial de France intérieure : gare d\u2019eau, quais, péniches.',
-  refuge:'Piscine municipale et Saône pour se baigner ; les halles du port font de l\u2019ombre toute la journée.',
-  camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking', c:'Ombragé, à côté du plan d\u2019eau'},
-         {n:'Chambres d\u2019hôtes du port', t:'repli', c:'Solution en dur si la nuit est étouffante'}]},
+  camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking'},
+         {n:'Chambres d\u2019hôtes du port', t:'repli'}]},
  {n:'Seurre', ll:[46.9951,5.1503], km:22, surf:'vv', vr:'La Voie Bleue · Saône',
   gare:'Gare de Seurre', svc:['eau','commerces','boulangerie','pharmacie'],
   voir:'Maisons à pans de bois, écomusée de la Saône, plage fluviale surveillée.',
-  refuge:'Plage aménagée sur la Saône + piscine découverte. L\u2019écomusée est frais l\u2019après-midi.',
-  camps:[{n:'Camping municipal de Seurre', t:'★★ · bord de Saône', c:'Grands arbres, accès direct à la plage'},
-         {n:'Gîtes d\u2019étape de Seurre', t:'repli', c:'Chambres en pierre, fraîches'}]},
+  camps:[{n:'Camping municipal de Seurre', t:'★★ · bord de Saône'},
+         {n:'Gîtes d\u2019étape de Seurre', t:'repli'}]},
  {n:'Verdun-sur-le-Doubs', ll:[46.8977,5.0221], km:16, surf:'route', vr:'Jonction · petites routes',
   gare:'—', svc:['eau','commerces'],
   voir:'La confluence du Doubs et de la Saône ; patrie de la pochouse.',
-  refuge:'Confluence idéale pour la baignade familiale, berges très ombragées.',
-  camps:[{n:'Camping municipal La Plage', t:'★★ · confluence', c:'Baignade au pied des tentes'}]},
+  camps:[{n:'Camping municipal La Plage', t:'★★ · confluence'}]},
  {n:'Chalon-sur-Saône', ll:[46.7806,4.8539], km:16, surf:'vv', vr:'V50 · début canal du Centre',
   gare:'Gare de Chalon (Dijon–Mâcon, fréquente)', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
   voir:'Île Saint-Laurent, musée Nicéphore-Niépce (berceau de la photo), quais animés.',
-  refuge:'Musée Niépce climatisé et gratuit le 1er dimanche ; piscine olympique ; l\u2019île Saint-Laurent est un couloir d\u2019ombre.',
-  camps:[{n:'Camping du Pont de Bourgogne', t:'★★★ · bord de Saône', c:'Piscine sur place, très ombragé'},
-         {n:'Auberge de jeunesse de Chalon', t:'repli', c:'Dortoirs familiaux climatisés'}]},
+  camps:[{n:'Camping du Pont de Bourgogne', t:'★★★ · bord de Saône'},
+         {n:'Auberge de jeunesse de Chalon', t:'repli'}]},
  {n:'Fragnes', ll:[46.8272,4.8322], km:9, surf:'vv', vr:'V50 · canal du Centre',
   gare:'—', svc:['eau','commerces'],
   voir:'Premier port de plaisance du canal du Centre, écluses en enfilade.',
-  refuge:'Halte fluviale ombragée, buvette ; base de loisirs de la Marina à 2 km.',
-  camps:[{n:'Aire de la halte fluviale', t:'aire vélo', c:'Sanitaires, ombre des platanes'}]},
+  camps:[{n:'Aire de la halte fluviale', t:'aire vélo'}]},
  {n:'Chagny', ll:[46.9099,4.7508], km:11, surf:'vv', vr:'V50 · jonction Voie des Vignes',
   gare:'Gare de Chagny', svc:['eau','supermarché','boulangerie','pharmacie'],
   voir:'Carrefour du canal du Centre et de la Voie des Vignes ; marché du dimanche.',
-  refuge:'Piscine intercommunale ; les caves de dégustation sont à 14 °C toute l\u2019année.',
-  camps:[{n:'Camping du Pâquier Fané', t:'★★★ · centre', c:'Piscine chauffée, pelouses arborées'},
-         {n:'Camping de Santenay (7 km)', t:'★★★ · thermal', c:'Grande piscine, parc thermal ombragé'}]},
+  camps:[{n:'Camping du Pâquier Fané', t:'★★★ · centre'},
+         {n:'Camping de Santenay (7 km)', t:'★★★ · thermal'}]},
  {n:'Saint-Léger-sur-Dheune', ll:[46.8472,4.6331], km:18, surf:'vv', vr:'V50 · canal du Centre',
   gare:'Gare de Saint-Léger', svc:['eau','commerces','boulangerie'],
   voir:'Port de plaisance, écluses, capitainerie.',
-  refuge:'Plan d\u2019eau de Saint-Sernin à 4 km, baignade surveillée en août.',
-  camps:[{n:'Halte nautique &amp; camping de St-Léger', t:'★★ · port', c:'Bord de canal, ombre continue'},
-         {n:'Camping du lac de Saint-Sernin', t:'★★ · 4 km', c:'Baignade surveillée au pied du camp'}]},
+  camps:[{n:'Halte nautique &amp; camping de St-Léger', t:'★★ · port'},
+         {n:'Camping du lac de Saint-Sernin', t:'★★ · 4 km'}]},
  {n:'Montchanin', ll:[46.7480,4.4670], km:16, surf:'vv', vr:'V50 · bief de partage',
   gare:'Gare de Montchanin (TGV Le Creusot à 8 km)', svc:['eau','commerces','pharmacie'],
   voir:'Le point haut du canal du Centre et ses réservoirs.',
-  refuge:'Étangs du bief de partage : baignade et pédalos, forêt tout autour.',
-  camps:[{n:'Camping des étangs de Montchanin', t:'★★ · plan d\u2019eau', c:'Sous les pins, baignade directe'}]},
+  camps:[{n:'Camping des étangs de Montchanin', t:'★★ · plan d\u2019eau'}]},
  {n:'Montceau-les-Mines', ll:[46.6772,4.3654], km:12, surf:'vv', vr:'V50 · canal du Centre',
   gare:'Gare de Montceau-les-Mines', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
   voir:'Ville-canal, musée de la Mine à Blanzy : chevalement et galerie souterraine.',
-  refuge:'La galerie de mine reconstituée est à 13 °C — la meilleure heure creuse anti-canicule du parcours. Lac de la Sorme pour la baignade.',
-  camps:[{n:'Camping du Lac de la Sorme', t:'★★★ · 5 km', c:'Lac de baignade, sous-bois'},
-         {n:'Hôtels du centre', t:'repli', c:'Chambres climatisées si nuit tropicale'}]},
+  camps:[{n:'Camping du Lac de la Sorme', t:'★★★ · 5 km'},
+         {n:'Hôtels du centre', t:'repli'}]},
  {n:'Génelard', ll:[46.5773,4.2394], km:20, surf:'vv', vr:'V50 · canal du Centre',
   gare:'—', svc:['eau','commerces'],
   voir:'Centre d\u2019interprétation de la ligne de démarcation (1940-1943).',
-  refuge:'Le centre d\u2019interprétation est climatisé ; port ombragé.',
-  camps:[{n:'Camping municipal de Génelard', t:'★★ · port', c:'Petit, calme, platanes du canal'}]},
+  camps:[{n:'Camping municipal de Génelard', t:'★★ · port'}]},
  {n:'Paray-le-Monial', ll:[46.4524,4.1213], km:25, surf:'vv', vr:'V50 · canal du Centre',
   gare:'Gare de Paray-le-Monial', svc:['eau','supermarché','pharmacie','boulangerie'],
   voir:'Basilique romane du XIe siècle, sœur cadette de Cluny.',
-  refuge:'La basilique reste à ~20 °C en plein après-midi : la sieste des enfants y est mémorable. Piscine et plan d\u2019eau du Val d\u2019Or.',
-  camps:[{n:'Camping de Mambré', t:'★★★ · bord de Bourbince', c:'Piscine, grands arbres'},
-         {n:'Hébergements de pèlerinage', t:'repli', c:'Chambres simples en dur, très abondantes'}]},
+  camps:[{n:'Camping de Mambré', t:'★★★ · bord de Bourbince'},
+         {n:'Hébergements de pèlerinage', t:'repli'}]},
  {n:'Digoin', ll:[46.4810,3.9793], km:15, surf:'vv', vr:'V50 → EV6 · pont-canal',
   gare:'Gare de Digoin', svc:['eau','supermarché','pharmacie','baignade'],
   voir:'Le pont-canal de 243 m qui enjambe la Loire — on pédale au-dessus du fleuve.',
-  refuge:'Plan d\u2019eau surveillé et piscine ; l\u2019observatoire du pont-canal est ventilé par le fleuve.',
-  camps:[{n:'Camping de la Chevrette', t:'★★★ · bord de Loire', c:'Piscine, baignade surveillée à côté'},
-         {n:'Camping de Bourbon-Lancy (35 km)', t:'★★★ · thermal', c:'Bassin thermal, si on pousse plus loin'}]},
+  camps:[{n:'Camping de la Chevrette', t:'★★★ · bord de Loire'},
+         {n:'Camping de Bourbon-Lancy (35 km)', t:'★★★ · thermal'}]},
  {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:35, surf:'vv', vr:'EV6 · canal latéral à la Loire',
   gare:'—', svc:['eau','commerces','thermes','piscine'],
   voir:'Ville thermale médiévale : beffroi, maisons à colombages, sources chaudes.',
-  refuge:'Le meilleur refuge du parcours : bassin thermal couvert, piscine municipale, parc arboré.',
-  camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal', c:'Piscine, ombre dense, accès thermes'}]},
+  camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal'}]},
  {n:'Decize', ll:[46.8283,3.4624], km:35, surf:'vv', vr:'EV6 → V51 · Loire &amp; Nivernais',
   gare:'Gare de Decize (Nevers–Dijon)', svc:['eau','supermarché','pharmacie','baignade'],
   voir:'Ville insulaire entre Loire et canal ; promenade des Halles sous les tilleuls.',
-  refuge:'Plage surveillée sur la Loire, piscine découverte, et la promenade des Halles est une voûte d\u2019ombre.',
-  camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île', c:'Cerné par l\u2019eau, très ombragé'}]},
+  camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île'}]},
  {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:25, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'Gare de Cercy-la-Tour', svc:['eau','commerces','baignade'],
   voir:'Statue monumentale de la Vierge dominant la vallée de l\u2019Aron.',
-  refuge:'Plage sur l\u2019Aron, base de loisirs, camping en sous-bois.',
-  camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal', c:'Baignade surveillée, arbres partout'}]},
+  camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal'}]},
  {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:27, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'—', svc:['eau','commerces','boulangerie'],
   voir:'Château sur l\u2019eau, port fluvial, cœur du Bazois bocager.',
-  refuge:'Bief ombragé, halte fluviale avec buvette ; peu d\u2019options en dur, prévoir.',
-  camps:[{n:'Camping municipal du Bazois', t:'★★ · port', c:'Calme, bordure de canal ombragée'},
-         {n:'Bivouac du Bazois', t:'bivouac', c:'Prairies d\u2019éclusiers, demander à la maison éclusière'}]},
+  camps:[{n:'Camping municipal du Bazois', t:'★★ · port'},
+         {n:'Bivouac du Bazois', t:'bivouac'}]},
  {n:'Étangs de Baye', ll:[47.1903,3.6553], km:22, surf:'vv', vr:'V51 · 16 écluses de la Collancelle',
   gare:'—', svc:['eau','baignade','buvette'],
   voir:'Les réservoirs qui alimentent le canal, après l\u2019échelle des 16 écluses.',
-  refuge:'LE refuge canicule du voyage : plage surveillée, pédalos, forêt, buvette. Journée entière possible sans bouger.',
-  camps:[{n:'Camping de la base de loisirs de Baye', t:'★★ · plage', c:'Baignade à 20 m des tentes, pinède'},
-         {n:'Bivouac autour des étangs', t:'bivouac', c:'Toléré en discrétion, vérifier sur place'}]},
+  camps:[{n:'Camping de la base de loisirs de Baye', t:'★★ · plage'},
+         {n:'Bivouac autour des étangs', t:'bivouac'}]},
  {n:'Corbigny', ll:[47.2564,3.6831], km:13, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'Gare de Corbigny (terminus ligne du Nivernais)', svc:['eau','supermarché','pharmacie','boulangerie'],
   voir:'Abbaye Saint-Léonard, porte du Morvan.',
-  refuge:'Abbaye et halles fraîches ; piscine municipale découverte.',
-  camps:[{n:'Camping municipal de Corbigny', t:'★★ · centre', c:'Ombragé, piscine à côté'}]},
+  camps:[{n:'Camping municipal de Corbigny', t:'★★ · centre'}]},
  {n:'Chitry-les-Mines', ll:[47.2830,3.6520], km:6, surf:'vv', vr:'V51 · Yonne canalisée',
   gare:'Halte de Chitry', svc:['eau'],
   voir:'Le village de Jules Renard, château et écluses.',
-  refuge:'Petit, très ombragé, baignade en rivière possible.',
-  camps:[{n:'Aire naturelle de Chitry', t:'aire', c:'Simple, sous les arbres, au bord de l\u2019eau'}]},
+  camps:[{n:'Aire naturelle de Chitry', t:'aire'}]},
  {n:'Tannay', ll:[47.3661,3.5903], km:12, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'Gare de Tannay', svc:['eau','commerces'],
   voir:'Village vigneron perché, chardonnay de Tannay, collégiale Saint-Léger.',
-  refuge:'Caves de dégustation fraîches ; le camping est en hauteur, plus ventilé.',
-  camps:[{n:'Camping du Bois de Tannay', t:'★★ · hauteur', c:'En sous-bois, ventilé, vue'}]},
+  camps:[{n:'Camping du Bois de Tannay', t:'★★ · hauteur'}]},
  {n:'Clamecy', ll:[47.4600,3.5192], km:22, surf:'vv', vr:'V51 · Yonne',
   gare:'Gare de Clamecy', svc:['eau','supermarché','pharmacie','baignade','laverie'],
   voir:'Musée du flottage du bois, vieille ville médiévale, collégiale Saint-Martin.',
-  refuge:'Baignade aménagée sur l\u2019Yonne, piscine, musée climatisé et vieille ville aux ruelles étroites (donc ombragées).',
-  camps:[{n:'Camping du Pont Picot', t:'★★ · entre Yonne et canal', c:'Cerné d\u2019eau, baignade directe'},
-         {n:'Hôtels de la vieille ville', t:'repli', c:'Murs épais, frais l\u2019après-midi'}]},
+  camps:[{n:'Camping du Pont Picot', t:'★★ · entre Yonne et canal'},
+         {n:'Hôtels de la vieille ville', t:'repli'}]},
  {n:'Coulanges-sur-Yonne', ll:[47.5210,3.5580], km:14, surf:'vv', vr:'V51 · Yonne',
   gare:'Gare de Coulanges', svc:['eau','commerces','baignade'],
   voir:'Port de plaisance, plage sur l\u2019Yonne.',
-  refuge:'Plage municipale surveillée en août, très bon plan de mi-journée.',
-  camps:[{n:'Camping municipal de Coulanges', t:'★★ · bord d\u2019Yonne', c:'Plage attenante, peupliers'}]},
+  camps:[{n:'Camping municipal de Coulanges', t:'★★ · bord d\u2019Yonne'}]},
  {n:'Châtel-Censoir', ll:[47.5347,3.6338], km:8, surf:'vv', vr:'V51 · rochers du Saussois',
   gare:'Gare de Châtel-Censoir', svc:['eau','commerces','baignade'],
   voir:'Collégiale perchée ; rochers du Saussois à 3 km (école d\u2019escalade réputée).',
-  refuge:'Baignade au port ; la falaise du Saussois donne de l\u2019ombre le matin.',
-  camps:[{n:'Camping du Petit Port', t:'★★ · canal', c:'Petit, ombragé, accès baignade'}]},
+  camps:[{n:'Camping du Petit Port', t:'★★ · canal'}]},
  {n:'Mailly-le-Château', ll:[47.5901,3.6503], km:15, surf:'vv', vr:'V51 · Yonne',
   gare:'—', svc:['eau','commerces','baignade'],
   voir:'Village haut et village bas reliés par un pont médiéval ; falaises calcaires.',
-  refuge:'Belle plage de rivière au village bas, sous les frondaisons.',
-  camps:[{n:'Camping le Pré du Roi', t:'★★ · bord d\u2019Yonne', c:'Baignade au pied, grands arbres'}]},
+  camps:[{n:'Camping le Pré du Roi', t:'★★ · bord d\u2019Yonne'}]},
  {n:'Vincelles', ll:[47.7003,3.6303], km:18, surf:'vv', vr:'V51 · Yonne',
   gare:'Gare de Cravant-Bazarnes (3 km)', svc:['eau','commerces','baignade'],
   voir:'Port de plaisance ; vignobles d\u2019Irancy et Saint-Bris à deux pas.',
-  refuge:'Base nautique et baignade ; caves d\u2019Irancy à 14 °C.',
-  camps:[{n:'Camping les Ceriselles', t:'★★★ · port', c:'Piscine, très arboré, label Accueil Vélo'}]},
+  camps:[{n:'Camping les Ceriselles', t:'★★★ · port'}]},
  {n:'Auxerre', ll:[47.7980,3.5731], km:14, surf:'vv', vr:'V51 · fin du Nivernais',
   gare:'Gare d\u2019Auxerre-Saint-Gervais', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
   voir:'Cathédrale Saint-Étienne, abbaye Saint-Germain et ses cryptes carolingiennes.',
-  refuge:'Les cryptes de Saint-Germain sont le point le plus frais d\u2019Auxerre ; piscine du stade nautique ; quais ombragés.',
-  camps:[{n:'Camping municipal d\u2019Auxerre', t:'★★★ · bord d\u2019Yonne', c:'Piscine municipale mitoyenne, platanes'},
-         {n:'Hôtels du centre', t:'repli', c:'Nombreux, utile à mi-parcours'}]},
+  camps:[{n:'Camping municipal d\u2019Auxerre', t:'★★★ · bord d\u2019Yonne'},
+         {n:'Hôtels du centre', t:'repli'}]},
  {n:'Migennes', ll:[47.9650,3.5172], km:20, surf:'vv', vr:'V51 · départ canal de Bourgogne',
   gare:'Gare de Laroche-Migennes (grande ligne)', svc:['eau','supermarché','pharmacie'],
   voir:'Confluence Yonne–canal de Bourgogne ; le point de bascule du voyage.',
-  refuge:'Piscine et base de loisirs ; port ombragé.',
-  camps:[{n:'Camping du Confluent', t:'★★ · port', c:'Bord de l\u2019eau, ombre correcte'}]},
+  camps:[{n:'Camping du Confluent', t:'★★ · port'}]},
  {n:'Brienon-sur-Armançon', ll:[47.9860,3.6180], km:9, surf:'halage', vr:'V51 · halage non revêtu',
   gare:'Gare de Brienon', svc:['eau','commerces'],
   voir:'Halles du XVIIIe et lavoir circulaire.',
-  refuge:'Halles couvertes très fraîches, plan d\u2019eau à proximité.',
-  camps:[{n:'Camping municipal de Brienon', t:'★★ · Armançon', c:'Petit, calme, ombragé'}]},
+  camps:[{n:'Camping municipal de Brienon', t:'★★ · Armançon'}]},
  {n:'Saint-Florentin', ll:[48.0004,3.7208], km:13, surf:'halage', vr:'V51 · halage non revêtu',
   gare:'Gare de Saint-Florentin-Vergigny', svc:['eau','commerces','boulangerie','fromagerie'],
   voir:'Le fromage de Saint-Florentin, vitraux Renaissance de l\u2019église.',
-  refuge:'Base de loisirs avec baignade, église fraîche.',
-  camps:[{n:'Camping municipal de l\u2019Armançon', t:'★★ · rivière', c:'Baignade proche, saules'}]},
+  camps:[{n:'Camping municipal de l\u2019Armançon', t:'★★ · rivière'}]},
  {n:'Flogny-la-Chapelle', ll:[47.9290,3.8880], km:15, surf:'halage', vr:'V51 · halage non revêtu',
   gare:'Halte de Flogny', svc:['eau','commerces'],
   voir:'Village-étape du Tonnerrois, bief calme.',
-  refuge:'Peu d\u2019équipements : c\u2019est une étape de repli, pas un objectif.',
-  camps:[{n:'Aire communale de Flogny', t:'aire', c:'Ombre, eau, sanitaires simples'}]},
+  camps:[{n:'Aire communale de Flogny', t:'aire'}]},
  {n:'Tonnerre', ll:[47.8562,3.9734], km:11, surf:'halage', vr:'V51 · canal de Bourgogne',
   gare:'Gare de Tonnerre', svc:['eau','supermarché','pharmacie','boulangerie'],
   voir:'La Fosse Dionne : source turquoise en pleine ville, lavoir circulaire.',
-  refuge:'La Fosse Dionne reste à 15 °C toute l\u2019année ; l\u2019Hôtel-Dieu médiéval est glacial et magnifique. Piscine découverte.',
-  camps:[{n:'Camping de la Cascade', t:'★★ · Armançon', c:'Bord de rivière, ombre dense'},
-         {n:'Hôtels de Tonnerre', t:'repli', c:'Bâtis anciens, frais'}]},
+  camps:[{n:'Camping de la Cascade', t:'★★ · Armançon'},
+         {n:'Hôtels de Tonnerre', t:'repli'}]},
  {n:'Tanlay', ll:[47.8402,4.0903], km:12, surf:'vv', vr:'V51 · canal de Bourgogne',
   gare:'Halte de Tanlay', svc:['eau','commerces'],
   voir:'Château Renaissance et ses douves, l\u2019un des plus beaux de Bourgogne.',
-  refuge:'Douves et parc du château ; la galerie peinte est fraîche.',
-  camps:[{n:'Camping municipal de Tanlay', t:'★★ · canal', c:'Petit, au bord de l\u2019eau, ombragé'}]},
+  camps:[{n:'Camping municipal de Tanlay', t:'★★ · canal'}]},
  {n:'Ancy-le-Franc', ll:[47.7752,4.1626], km:10, surf:'vv', vr:'V51 · canal de Bourgogne',
   gare:'—', svc:['eau','commerces'],
   voir:'Château Renaissance italienne de Serlio, décors peints exceptionnels.',
-  refuge:'Le château : salles de pierre à 19 °C, visite parfaite entre 14 h et 16 h.',
-  camps:[{n:'Camping municipal d\u2019Ancy', t:'★★ · canal', c:'Face au château, arboré'}]},
+  camps:[{n:'Camping municipal d\u2019Ancy', t:'★★ · canal'}]},
  {n:'Ravières', ll:[47.7360,4.2280], km:9, surf:'vv', vr:'V51 · canal de Bourgogne',
   gare:'Gare de Nuits-sous-Ravières', svc:['eau','commerces'],
   voir:'Bief calme, carrières de pierre de Bourgogne.',
-  refuge:'Halte simple, baignade en Armançon possible.',
-  camps:[{n:'Aire de Ravières', t:'aire', c:'Ombre, point d\u2019eau, gare à côté'}]},
+  camps:[{n:'Aire de Ravières', t:'aire'}]},
  {n:'Aisy-sur-Armançon', ll:[47.6660,4.2760], km:10, surf:'vv', vr:'V51 · canal de Bourgogne',
   gare:'Halte d\u2019Aisy', svc:['eau','commerces'],
   voir:'Bief tranquille de l\u2019Armançon, écluses et maisons éclusières.',
-  refuge:'Baignade en Armançon, ombre continue du halage. Étape simple mais bien placée.',
-  camps:[{n:'Aire naturelle d\u2019Aisy', t:'aire', c:'Au bord de l\u2019eau, sous les frênes'}]},
+  camps:[{n:'Aire naturelle d\u2019Aisy', t:'aire'}]},
  {n:'Montbard', ll:[47.6233,4.3371], km:14, surf:'vv', vr:'V51 · canal de Bourgogne',
   gare:'Gare de Montbard (TGV + TER)', svc:['eau','supermarché','pharmacie','piscine'],
   voir:'Parc Buffon en terrasses ; abbaye de Fontenay à 6 km (UNESCO).',
-  refuge:'Piscine municipale ; l\u2019abbatiale de Fontenay et son dortoir de moines sont un havre de fraîcheur.',
-  camps:[{n:'Camping municipal des Treilles', t:'★★★ · piscine mitoyenne', c:'Accès piscine inclus, ombragé'}]},
+  camps:[{n:'Camping municipal des Treilles', t:'★★★ · piscine mitoyenne'}]},
  {n:'Venarey-les-Laumes', ll:[47.5424,4.4619], km:13, surf:'vv', vr:'V51 · canal de Bourgogne',
   gare:'Gare des Laumes-Alésia', svc:['eau','commerces','boulangerie'],
   voir:'MuséoParc Alésia : le site de la bataille de -52, reconstitutions grandeur nature.',
-  refuge:'Le MuséoParc est climatisé et passionne les enfants — l\u2019après-midi caniculaire idéal.',
-  camps:[{n:'Camping municipal de Venarey', t:'★★ · canal', c:'Calme, arboré, piscine à proximité'}]},
+  camps:[{n:'Camping municipal de Venarey', t:'★★ · canal'}]},
  {n:'Pouillenay', ll:[47.5020,4.4470], km:7, surf:'vv', vr:'V51 · canal de Bourgogne',
   gare:'Halte de Pouillenay', svc:['eau'],
   voir:'Échelle d\u2019écluses vers le bief de partage.',
-  refuge:'Étape technique, peu de services : à n\u2019utiliser qu\u2019en dépannage.',
-  camps:[{n:'Bivouac d\u2019écluse', t:'bivouac', c:'Demander à la maison éclusière, ombre des frênes'}]},
+  camps:[{n:'Bivouac d\u2019écluse', t:'bivouac'}]},
  {n:'Marigny-le-Cahouët', ll:[47.4400,4.4900], km:16, surf:'vv', vr:'V51 · vallée de la Brenne',
   gare:'—', svc:['eau'],
   voir:'Château fort sur motte et échelle d\u2019écluses de l\u2019Auxois.',
-  refuge:'Étape de dépannage : ombre des frênes du bief, point d\u2019eau à l\u2019écluse.',
-  camps:[{n:'Bivouac d\u2019écluse de Marigny', t:'bivouac', c:'Demander à la maison éclusière, ombre continue'}]},
+  camps:[{n:'Bivouac d\u2019écluse de Marigny', t:'bivouac'}]},
  {n:'Vandenesse-en-Auxois', ll:[47.2360,4.6250], km:16, surf:'vv', vr:'V51 · sous Châteauneuf',
   gare:'—', svc:['eau','commerces'],
   voir:'Le port sous la forteresse de Châteauneuf-en-Auxois, un des plus beaux villages de France.',
-  refuge:'Port ombragé, plan d\u2019eau de Panthier à 3 km (baignade surveillée, voile).',
-  camps:[{n:'Camping du lac de Panthier', t:'★★★ · 3 km', c:'Piscine + lac de baignade, très arboré'},
-         {n:'Halte fluviale de Vandenesse', t:'aire', c:'Simple, sous les arbres du port'}]},
+  camps:[{n:'Camping du lac de Panthier', t:'★★★ · 3 km'},
+         {n:'Halte fluviale de Vandenesse', t:'aire'}]},
  {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:8, surf:'vv', vr:'V51 · point culminant',
   gare:'—', svc:['eau','commerces','boulangerie'],
   voir:'Le sommet du canal : voûte souterraine de 3 333 m, toueur électrique du musée.',
-  refuge:'Le musée du toueur et l\u2019entrée de la voûte sont frais ; à 390 m d\u2019altitude, les nuits sont plus respirables.',
-  camps:[{n:'Camping du Vert Auxois', t:'★★ · centre', c:'Altitude = nuits fraîches, ombragé'}]},
+  camps:[{n:'Camping du Vert Auxois', t:'★★ · centre'}]},
  {n:'Pont-d\u2019Ouche', ll:[47.2130,4.6900], km:12, surf:'vv', vr:'V51 · entrée vallée de l\u2019Ouche',
   gare:'—', svc:['eau','commerces'],
   voir:'Jonction du canal et de l\u2019Ouche, port de plaisance au pied des collines.',
-  refuge:'Rivière fraîche accessible, halte ombragée, buvette du port en saison.',
-  camps:[{n:'Camping du Pont d\u2019Ouche', t:'★★ · rivière', c:'Bord d\u2019Ouche, très ombragé'}]},
+  camps:[{n:'Camping du Pont d\u2019Ouche', t:'★★ · rivière'}]},
  {n:'La Bussière-sur-Ouche', ll:[47.2298,4.7702], km:14, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
   gare:'—', svc:['eau','commerces'],
   voir:'Abbaye cistercienne du XIIe, vallée encaissée et ombragée.',
-  refuge:'La vallée de l\u2019Ouche est la section la plus ombragée du voyage ; rivière pour se rafraîchir.',
-  camps:[{n:'Camping de la vallée de l\u2019Ouche', t:'★★ · rivière', c:'Encaissé, ombre permanente, eau vive'}]},
+  camps:[{n:'Camping de la vallée de l\u2019Ouche', t:'★★ · rivière'}]},
  {n:'Fleurey-sur-Ouche', ll:[47.3080,4.8800], km:16, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
   gare:'Halte de Fleurey', svc:['eau','commerces','boulangerie'],
   voir:'Dernier village avant Dijon, écluses en descente continue.',
-  refuge:'Bord d\u2019Ouche ombragé, commerces pour le dernier ravitaillement.',
-  camps:[{n:'Aire de Fleurey', t:'aire', c:'Ombragée, au bord de l\u2019eau'}]},
+  camps:[{n:'Aire de Fleurey', t:'aire'}]},
  {n:'Velars-sur-Ouche', ll:[47.3160,4.9250], km:9, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
   gare:'Gare de Velars-sur-Ouche', svc:['eau','commerces','boulangerie'],
   voir:'Dernier village avant Dijon, sous la roche de Notre-Dame d\u2019Étang.',
-  refuge:'Lac du Chat à proximité, bord d\u2019Ouche ombragé, train direct pour Dijon en 10 min.',
-  camps:[{n:'Aire de Velars', t:'aire', c:'Simple, ombragée, gare à 300 m'}]},
+  camps:[{n:'Aire de Velars', t:'aire'}]},
  {n:'Dijon', ll:[47.3220,5.0415], km:10, surf:'vv', vr:'V51 · fin du canal de Bourgogne',
   gare:'Gare de Dijon-Ville (TER direct St-Jean-de-Losne, 15 min)',
   svc:['eau','supermarché','pharmacie','vélociste','laverie','baignade'],
   voir:'Palais des Ducs, parcours de la Chouette, halles de Rude ; lac Kir.',
-  refuge:'Lac Kir : plage surveillée à l\u2019arrivée. Les caves du palais et le musée des Beaux-Arts (gratuit, climatisé) sont des refuges parfaits.',
-  camps:[{n:'Camping du Lac Kir', t:'★★★ · plage', c:'Baignade surveillée sur place, ombragé'},
-         {n:'Hôtels de Dijon', t:'repli', c:'Récompense de fin de voyage'}]},
+  camps:[{n:'Camping du Lac Kir', t:'★★★ · plage'},
+         {n:'Hôtels de Dijon', t:'repli'}]},
  {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:35, surf:'vv', vr:'V50 · retour au parking',
   gare:'Gare de St-Jean-de-Losne', svc:['eau','commerces'],
   voir:'La boucle refermée à la force des mollets.',
-  refuge:'Retour à la voiture.',
-  camps:[{n:'Camping des Herlequins', t:'★★ · départ', c:'Dernière nuit avant la route'}]}
+  camps:[{n:'Camping des Herlequins', t:'★★ · départ'}]}
 ];
 
 /* Options globales (pas des variations quotidiennes) */
@@ -864,13 +814,13 @@ var BAINSTYLE = {
 };
 
 /* Couches affichables sur la carte d'ensemble */
-var LAYERS = {camps:true, bains:true, etapes:true, eau:false};
+var LAYERS = {camps:true, bains:true, etapes:true, eau:false, velo:false};
 try{
   var lsv = JSON.parse(localStorage.getItem('bourg-layers')||'null');
-  if(lsv){ ['camps','bains','etapes','eau'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
+  if(lsv){ ['camps','bains','etapes','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v3.2.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v4.1.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -886,17 +836,28 @@ var JOURS = ['dim','lun','mar','mer','jeu','ven','sam'];
 var MOIS = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
 
 /* ---------- état ---------- */
-var STATE = {opts:{}, days:{}, done:{}};
+/* Version du schéma d'état. À incrémenter quand une valeur PAR DÉFAUT change :
+   sinon les réglages déjà enregistrés sur le téléphone continuent d'écraser
+   la nouvelle valeur, et le changement n'a aucun effet pour l'utilisateur
+   existant. C'est ce qui laissait la boucle ouverte à Dijon en v3.2. */
+var STATEVER = 2;
+var STATE = {v:STATEVER, opts:{}, days:{}, done:{}};
 OPTIONS.forEach(function(o){ STATE.opts[o.id] = o.on; });
 try{
   var sv = JSON.parse(localStorage.getItem('bourg-state2')||'null');
   if(sv){
-    if(sv.opts){ OPTIONS.forEach(function(o){ if(typeof sv.opts[o.id]==='boolean'){ STATE.opts[o.id]=sv.opts[o.id]; } }); }
+    /* Les options ne sont reprises que si le schéma est à jour ; sinon on
+       repart des valeurs par défaut du code. Les journées validées et les
+       choix quotidiens, eux, sont toujours conservés : ce sont des faits. */
+    if(sv.opts && sv.v === STATEVER){
+      OPTIONS.forEach(function(o){ if(typeof sv.opts[o.id]==='boolean'){ STATE.opts[o.id]=sv.opts[o.id]; } });
+    }
     if(sv.days){ STATE.days = sv.days; }
     if(sv.done){ STATE.done = sv.done; }
+    if(sv.v !== STATEVER){ try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
   }
 }catch(e){}
-function saveState(){ try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
+function saveState(){ STATE.v = STATEVER; try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
 function resetDays(){ STATE.days = {}; saveState(); }
 function resetDone(){ STATE.done = {}; saveState(); }
 
@@ -957,10 +918,14 @@ function computeStages(){
   }
 
   /* index du maillon confirmé pour un jour donné, ou -1 */
-  function doneIdx(day){
-    var nm = STATE.done['d'+day];
-    if(!nm) return -1;
-    for(var i=0;i<M;i++){ if(chain[i].n===nm) return i; }
+  function doneIdx(day, after){
+    var v = STATE.done['d'+day];
+    if(v===undefined || v===null) return -1;
+    if(typeof v === 'number'){ return (v>=0 && v<M) ? v : -1; }
+    /* ancien format (nom) : on cherche la première occurrence APRÈS la position
+       courante — indispensable car Saint-Jean-de-Losne apparaît deux fois. */
+    for(var i=(after||0)+1; i<M; i++){ if(chain[i].n===v) return i; }
+    for(var j=0;j<M;j++){ if(chain[j].n===v) return j; }
     return -1;
   }
 
@@ -968,8 +933,8 @@ function computeStages(){
      La réalité prime sur le plan — on adapte le plafond au reste à parcourir. */
   var lastDone = 0, lastDoneDay = 0;
   for(var dd=1; dd<=rideDays; dd++){
-    var di = doneIdx(dd);
-    if(di > lastDone){ lastDone = di; lastDoneDay = dd; }
+    var di = doneIdx(dd, lastDone);
+    if(di > lastDone && (cum[di]-cum[lastDone]) <= 120){ lastDone = di; lastDoneDay = dd; }
   }
   var remainKm = T - cum[lastDone], remainDays = rideDays - lastDoneDay;
   var needAvg = remainDays > 0 ? remainKm/remainDays : 0;
@@ -989,7 +954,10 @@ function computeStages(){
     var to, forced = false, confirmed = false;
     var opts = {court:null, normal:null, long:null};
 
-    var fixed = doneIdx(day);
+    var fixed = doneIdx(day, at);
+    /* garde-fou : une journée validée à plus de 120 km est une donnée aberrante
+       (stockage corrompu, ancien format mal résolu) — on l'ignore. */
+    if(fixed > at && (cum[fixed]-cum[at]) > 120){ fixed = -1; delete STATE.done['d'+day]; }
     if(fixed > at || (fixed === at && day <= lastDoneDay)){
       /* journée validée : le point d'arrivée est un fait, pas un calcul */
       to = Math.max(fixed, at);
@@ -1283,8 +1251,17 @@ function initStageMap(st){
      .bindPopup('<b>'+esc(p.n)+'</b>'+(p.voir?'<br><span style="font-size:.8em">'+p.voir+'</span>':'')
        +(isEnd&&i>0&&p.camp?'<br><br>\ud83c\udfd5 '+esc(p.camp):''));
   });
-  m.fitBounds(line.getBounds(), {padding:[26,26]});
-  setTimeout(function(){ m.invalidateSize(); },140);
+  function fitStage(){
+    if(!m._container || !m._container.parentNode || maps[st.id]!==m) return;
+    try{
+      m.invalidateSize();
+      if(!m._userMoved){ m.fitBounds(line.getBounds(), {padding:[26,26]}); }
+    }catch(e){}
+  }
+  fitStage();
+  setTimeout(fitStage, 160);
+  setTimeout(fitStage, 600);
+  m.on('zoomstart dragstart', function(){ m._userMoved = true; });
 
   var note = document.getElementById('rt-'+st.id);
   if(note){ note.textContent = 'Tracé schématique — affinage par routage en cours…'; }
@@ -1370,7 +1347,8 @@ function initOverviewMap(){
   var gCamps = L.layerGroup();
   var gBains = L.layerGroup();
   var gEau = L.layerGroup();
-  m._g = {trace:gTrace, etapes:gEtapes, camps:gCamps, bains:gBains, eau:gEau};
+  var gVelo = L.layerGroup();
+  m._g = {trace:gTrace, etapes:gEtapes, camps:gCamps, bains:gBains, eau:gEau, velo:gVelo};
 
   var all = [];
   var rides = RUN.stages.filter(function(s){ return s.type==='ride'; });
@@ -1381,7 +1359,9 @@ function initOverviewMap(){
     sketch[st.id] = L.polyline(raw,{color:st.color,weight:2,opacity:.5,dashArray:'5 7'}).addTo(gTrace)
      .bindTooltip('J'+st.day+' \u00b7 '+st.from.n+' \u2192 '+st.to.n+' \u00b7 '+kmLabel(st)+' (tracé en cours de calcul)');
   });
-  L.marker(START,{icon:startIcon()}).addTo(gTrace).bindPopup(START_POPUP);
+  L.marker(START,{icon:startIcon()}).addTo(gTrace)
+   .bindPopup(START_POPUP + '<br><br><b>Départ J1 et arrivée J'+RUN.rideDays+'</b> \u2014 la boucle se referme ici.')
+   .bindTooltip('D\u00e9part &amp; arriv\u00e9e');
 
   /* --- couche 2 : les lieux de nuit du découpage courant --- */
   rides.forEach(function(st){
@@ -1452,16 +1432,62 @@ function initOverviewMap(){
     })(0);
   };
 
+  m._veloLoaded = false;
+  m._loadVelo = function(){
+    if(m._veloLoaded) return;
+    m._veloLoaded = true;
+    var n = 0, done = 0, failed = 0;
+    var stat = document.getElementById('velo-stat');
+    if(stat){ stat.style.display='block'; stat.textContent = 'Recherche des vélocistes\u2026'; }
+    (function next(i){
+      if(i>=rides.length){
+        if(stat){ stat.textContent = n+' vélocistes et Decathlon à moins de 5 km'+(failed?' \u00b7 '+failed+' étape(s) non chargée(s)':''); }
+        var cv = document.getElementById('cnt-velo'); if(cv) cv.textContent = n;
+        return;
+      }
+      getVelo(rides[i], function(list, src){
+        if(!list){ failed++; }
+        else{
+          list.forEach(function(vp){
+            var stl = VSTYLE[vp[2]] || VSTYLE.bike;
+            L.marker([vp[0],vp[1]],{icon:dotIcon(stl.ico, stl.col)}).addTo(gVelo)
+             .bindPopup('<b>'+(vp[4]||stl.lab)+'</b><br><span style="font-size:.85em">'+stl.lab+' \u00b7 \u2248 '+vp[3]+' m \u00b7 J'+rides[i].day+'</span>'
+               +(vp[5]?'<br><a href="tel:'+vp[5].replace(/\s/g,'')+'">'+vp[5]+'</a>':'')
+               +'<br><a href="https://www.google.com/maps?q='+vp[0]+','+vp[1]+'" target="_blank" rel="noopener">Maps</a>');
+            n++;
+          });
+        }
+        done++;
+        if(stat){ stat.textContent = done+'/'+rides.length+' étapes \u00b7 '+n+' trouvés\u2026'; }
+        setTimeout(function(){ next(i+1); }, src==='cache' ? 0 : 700);
+      });
+    })(0);
+  };
+
   if(LAYERS.etapes) gEtapes.addTo(m);
   if(LAYERS.camps)  gCamps.addTo(m);
   if(LAYERS.bains)  gBains.addTo(m);
   if(LAYERS.eau){ gEau.addTo(m); m._loadEau(); }
+  if(LAYERS.velo){ gVelo.addTo(m); m._loadVelo(); }
 
   var cc = document.getElementById('cnt-camps'); if(cc) cc.textContent = nCamps;
   var cb = document.getElementById('cnt-bains'); if(cb) cb.textContent = nBains;
 
-  if(all.length){ m.fitBounds(L.latLngBounds(all),{padding:[24,24]}); }
-  setTimeout(function(){ m.invalidateSize(); },140);
+  /* La taille du conteneur n'est pas encore connue au moment du rendu :
+     il faut invalidateSize() AVANT fitBounds(), sinon Leaflet calcule le
+     zoom sur une taille fausse et la carte reste zoomée sur le centre. */
+  m._allBounds = all.length ? L.latLngBounds(all) : null;
+  function fitAll(){
+    if(!m._container || !m._container.parentNode || maps.apercu!==m) return;   /* carte remplacée */
+    try{
+      m.invalidateSize();
+      if(m._allBounds && !m._userMoved){ m.fitBounds(m._allBounds, {padding:[24,24]}); }
+    }catch(e){}
+  }
+  fitAll();
+  setTimeout(fitAll, 160);
+  setTimeout(fitAll, 600);
+  m.on('zoomstart dragstart', function(){ m._userMoved = true; });
 
   /* affinage progressif du tracé, séquentiel pour ménager le serveur */
   (function next(i){
@@ -1488,10 +1514,13 @@ function toggleLayer(key, on){
   if(on){
     g.addTo(m);
     if(key==='eau' && m._loadEau){ m._loadEau(); }
+    if(key==='velo' && m._loadVelo){ m._loadVelo(); }
   } else {
     m.removeLayer(g);
     var st1 = document.getElementById('eau-stat');
     if(key==='eau' && st1){ st1.style.display='none'; }
+    var st3 = document.getElementById('velo-stat');
+    if(key==='velo' && st3){ st3.style.display='none'; }
   }
 }
 
@@ -1572,6 +1601,62 @@ function getWater(st, cb){
 }
 
 
+
+/* ---------------------------------------------------------
+   VÉLOCISTES & DECATHLON (OpenStreetMap)
+   shop=bicycle · enseignes Decathlon (shop=sports / brand)
+   Rayon élargi à 5 km : pour une réparation, le détour vaut
+   le coup bien au-delà des 2 km des points d'eau.
+   --------------------------------------------------------- */
+var VELO_MAX_M = 5000;
+var VSTYLE = {
+  bike: {ico:'\ud83d\udd27', col:'#e07b39', lab:'Vélociste'},
+  deca: {ico:'\ud83c\udfea', col:'#1d5fa8', lab:'Decathlon'}
+};
+function veloKey(st){ return 'bourgvelo-'+GEN+'-'+st.id+'-'+Math.round(st.km); }
+function getVelo(st, cb){
+  var key = veloKey(st);
+  try{
+    var c = localStorage.getItem(key);
+    if(c){ cb(JSON.parse(c), 'cache'); return; }
+  }catch(e){}
+  var line = routeLine(st);
+  var bb = bboxOf(line, 0.06);
+  var B = bb.join(',');
+  var q = '[out:json][timeout:50];('
+    + 'nwr["shop"="bicycle"]('+B+');'
+    + 'nwr["brand"~"Decathlon",i]('+B+');'
+    + 'nwr["name"~"Decathlon",i]('+B+');'
+    + ');out center 300;';
+  fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))
+   .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+   .then(function(j){
+     var out = [], seen = {};
+     (j.elements||[]).forEach(function(e){
+       var la = e.lat!=null ? e.lat : (e.center && e.center.lat);
+       var lo = e.lon!=null ? e.lon : (e.center && e.center.lon);
+       if(la==null || lo==null) return;
+       var t = e.tags||{};
+       var nm = (t.name||'').trim();
+       var isDeca = /decathlon/i.test(nm) || /decathlon/i.test(t.brand||'');
+       if(!isDeca && t.shop!=='bicycle') return;
+       var id = la.toFixed(4)+','+lo.toFixed(4);
+       if(seen[id]) return;
+       seen[id] = 1;
+       var d = distToLine([la,lo], line);
+       if(d > VELO_MAX_M) return;
+       out.push([+la.toFixed(5), +lo.toFixed(5), isDeca?'deca':'bike', Math.round(d),
+                 nm.replace(/[<>&"]/g,' ').slice(0,40),
+                 (t.phone||t['contact:phone']||'').replace(/[<>&"]/g,' ').slice(0,20)]);
+     });
+     out.sort(function(a,b){ return a[3]-b[3]; });
+     out = out.slice(0,80);
+     try{ localStorage.setItem(key, JSON.stringify(out)); }catch(e){}
+     cb(out, 'live');
+   })
+   .catch(function(){ cb(null,'fail'); });
+}
+
 /* ---------- mode guidon ---------- */
 var GUIDON = {active:false, id:null, wl:null};
 function enterGuidon(sid){
@@ -1625,27 +1710,21 @@ function statHtml(st){
 }
 function progressBox(){
   var d = RUN.lastDoneDay;
-  if(!d){
-    return '<div class="vbox"><h4>Avancement</h4>'
-      +'<p style="font-size:.82rem;line-height:1.5">Aucune journée validée pour l\u2019instant. Sur la route, ouvre la fiche du jour et indique où vous avez réellement dormi : <b>tout le reste du voyage se recalcule aussitôt</b>.</p></div>';
-  }
+  if(!d){ return ''; }
   var pct = Math.round(RUN.doneKm/RUN.total*100);
-  return '<div class="vbox"><h4>Avancement réel</h4>'
+  return '<div class="vbox"><h4>Avancement</h4>'
     +'<div class="pbar"><i style="width:'+pct+'%"></i></div>'
-    +'<p style="font-size:.82rem;line-height:1.5;margin-top:8px"><b>'+d+' journée'+(d>1?'s':'')+' validée'+(d>1?'s':'')+'</b> \u00b7 '
-    +Math.round(RUN.doneKm)+' km parcourus sur '+Math.round(RUN.total)+' ('+pct+' %).<br>'
-    +'Reste <b>'+Math.round(RUN.remainKm)+' km en '+RUN.remainDays+' jour'+(RUN.remainDays>1?'s':'')+'</b>, soit '+Math.round(RUN.needAvg)+' km/jour.</p>'
-    +(RUN.needAvg>52 ? '<div class="warnbox" style="margin-top:8px">\u26a0 <b>'+Math.round(RUN.needAvg)+' km/jour pour tenir les délais.</b> C\u2019est beaucoup avec les remorques : envisage un saut en train, ou accepte d\u2019arrêter le voyage à une gare avant Dijon.</div>' : '')
-    +'<div class="btn-row"><button class="undone-btn">\u21ba Annuler toutes les validations</button></div>'
+    +'<p style="font-size:.84rem;line-height:1.5;margin-top:8px">'
+    +'<b>J'+d+'</b> \u00b7 '+Math.round(RUN.doneKm)+' / '+Math.round(RUN.total)+' km ('+pct+' %)<br>'
+    +'Reste '+Math.round(RUN.remainKm)+' km en '+RUN.remainDays+' j \u2192 <b>'+Math.round(RUN.needAvg)+' km/j</b></p>'
+    +'<div class="btn-row"><button class="undone-btn">\u21ba Annuler les validations</button></div>'
     +'</div>';
 }
 function officialBox(){
-  return '<div class="vbox"><h4>Fidélité au tracé officiel</h4>'
-    +'<p style="font-size:.8rem;line-height:1.5">Le parcours suit le <b>Tour de Bourgogne à vélo</b> officiel : canal du Centre (V50) de Saint-Jean-de-Losne à Digoin, canal latéral à la Loire et EuroVelo 6 jusqu\u2019à Decize, canal du Nivernais (V51) jusqu\u2019à Auxerre, puis canal de Bourgogne jusqu\u2019à Dijon. La boucle officielle annonce environ 800 km ; notre découpage en fait '+Math.round(RUN.total)+' km parce qu\u2019il ne repasse pas par Nevers et coupe quelques méandres.</p>'
-    +'<div class="warnbox" style="margin-top:10px">\u26a0 <b>Deux réserves à connaître :</b> le Tour de Bourgogne est ouvert à environ 83 % dans les deux sens, des tronçons restant en cours d\u2019aménagement sur le Nivernais, le canal de Bourgogne et la Voie Bleue. Et le halage entre Migennes et Tonnerre n\u2019est <b>pas encore revêtu</b> : c\u2019est du chemin roulant mais irrégulier, à savoir avec deux remorques chargées. Ces segments sont signalés en jaune sur chaque étape.</div>'
-    +'<label class="vopt" style="margin-top:8px"><input type="checkbox" class="ochk" data-o="bouclage"'+(STATE.opts.bouclage?' checked':'')+'>'
-    +'<span class="vt"><b>Refermer la boucle à vélo</b><span class="vk">+35 km</span>'
-    +'<span class="vd">Rentrer de Dijon à Saint-Jean-de-Losne par le canal, au lieu du TER de 15 minutes.</span></span></label>'
+  return '<div class="vbox">'
+    +'<label class="vopt"><input type="checkbox" class="ochk" data-o="bouclage"'+(STATE.opts.bouclage?' checked':'')+'>'
+    +'<span class="vt"><b>Boucle fermée</b><span class="vk">+35 km</span>'
+    +'<span class="vd">Dijon \u2192 Saint-Jean-de-Losne à vélo. Décoché : arrivée à Dijon, retour TER.</span></span></label>'
     +'</div>';
 }
 function surfBar(surfs, total){
@@ -1699,8 +1778,10 @@ function layerBox(){
     + chip('etapes','\ud83c\udff1','Lieux de nuit', false)
     + chip('camps','\ud83c\udfd5','Campings', true)
     + chip('bains','\ud83d\udca7','Baignades', true)
-    + chip('eau','\ud83d\udeb0','Eau potable', true)
+    + chip('eau','\ud83d\udeb0','Eau', true)
+    + chip('velo','\ud83d\udd27','Vélocistes', true)
     +'</div><p class="mapstatus2" id="eau-stat" style="display:none"></p>'
+    +'<p class="mapstatus2" id="velo-stat" style="display:none"></p>'
 ;
 }
 function sejourHtml(){
@@ -1710,33 +1791,22 @@ function sejourHtml(){
   var moy = Math.round(tot/rides.length);
   var mx = Math.round(Math.max.apply(null,kms));
   var h = '<div class="card">'
-    +'<h2><small>13 &ndash; 29 août 2026 · 17 jours</small>Tour de Bourgogne à vélo</h2>'
-    +'<p class="muted" style="margin-top:8px">Dix-sept journées de vélo d\u2019affilée, sans jour d\u2019arrêt \u2014 une seule boucle continue au départ de Saint-Jean-de-Losne, dans le sens horaire : la Saône, le canal du Centre, la Loire, le canal du Nivernais, puis le canal de Bourgogne et la descente finale de la vallée de l\u2019Ouche vers Dijon.</p>'
-    +'<div class="stats" style="margin-top:14px">'
+    +'<div class="stats">'
     +'<div class="stat"><b>'+tot+' km</b><span>total</span></div>'
-    +'<div class="stat"><b>17</b><span>jours vélo</span></div>'
+    +'<div class="stat"><b>'+rides.length+'</b><span>jours</span></div>'
     +'<div class="stat"><b>'+moy+' km</b><span>moyenne</span></div>'
-    +'<div class="stat"><b>'+mx+' km</b><span>plus longue</span></div>'
+    +'<div class="stat"><b>'+mx+' km</b><span>max</span></div>'
     +'</div>'
     + progressBox()
-    /* --- la carte, juste sous le curseur : elle se redessine à chaque réglage --- */
     +'<div class="map" id="map-apercu" style="position:relative;margin-top:14px"></div>'
     + layerBox()
-    +'<p class="map-note">\u2605 = parking Saint-Jacques (Saint-Usage) \u00b7 pastilles turquoise numérotées = les lieux de nuit du découpage courant \u00b7 \ud83c\udfd5 = campings \u00b7 \ud83d\udca7\ud83c\udfd6\ud83c\udfca = baignades, plans d\u2019eau et piscines. Décoche une couche pour alléger la carte. Les tracés s\u2019affinent par routage au fil du chargement.</p>';
-  if(RUN.capRaised>0){
-    h += '<div class="warnbox">\u26a0 <b>Plafond relevé à '+RUN.cap+' km.</b> Avec ces réglages, le parcours ne tient pas en 17 jours sous le plafond du rythme choisi : certaines journées seront plus longues que prévu. Décoche le bouclage à vélo ou passe à un rythme plus soutenu.</div>';
-  }
-  if(moy > 55){
-    h += '<div class="warnbox"><b>Attention rythme :</b> à '+moy+' km/jour de moyenne avec deux remorques et deux enfants de 3 ans en plein mois d\u2019août, les journées seront longues.</div>';
-  }
-  h += officialBox();
-  h += '</div>';
-  h += '<div class="card"><h3>Le déroulé du séjour</h3>'
-    +'<p class="muted" style="margin-bottom:6px;font-size:.8rem">Dix-sept journées, un seul itinéraire. Touche une étape pour l\u2019ouvrir : carte, profil, hébergement, refuge canicule, gare de secours \u2014 et pour valider la journée une fois faite.</p>'
+    + officialBox()
+    +'</div>';
+  h += '<div class="card">'
     + chainList()
-    +'<div class="btn-row"><button class="reset-btn">\u21ba Tout remettre en « normal »</button></div>'
-    +'<div class="btn-row"><button class="allgpx-btn">\u2b07\ufe0f GPX du parcours complet</button>'
-    +'<button class="share-btn">\ud83d\udd17 Partager ce réglage</button></div>'
+    +'<div class="btn-row"><button class="reset-btn">\u21ba Longueurs par défaut</button></div>'
+    +'<div class="btn-row"><button class="allgpx-btn">\u2b07\ufe0f GPX complet</button>'
+    +'<button class="share-btn">\ud83d\udd17 Partager</button></div>'
     +'<div id="sharebox"></div>'
     +'</div>';
   return h;
@@ -1768,11 +1838,6 @@ function stageHtml(st){
     +'<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1"'+(ol?'':' disabled')+'>Plus long'
       +'<b>'+(ol?ol.km+' km · '+ol.n:'indisponible')+'</b></button>'
     +'</div>';
-  if(!oc || !ol){
-    h += '<p class="map-note" style="margin-top:9px">'
-      + (!oc && !ol ? 'Aucune alternative ce jour-là : ' : (!oc ? 'Pas d\u2019option plus courte : ' : 'Pas d\u2019option plus longue : '))
-      + 'les villages où dormir sont trop espacés ici, ou raccourcir rendrait la suite du voyage infaisable. Ajuste une journée précédente pour retrouver de la marge.</p>';
-  }
   /* --- validation de la journée : la réalité prime sur le plan --- */
   var doneName = STATE.done['d'+st.day] || null;
   var i0 = st.chain.indexOf(st.from);
@@ -1784,23 +1849,19 @@ function stageHtml(st){
   }
   h += '<div class="vbox"><h4>Où avez-vous dormi ce soir-là ?</h4>';
   if(doneName){
-    h += '<p class="okmsg">\u2713 Journée validée : <b>'+esc(doneName)+'</b> \u00b7 '+Math.round(st.km)+' km. Les jours suivants ont été recalculés.</p>'
+    h += '<p class="okmsg">\u2713 '+esc(st.to.n)+' \u00b7 '+Math.round(st.km)+' km</p>'
       +'<div class="btn-row"><button class="unvalid-btn" data-day="'+st.day+'">\u21ba Annuler cette validation</button></div>';
   }else{
     h += '<div class="btn-row"><button class="valid-btn" data-day="'+st.day+'" data-node="'+esc(st.to.n)+'">\u2713 Fait comme prévu \u2014 '+esc(st.to.n)+'</button></div>'
       +'<div class="addrow" style="margin-top:8px">'
       +'<select class="done-sel" data-day="'+st.day+'">'
-      + alts.map(function(a){ return '<option value="'+esc(a.n)+'"'+(a.n===st.to.n?' selected':'')+'>'+esc(a.n)+' \u00b7 '+a.km+' km</option>'; }).join('')
+      + alts.map(function(a){ return '<option value="'+a.i+'"'+(a.i===st.chain.indexOf(st.to)?' selected':'')+'>'+esc(a.n)+' \u00b7 '+a.km+' km</option>'; }).join('')
       +'</select><button class="valid-other" data-day="'+st.day+'">Valider</button></div>'
-      +'<p class="muted" style="font-size:.76rem;margin-top:8px">Arrêtés plus tôt ou poussés plus loin ? Choisis le vrai lieu de nuit : <b>les 17 jours se réorganisent instantanément</b> sur la distance et les jours restants.</p>';
+;
   }
   h += '</div>';
 
-  if(st.forced){
-    h += '<div class="warnbox" style="margin-top:10px">\u26a0 <b>Choix neutralisé aujourd\u2019hui.</b> Le retard accumulé impose cette étape pour que la suite reste faisable. Repasse une journée précédente en « plus long » pour retrouver de la marge.</div>';
-  }else{
-    h += '<div class="cascade"><span>\u21bb</span><span>Changer la longueur de cette journée <b>décale la nuitée et recalcule toutes les étapes suivantes</b>, dates comprises.</span></div>';
-  }
+  if(st.forced){ h += '<div class="warnbox" style="margin-top:10px">Étape imposée par le retard accumulé.</div>'; }
   h += '</div>';
   }
   h += '</div>';
@@ -1821,84 +1882,66 @@ function stageHtml(st){
     var sf = SURF[p.surf]||SURF.vv;
     h += '<li><span class="h">'+role+'</span><span class="t"><b>'+esc(p.n)+'</b>'
       +(i>0?' <span class="vv">'+sf.ico+' '+esc(p.vr||'')+'</span>':'')
-      +(p.voir?'<br>'+p.voir:'')
       +'<div class="svc">'+(p.svc||[]).map(function(x){ return '<span class="on">'+esc(x)+'</span>'; }).join('')+'</div>'
       +'</span></li>';
   });
   h += '</ul></div>';
 
   /* ---- refuge canicule + options de camping ---- */
-  h += '<div class="card"><h3>\ud83c\udfd5 Dormir à '+esc(st.to.n)+'</h3>';
+  h += '<div class="card"><h3>\ud83c\udfd5 '+esc(st.to.n)+'</h3>';
   (st.to.camps||[]).forEach(function(c){
-    h += '<div class="camp"><b>'+c.n+'</b><span class="ct">'+c.t+'</span>'
-      +'<span class="cc">\u2600\ufe0f '+c.c+'</span></div>';
+    h += '<div class="camp"><b>'+c.n+'</b><span class="ct">'+c.t+'</span></div>';
   });
-  h += '<div class="refuge"><h4>Se réfugier en cas de forte chaleur</h4>'+st.to.refuge+'</div>';
-  h += '<p class="muted" style="margin-top:10px;font-size:.8rem"><b>Bivouac :</b> le halage est domaine public fluvial (VNF) et le camping y est officiellement interdit, mais le bivouac discret \u2014 tente montée tard, levée tôt, zéro trace \u2014 est largement toléré. Les éclusiers et les fermes voisines disent presque toujours oui à une famille.</p>';
-  h += '<p class="muted" style="margin-top:8px;font-size:.8rem"><b>Secours :</b> '+esc(st.to.gare)+'</p>';
-  h += '<p class="muted" style="margin-top:8px;font-size:.76rem">Noms et ouvertures à confirmer par téléphone : certains campings municipaux changent de statut d\u2019une saison à l\u2019autre.</p>';
+  h += '<p class="muted" style="margin-top:8px;font-size:.8rem">'+esc(st.to.gare)+'</p>';
   h += '</div>';
   return h;
 }
 
 function pratiqueHtml(){
-  return '<div class="card"><h2><small>Avant de partir</small>Accès &amp; parking</h2>'
-    +'<p><b>Route depuis Les Paccots</b> \u2014 environ 230 km, 3 h à 3 h 15 avec des pauses : Châtel-Saint-Denis, Vevey, Lausanne, Vallorbe, frontière de Jougne, Pontarlier, Levier, Salins-les-Bains, Poligny, Dole, Saint-Jean-de-Losne. Quasi tout en nationale gratuite après la frontière.</p>'
-    +'<p style="margin-top:10px"><b>Parking Saint-Jacques</b>, rue Saint-Jacques à Saint-Usage, accolé à la Gare d\u2019eau : 90 places dans un parc sécurisé, réservation en ligne, location à la journée ou au mois, bornes de recharge. À réserver avant le départ.</p>'
-    +'<p style="margin-top:10px"><b>Conseil de départ :</b> avec 17 jours disponibles, le plus confortable est de faire la route le <b>mercredi 12 août</b> en fin de journée et de dormir au camping des Herlequins, à 800 m du parking. Vous démarrez frais le jeudi 13 au matin, avec une première étape volontairement courte. Si vous partez le 13 au matin, comptez 3 h de route et une mise en selle en début d’après-midi — le rythme « Flânerie » est fait pour ça.</p>'
+  var gares = [];
+  RUN.chain.forEach(function(n){ if(n.gare && n.gare!=='\u2014'){ gares.push(n.n); } });
+  return '<div class="card"><h3>Accès</h3>'
+    +'<div class="kv"><span>Route</span><b>Les Paccots \u2192 Saint-Jean-de-Losne \u00b7 230 km \u00b7 ~3 h</b></div>'
+    +'<div class="kv"><span>Via</span><b>Vallorbe \u00b7 Jougne \u00b7 Pontarlier \u00b7 Salins \u00b7 Poligny \u00b7 Dole</b></div>'
+    +'<div class="kv"><span>Parking</span><b>Saint-Jacques, rue Saint-Jacques, Saint-Usage</b></div>'
+    +'<div class="kv"><span></span><b>90 places \u00b7 sécurisé \u00b7 réservation en ligne \u00b7 bornes de recharge</b></div>'
+    +'<div class="kv"><span>Port H2O</span><b>03 80 39 23 00</b></div>'
     +'</div>'
-    +'<div class="card"><h3>Sens horaire \u2014 pourquoi</h3><ul class="tl">'
-    +'<li><span class="h">1</span><span class="t">Finir par la <b>descente</b> de la vallée de l\u2019Ouche vers Dijon plutôt que la grimper au départ.</span></li>'
-    +'<li><span class="h">2</span><span class="t">Monter vers le point culminant de Pouilly par le versant progressif de l\u2019Armançon, en fin de séjour quand les jambes sont faites.</span></li>'
-    +'<li><span class="h">3</span><span class="t">Placer le Nivernais, le tronçon le plus ombragé et le plus riche en baignades, au milieu du voyage \u2014 au pic probable de la canicule.</span></li>'
-    +'<li><span class="h">4</span><span class="t">Les vents dominants d\u2019ouest poussent légèrement sur le retour vers l\u2019est.</span></li>'
-    +'<li><span class="h">5</span><span class="t">Expédier les sections les plus exposées (Saône, canal latéral à la Loire) les premiers jours, quand la motivation est au maximum.</span></li>'
-    +'</ul></div>'
-    +'<div class="card"><h3>\ud83d\ude86 Le filet de sécurité ferroviaire</h3>'
-    +'<p>La boucle est doublée par le rail sur presque toute sa longueur. Les vélos voyagent <b>gratuitement</b> dans les TER Mobigo de Bourgogne-Franche-Comté, dans la limite des places disponibles \u2014 <b>sauf</b> sur l\u2019axe Paris\u2013Auxerre\u2013Clamecy\u2013Corbigny, où une réservation vélo gratuite est obligatoire pour tous.</p>'
-    +'<div class="svc" style="margin-top:12px">'
-    +['Seurre','Chalon','Chagny','Montceau','Paray','Digoin','Decize','Cercy','Corbigny','Tannay','Clamecy','Châtel-Censoir','Cravant','Auxerre','Migennes','St-Florentin','Tonnerre','Montbard','Les Laumes','Dijon']
-      .map(function(g){ return '<span class="on">'+g+'</span>'; }).join('')+'</div>'
-    +'<p class="muted" style="margin-top:12px;font-size:.82rem">Peu de trains au sud de Cravant : vérifier les horaires sur viamobigo.fr. Une navette privée vélo existe aussi sur le Nivernais. <b>Retour final :</b> TER Dijon \u2192 Saint-Jean-de-Losne, environ 15 minutes.</p>'
+    +'<div class="card"><h3>Trains</h3>'
+    +'<div class="kv"><span>Vélos</span><b>Gratuits en TER Mobigo, dans la limite des places</b></div>'
+    +'<div class="kv"><span>Exception</span><b>Axe Auxerre\u2013Clamecy\u2013Corbigny : réservation vélo gratuite obligatoire</b></div>'
+    +'<div class="kv"><span>Retour</span><b>TER Dijon \u2192 Saint-Jean-de-Losne \u00b7 15 min</b></div>'
+    +'<div class="kv"><span>Horaires</span><b><a href="https://www.viamobigo.fr" target="_blank" rel="noopener">viamobigo.fr</a></b></div>'
+    +'<p class="muted" style="margin-top:10px;font-size:.78rem">Gares sur le parcours :</p>'
+    +'<div class="svc">'+gares.map(function(g){ return '<span class="on">'+esc(g)+'</span>'; }).join('')+'</div>'
     +'</div>'
-    +'<div class="card"><h3>\u26a1 Canicule \u2014 le protocole</h3><ul class="tl">'
-    +'<li><span class="h">7h</span><span class="t">Départ à l\u2019aube. Rouler jusqu\u2019à 12 h 30, monter le camp, sieste et baignade l\u2019après-midi.</span></li>'
-    +'<li><span class="h">\u26a0</span><span class="t"><b>Les remorques sont des fours potentiels</b> : moustiquaire ouverte, jamais la bâche plastique fermée, brumisateur à portée, contrôle des enfants toutes les 45 à 60 minutes. Ils ne pédalent pas, donc ils chauffent sans ventilation.</span></li>'
-    +'<li><span class="h">\ud83d\udca7</span><span class="t">2 L d\u2019eau par adulte au départ, recharge à chaque écluse et village. Sels de réhydratation dans la trousse.</span></li>'
-    +'<li><span class="h">\ud83c\udf6a</span><span class="t">Un encas par heure de roulage pour les enfants : c\u2019est le carburant de la paix sociale.</span></li>'
-    +'<li><span class="h">\ud83c\udf21</span><span class="t">Pas de jour d\u2019arrêt dans ce plan : la récupération se fait <b>dans</b> la journée. Chaque fiche d\u2019étape indique où se réfugier l\u2019après-midi \u2014 mine de Blanzy à 13 °C, Fosse Dionne de Tonnerre, cryptes d\u2019Auxerre, basilique de Paray, thermes de Bourbon-Lancy, plage des étangs de Baye.</span></li>'
-    +'<li><span class="h">\ud83d\ude86</span><span class="t">Journée vraiment impossible ? Une gare jalonne presque chaque étape : sauter un tronçon en TER reste la soupape, et l\u2019app recalcule la suite toute seule.</span></li>'
-    +'</ul></div>'
-    +'<div class="card"><h3>\u26d1 Le week-end du 15 août</h3>'
-    +'<p>Le 15 août tombe un <b>samedi</b> : c\u2019est le week-end le plus chargé de l\u2019été sur les campings, et il tombe sur vos journées 1 à 3. Réserver dès maintenant les nuits des <b>13, 14, 15 et 16 août</b>. Le reste peut se réserver à J-2 en route. Beaucoup de commerces seront fermés le samedi 15 : faire le plein de ravitaillement le vendredi 14.</p>'
-    +'</div>'
-    +'<div class="card"><h3>\ud83d\udd17 Ressources</h3><ul class="tl">'
-    +'<li><span class="h">Spots</span><span class="t"><b>Park4Night</b> — l\u2019outil de référence pour les emplacements de bivouac : avis, photos et spots repérés par les voyageurs, des données que l\u2019on ne trouve nulle part ailleurs. Cette app ne les référence volontairement pas : Park4Night fait ça mieux.<br style="margin-top:4px"><b>Welcome To My Garden</b> (jardins gratuits, réservés aux voyageurs à vélo) · HomeCamper · Gamping · Warmshowers · France Passion</span></li>'
-    +'<li><span class="h">Tracés</span><span class="t"><b>francevelotourisme.com</b> (GPX officiels du Tour de Bourgogne) · af3v.org · cycle.travel · komoot</span></li>'
-    +'<li><span class="h">Trains</span><span class="t"><b>viamobigo.fr</b> \u2014 horaires et réservation vélo</span></li>'
-    +'</ul></div>';
+    +'<div class="card"><h3>Liens</h3>'
+    +'<div class="kv"><span>Tracé</span><b><a href="https://www.francevelotourisme.com/itineraire/tour-de-bourgogne-a-velo" target="_blank" rel="noopener">Tour de Bourgogne \u2014 GPX officiels</a></b></div>'
+    +'<div class="kv"><span>Spots</span><b><a href="https://park4night.com" target="_blank" rel="noopener">Park4Night</a></b></div>'
+    +'<div class="kv"><span>Jardins</span><b><a href="https://welcometomygarden.org" target="_blank" rel="noopener">Welcome To My Garden</a></b></div>'
+    +'</div>';
 }
 
 /* ---------- matériel ---------- */
 var GEAR = [
  ['\ud83d\udeb2 Vélos, remorques &amp; portage', [
-  'Vélos révisés (transmission, freins, roulements) \u2014 atelier 2 semaines avant, pas la veille',
-  'Pneus 40 mm+ anti-crevaison, quasi neufs',
-  'Remorques : pneus, roulements, timon + goupille de secours, drapeaux, moustiquaires',
-  'Harnais contrôlés + cale-têtes pour les siestes en roulant',
+  'Vélos révisés : transmission, freins, roulements',
+  'Pneus 40 mm+ anti-crevaison',
+  'Remorques : pneus, roulements, timon + goupille, drapeaux, moustiquaires',
+  'Harnais + cale-têtes',
   'Sacoches arrière étanches ×2 paires + sacoches de guidon',
   'Tendeurs et sangles pour le volume du dessus',
   'Antivol U + câble long (les 2 vélos et les remorques ensemble)',
   'Éclairages avant/arrière rechargeables + feux sur les remorques',
   'Rétroviseurs, béquilles doubles, sonnettes',
-  'Supports téléphone + GPX chargés hors-ligne + carte papier de secours'
+  'Supports téléphone + GPX hors-ligne + carte papier'
  ]],
  ['\ud83d\udd27 Réparation', [
-  '2 chambres à air par taille \u2014 vélos ET remorques (tailles souvent différentes !)',
+  '2 chambres à air par taille : vélos et remorques',
   'Rustines + colle fraîche, 3 démonte-pneus',
   'Vraie pompe avec manomètre',
   'Multitool avec dérive-chaîne + 2 maillons rapides compatibles',
-  'Une patte de dérailleur de rechange PAR vélo (introuvable en route)',
+  '1 patte de dérailleur de rechange par vélo',
   'Câble de frein + câble de dérailleur universels',
   'Lubrifiant chaîne, chiffon, gants nitrile',
   'Colliers rilsan, duct tape enroulé sur la pompe, fil de fer',
@@ -1906,49 +1949,49 @@ var GEAR = [
   'Aiguille et fil épais (sacoches, harnais, tente)'
  ]],
  ['\u26fa Bivouac &amp; camping', [
-  'Tente 4 places avec grande abside \u2014 la 2 places de rando ne suffira pas',
+  'Tente 4 places avec grande abside',
   'Bâche de sol, sardines de rechange, cordelette 10 m',
   '4 matelas (mousse pour les enfants : increvables)',
-  '4 sacs de couchage été \u2014 les nuits d\u2019août descendent à 12\u201315 °C',
+  '4 sacs de couchage été (confort ~10 °C)',
   'Draps de soie + oreillers gonflables enfants',
   '2 frontales + lanterne de camp',
-  'Réchaud à cartouche à valve (EN417, se trouve partout en France) + 2 cartouches',
+  'Réchaud à cartouche à valve EN417 + 2 cartouches',
   'Popote : 2 casseroles gigognes, poêle, 4 bols, 4 gobelets, couverts, couteau',
   'Éponge, savon biodégradable, torchon, briquets ×2',
   'Sacs poubelle, sacs zip, sac étanche 20 L',
-  'Tarp léger = ombre du midi quand il n\u2019y a pas d\u2019arbre'
+  'Tarp léger'
  ]],
  ['\ud83d\udca7 Eau &amp; nourriture', [
   '2 gourdes par personne + poche à eau souple 6 L pour le camp',
   'Pastilles de purification (secours)',
-  'Sels de réhydratation \u2014 non négociable en canicule avec des petits',
+  'Sels de réhydratation',
   'Petit-déj : flocons d\u2019avoine, lait en poudre ou briquettes, miel, fruits secs',
   'Dîner (1\u20132 jours max) : pâtes, semoule, lentilles corail, sauce tomate, huile d\u2019olive',
-  'Encas enfants en quantité : compotes à boire, biscuits, pain d\u2019épices',
-  'Le reste s\u2019achète chaque jour \u2014 un village par jour minimum sur toute la boucle',
+  'Encas : compotes à boire, biscuits, pain d\u2019épices',
+  'Ravitaillement quotidien en village',
   'Petit sac isotherme souple'
  ]],
  ['\ud83d\udc55 Habits (rien en coton)', [
   'Adultes : 2 cuissards, 3 t-shirts techniques, 1 manches longues anti-UV, polaire fine, veste pluie, pantalon léger, 4 sous-vêtements, 4 paires de chaussettes',
-  'Enfants : idem + 2 tenues de rechange supplémentaires + pyjama chaud',
+  'Enfants : idem + 2 tenues de rechange + pyjama chaud',
   'Casques ×4 ajustés',
-  'Chapeaux ×4 + lunettes de soleil cat. 3 (les enfants prennent la réverbération)',
+  'Chapeaux ×4 + lunettes de soleil cat. 3',
   'Maillots ×4 + 2 grandes serviettes microfibre',
   'Chaussures fermées ×4 + sandales pour le camp',
   'Gants vélo, buffs',
-  'Lessive en tube + 5 m de corde : lavage tous les 2 jours'
+  'Lessive en tube + 5 m de corde'
  ]],
  ['\ud83e\uddf4 Santé &amp; quotidien', [
   'Crème solaire SPF50 ×2 tubes + stick lèvres',
   'Savon multi-usage, brosses à dents, dentifrice, serviette microfibre',
-  'Crème anti-frottements (adultes) et crème change (enfants \u2014 sièges de remorque par 35 °C)',
+  'Crème anti-frottements + crème change',
   'Pharmacie : paracétamol adulte et pédiatrique (doses au poids), antihistaminique, désinfectant, pansements, tire-tique, thermomètre, sérum physiologique, arnica, crème brûlures, réhydratation pédiatrique',
-  'Anti-moustiques (canaux au crépuscule !)',
+  'Anti-moustiques',
   'Lingettes, papier toilette, petite pelle',
-  'Cartes d\u2019identité ×4, cartes bancaires, ~150 € en espèces (campings municipaux souvent cash), assurances',
+  'Cartes d\u2019identité ×4, cartes bancaires, ~150 € espèces, assurances',
   'Batteries externes 20 000 mAh ×2, chargeurs, adaptateur prises CH \u2192 FR',
-  'Doudous ×2 \u2014 l\u2019objet le plus critique de la liste. Vérifier À CHAQUE départ d\u2019étape',
-  'Livres, gommettes, crayons pour les fins d\u2019après-midi',
+  'Doudous ×2',
+  'Livres, gommettes, crayons',
   'Couteau suisse, jeu de cartes, carnet de bord'
  ]]
 ];
@@ -1990,15 +2033,11 @@ function gearCounts(){
 function gearHtml(){
   var c = gearCounts();
   var nDel = Object.keys(GEARDEL).length;
-  var h = '<div class="card"><h2><small>Autonomie 17 jours</small>Le matériel</h2>'
-    +'<p class="muted" style="margin-top:8px">Calibré pour 2 adultes et 2 enfants de 3 ans en remorques, camping et bivouac, canicule d\u2019août. Un village par jour minimum sur toute la boucle : inutile de porter plus de 24 à 36 h de nourriture. Viser 15 à 18 kg de bagages par vélo, remorques non comprises.</p>'
-    +'<p class="ckprog" style="margin-top:12px" id="ckprog">'+c.done+' / '+c.total+' cochés</p>'
+  var h = '<div class="card">'
+    +'<p class="ckprog" id="ckprog">'+c.done+' / '+c.total+' cochés</p>'
     +'<div class="btn-row"><button class="gear-edit">'+(GEAREDIT?'\u2713 Terminer les modifications':'\u270f\ufe0f Modifier la liste')+'</button></div>';
   if(GEAREDIT && nDel>0){
     h += '<div class="btn-row"><button class="gear-restore">\u21ba Restaurer les '+nDel+' élément'+(nDel>1?'s':'')+' d\u2019origine supprimé'+(nDel>1?'s':'')+'</button></div>';
-  }
-  if(GEAREDIT){
-    h += '<p class="muted" style="margin-top:10px;font-size:.78rem">Touche \u2715 pour retirer un élément, ou ajoute le tien en bas de chaque catégorie. Les éléments d\u2019origine sont seulement masqués \u2014 tu peux toujours les restaurer.</p>';
   }
   h += '</div>';
   GEAR.forEach(function(cat, ci){
@@ -2208,9 +2247,9 @@ mainEl.addEventListener('click', function(ev){
   if(t.closest && t.closest('.share-btn')){ toggleShare(); return; }
 });
 
-function validateDay(day, nodeName){
-  if(!nodeName) return;
-  STATE.done['d'+day] = nodeName;
+function validateDay(day, nodeIdx){
+  if(nodeIdx===null || nodeIdx===undefined || nodeIdx==='') return;
+  STATE.done['d'+day] = parseInt(nodeIdx, 10);
   delete STATE.days['d'+day];          /* le fait remplace le choix théorique */
   saveState();
   RUN = computeStages();
