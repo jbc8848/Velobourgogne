@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tour de Bourgogne à vélo — 17 jours en famille</title>
+<title>Tour de Bourgogne à vélo — 14 jours en famille</title>
 <meta name="description" content="Itinérance vélo 14 jours en famille au départ de Saint-Jean-de-Losne — 14 au 27 août 2026">
 <meta name="theme-color" content="#08252e" id="meta-theme">
 <script>try{if(localStorage.getItem('bourg-theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}</script>
@@ -510,12 +510,12 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v5.1.0</span>
+      <span class="ver" id="app-version">v6.0.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
-    <h1>Tour de Bourgogne à vélo<br><span class="gold">17 jours en famille</span></h1>
-    <p class="subline">13 → 29 août 2026 · boucle fermée au départ de Saint-Jean-de-Losne · sens horaire.</p>
+    <h1>Tour de Bourgogne à vélo<br><span class="gold">14 jours en famille</span></h1>
+    <p class="subline">16 → 29 août 2026 · boucle fermée au départ de Saint-Jean-de-Losne · sens horaire.</p>
       </div>
 </header>
 
@@ -523,14 +523,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v5.1.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v6.0.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v5.1.0
+   Tour de Bourgogne à vélo — PWA · v6.0.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -849,7 +849,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v5.1.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v6.0.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -859,8 +859,8 @@ try{
   oldK.forEach(function(k){ localStorage.removeItem(k); });
 }catch(e){}
 
-var TOTAL_DAYS = 17;
-var DATE0 = new Date(2026, 7, 13); /* jeudi 13 août 2026 */
+var TOTAL_DAYS = 14;
+var DATE0 = new Date(2026, 7, 16); /* dimanche 16 août 2026 */
 var JOURS = ['dim','lun','mar','mer','jeu','ven','sam'];
 var MOIS = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
 
