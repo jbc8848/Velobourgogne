@@ -1,10 +1,10 @@
-/* Tour de Bourgogne à vélo — service worker v6.0.0
+/* Tour de Bourgogne à vélo — service worker v6.1.0
    - App shell : cache-first (index, manifest, icônes, Leaflet, fonts)
    - Tuiles OSM : network-first avec mise en cache à la volée
      → les zones consultées en ligne restent visibles hors-ligne */
 'use strict';
 
-var VERSION = 'bourgogne-v6.0.0';
+var VERSION = 'bourgogne-v6.1.0';
 var SHELL_CACHE = VERSION + '-shell';
 var TILE_CACHE = VERSION + '-tiles';
 var TILE_LIMIT = 400;
