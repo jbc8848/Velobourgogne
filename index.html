@@ -510,7 +510,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v6.1.0</span>
+      <span class="ver" id="app-version">v6.2.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -523,14 +523,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v6.1.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v6.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v6.1.0
+   Tour de Bourgogne à vélo — PWA · v6.2.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -849,7 +849,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v6.1.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v6.2.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1355,6 +1355,12 @@ function initStageMap(st){
         var ok = applyRealKm(st, co);
         var ke = document.getElementById('km-'+st.id);
         if(ke){ ke.textContent = kmLabel(st); }
+        /* le bouton sélectionné doit afficher la même valeur que l'encart */
+        var selBtn = document.querySelector('.seg .dch.on b');
+        if(selBtn && ok){
+          var parts = selBtn.textContent.split('\u00b7');
+          selBtn.textContent = kmLabel(st) + (parts.length>1 ? ' \u00b7'+parts.slice(1).join('\u00b7') : '');
+        }
         var de = document.getElementById('dp-'+st.id);
         if(de){ de.textContent = pr.dplus+' m'; }
       }
@@ -2250,21 +2256,33 @@ function stageHtml(st){
   var ck = 'd'+st.day;
   var cur = STATE.days[ck]===-1 ? -1 : (STATE.days[ck]===1 ? 1 : 0);
   var chain = st.chain, cum = st.cum;
+  /* L'option retenue correspond à l'étape en cours : on affiche sa distance
+     RÉELLE (celle du routage), la même que dans l'encart du haut. Les deux
+     autres options ne sont pas routées : ce sont des estimations, marquées
+     « ≈ » pour qu'aucun chiffre ne se contredise à l'écran. */
+  var iTo = chain.indexOf(st.to);
+  var rk = realKm(st);
   function optLabel(idx){
     if(idx==null) return null;
     var i0 = chain.indexOf(st.from);
-    return {km: Math.round(cum[idx]-cum[i0]), n: chain[idx].n};
+    var est = Math.round(cum[idx]-cum[i0]);
+    if(idx===iTo && rk!==null){ return {km:rk, n:chain[idx].n, exact:true}; }
+    return {km:est, n:chain[idx].n, exact:false};
+  }
+  function optTxt(o){
+    if(!o) return null;
+    return (o.exact ? '' : '\u2248 ') + o.km + ' km \u00b7 ' + o.n;
   }
   var oc = optLabel(st.opts.court), on2 = optLabel(st.opts.normal), ol = optLabel(st.opts.long);
   if(!STATE.done['d'+st.day]){
   h += '<div class="vbox"><h4>Longueur de cette journée</h4>'
     +'<div class="seg">'
     +'<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1"'+(oc?'':' disabled')+'>Plus court'
-      +'<b>'+(oc?oc.km+' km · '+oc.n:'indisponible')+'</b></button>'
+      +'<b>'+(oc?optTxt(oc):'indisponible')+'</b></button>'
     +'<button class="dch'+(cur===0?' on':'')+'" data-day="'+st.day+'" data-c="0">Normal'
-      +'<b>'+(on2?on2.km+' km · '+on2.n:'\u2014')+'</b></button>'
+      +'<b>'+(on2?optTxt(on2):'\u2014')+'</b></button>'
     +'<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1"'+(ol?'':' disabled')+'>Plus long'
-      +'<b>'+(ol?ol.km+' km · '+ol.n:'indisponible')+'</b></button>'
+      +'<b>'+(ol?optTxt(ol):'indisponible')+'</b></button>'
     +'</div>';
   /* --- validation de la journée : la réalité prime sur le plan --- */
   var doneName = STATE.done['d'+st.day] || null;
@@ -2283,7 +2301,10 @@ function stageHtml(st){
     h += '<div class="btn-row"><button class="valid-btn" data-day="'+st.day+'" data-node="'+esc(st.to.n)+'">\u2713 Fait comme prévu \u2014 '+esc(st.to.n)+'</button></div>'
       +'<div class="addrow" style="margin-top:8px">'
       +'<select class="done-sel" data-day="'+st.day+'">'
-      + alts.map(function(a){ return '<option value="'+a.i+'"'+(a.i===st.chain.indexOf(st.to)?' selected':'')+'>'+esc(a.n)+' \u00b7 '+a.km+' km</option>'; }).join('')
+      + alts.map(function(a){
+          var exact = (a.i===iTo && rk!==null);
+          return '<option value="'+a.i+'"'+(a.i===iTo?' selected':'')+'>'+esc(a.n)+' \u00b7 '
+            +(exact?'':'\u2248 ')+(exact?rk:a.km)+' km</option>'; }).join('')
       +'</select><button class="valid-other" data-day="'+st.day+'">Valider</button></div>'
 ;
   }
