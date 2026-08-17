@@ -230,6 +230,8 @@ body.noscroll{overflow:hidden}
    pastilles de marqueurs sont contre-tournées pour rester lisibles. */
 .maprot{transform-origin:50% 50%; transition:transform .25s linear}
 .maprot .leaflet-control-container{display:none}
+.navmode .guidon-fs .leaflet-control-zoom{display:none}
+.navmode .guidon-fs .leaflet-control-attribution{display:none}
 .maprot .leaflet-marker-icon > div,
 .maprot .stagelbl,
 .maprot .leaflet-popup-content-wrapper{transform:rotate(var(--counter,0deg))}
@@ -562,7 +564,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v7.2.0</span>
+      <span class="ver" id="app-version">v7.3.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -575,14 +577,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v7.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v7.3.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v7.2.0
+   Tour de Bourgogne à vélo — PWA · v7.3.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -901,7 +903,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.2.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.3.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -2376,7 +2378,12 @@ function enterGuidon(sid){
 
   box.classList.add('guidon-fs');
   document.body.classList.add('noscroll');
-  if(box.requestFullscreen){ box.requestFullscreen().catch(function(){}); }
+  document.documentElement.classList.add('navmode');
+  /* Pas d'API Fullscreen : elle n'affiche QUE l'élément mis en plein écran et
+     ses descendants — nos bandeaux et boutons, posés sur <body> pour échapper
+     à la rotation, disparaissaient. La classe .guidon-fs suffit (position
+     fixe, plein écran), et en PWA installée il n'y a pas de barre navigateur
+     à masquer de toute façon. */
   if('wakeLock' in navigator){
     navigator.wakeLock.request('screen').then(function(x){ GUIDON.wl=x; }).catch(function(){});
   }
@@ -2508,6 +2515,7 @@ function exitGuidon(){
   });
   document.body.classList.remove('noscroll');
   if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
+  document.documentElement.classList.remove('navmode');
   if(m){ m._follow=false; setTimeout(function(){ m.invalidateSize(); },250); }
   if(GUIDON.wl){ try{ GUIDON.wl.release(); }catch(e){} GUIDON.wl=null; }
   GUIDON.active=false; GUIDON.id=null; GUIDON.nav=null; GUIDON.co=null; GUIDON.prevPt=null;
