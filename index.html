@@ -506,6 +506,9 @@ footer{
 .dbtn.off{background:var(--panel);border-color:var(--line);color:var(--muted);text-decoration:line-through;
   text-decoration-color:var(--aqua)}
 .dgrid-help{font-size:.72rem;color:var(--muted);margin:7px 0 2px;line-height:1.4}
+.pickmap-btn{width:100%;background:var(--panel);border:1px dashed var(--line);color:var(--ink);
+  border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
+.pickmap-btn.arm{border-style:solid;border-color:var(--gold);background:rgba(240,184,96,.16);color:var(--gold)}
 .dreload-all{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);
   border-radius:10px;padding:10px 8px;font:600 .78rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .dbtn.fail{background:rgba(229,138,122,.2);border-color:rgba(229,138,122,.6);color:var(--danger)}
@@ -566,7 +569,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v7.6.0</span>
+      <span class="ver" id="app-version">v8.0.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -579,14 +582,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v7.6.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v8.0.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v7.6.0
+   Tour de Bourgogne à vélo — PWA · v8.0.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -909,7 +912,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.6.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v8.0.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -930,7 +933,7 @@ var MOIS = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct'
    la nouvelle valeur, et le changement n'a aucun effet pour l'utilisateur
    existant. C'est ce qui laissait la boucle ouverte à Dijon en v3.2. */
 var STATEVER = 2;
-var STATE = {v:STATEVER, opts:{}, days:{}, done:{}};
+var STATE = {v:STATEVER, opts:{}, days:{}, done:{}, stops:{}};
 OPTIONS.forEach(function(o){ STATE.opts[o.id] = o.on; });
 try{
   var sv = JSON.parse(localStorage.getItem('bourg-state2')||'null');
@@ -943,12 +946,13 @@ try{
     }
     if(sv.days){ STATE.days = sv.days; }
     if(sv.done){ STATE.done = sv.done; }
+    if(sv.stops && typeof sv.stops==='object'){ STATE.stops = sv.stops; }
     if(sv.v !== STATEVER){ try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
   }
 }catch(e){}
-function saveState(){ STATE.v = STATEVER; try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
+function saveState(){ STATE.v = STATEVER; if(!STATE.stops) STATE.stops = {}; try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
 function resetDays(){ STATE.days = {}; saveState(); }
-function resetDone(){ STATE.done = {}; saveState(); }
+function resetDone(){ STATE.done = {}; STATE.stops = {}; saveState(); }
 
 (function(){
   var h = location.hash||'', got=false;
@@ -973,14 +977,53 @@ function resetDone(){ STATE.done = {}; saveState(); }
    sur la distance et les jours restants.
    ========================================================= */
 function buildChain(){
-  var chain = [];
+  var base = [];
   for(var i=0;i<CHAIN.length;i++){
     var n = CHAIN[i];
     if(n.n==='Saint-Jean-de-Losne' && i>0 && !STATE.opts.bouclage) continue;
-    chain.push(Object.assign({}, n, {i:chain.length}));
+    /* clé stable : les index bougent dès qu'un arrêt libre est inséré, alors
+       que les validations doivent survivre à ces insertions. */
+    base.push(Object.assign({}, n, {key:'n'+i}));
   }
-  return chain;
+  /* Arrêts libres choisis sur la carte : insérés comme des villages, à leur
+     position réelle le long du parcours. */
+  var stops = [];
+  Object.keys(STATE.stops||{}).forEach(function(k){
+    var sp = STATE.stops[k];
+    if(!sp || sp.lat==null) return;
+    stops.push({k:k, lat:sp.lat, lng:sp.lng, name:sp.name});
+  });
+  if(!stops.length){ return base; }
+
+  stops.forEach(function(sp){
+    /* segment du parcours le plus proche du point touché */
+    var bi = 0, bd = Infinity, bt = 0;
+    for(var j=0;j<base.length-1;j++){
+      var r = segCalc([sp.lat, sp.lng], base[j].ll, base[j+1].ll);
+      if(r.d < bd){ bd = r.d; bi = j; bt = r.t; }
+    }
+    sp._i = bi; sp._t = bt;
+  });
+  /* insertion de la fin vers le début pour ne pas décaler les positions */
+  stops.sort(function(a,b){ return (b._i - a._i) || (b._t - a._t); });
+  stops.forEach(function(sp){
+    var nxt = base[sp._i+1];
+    if(!nxt) return;
+    var total = nxt.km;
+    var part = Math.max(1, Math.round(total * sp._t));
+    if(part >= total) part = Math.max(1, total-1);
+    var node = {
+      n: sp.name || ('Arrêt libre \u00b7 ' + base[sp._i].n + ' \u2192 ' + nxt.n),
+      ll: [sp.lat, sp.lng], km: part, surf: nxt.surf, vr: nxt.vr,
+      gare: '\u2014', svc: [], camps: [{n:'Point choisi sur la carte', t:'arrêt libre'}],
+      key: 's'+sp.k, custom: true
+    };
+    base.splice(sp._i+1, 0, node);
+    base[sp._i+2].km = Math.max(1, total - part);
+  });
+  return base;
 }
+
 function chainCum(chain){
   var cum=[0];
   for(var i=1;i<chain.length;i++){ cum.push(cum[i-1]+chain[i].km); }
@@ -1009,6 +1052,10 @@ function computeStages(){
   /* index du maillon confirmé pour un jour donné, ou -1 */
   function doneIdx(day, after){
     var v = STATE.done['d'+day];
+    if(typeof v === 'string' && v.length && !/^\d+$/.test(v)){
+      for(var ki=0; ki<M; ki++){ if(chain[ki].key===v) return ki; }
+      return -1;
+    }
     if(v===undefined || v===null) return -1;
     if(typeof v === 'number'){ return (v>=0 && v<M) ? v : -1; }
     /* ancien format (nom) : on cherche la première occurrence APRÈS la position
@@ -1508,7 +1555,10 @@ function initStageMap(st){
   setTimeout(fitStage, 600);
   m.on('zoomstart dragstart', function(){ m._userMoved = true; });
   /* un appui sur la carte de l'étape ouvre la navigation plein écran */
-  m.on('click', function(){ if(!GUIDON.active){ enterGuidon(st.id); } });
+  m.on('click', function(ev){
+    if(PICK.on && PICK.sid===st.id){ setStop(PICK.day, ev.latlng); return; }
+    if(!GUIDON.active){ enterGuidon(st.id); }
+  });
 
   var note = document.getElementById('rt-'+st.id);
   if(note){ note.textContent = 'Tracé schématique — affinage par routage en cours…'; }
@@ -2841,6 +2891,7 @@ function stageHtml(st){
           return '<option value="'+a.i+'"'+(a.i===iTo?' selected':'')+'>'+esc(a.n)+' \u00b7 '
             +(exact?'':'\u2248 ')+(exact?rk:a.km)+' km</option>'; }).join('')
       +'</select><button class="valid-other" data-day="'+st.day+'">Corriger</button></div>'
+      +'<div class="btn-row"><button class="pickmap-btn" data-day="'+st.day+'" data-stage="'+st.id+'">\ud83d\udccd Choisir un point sur la carte</button></div>'
       +'<div class="btn-row"><button class="unvalid-btn" data-day="'+st.day+'">\u21ba Annuler cette validation</button></div>';
   }else{
     h += '<div class="btn-row"><button class="valid-btn" data-day="'+st.day+'" data-node="'+esc(st.to.n)+'">\u2713 Fait comme prévu \u2014 '+esc(st.to.n)+'</button></div>'
@@ -2851,7 +2902,8 @@ function stageHtml(st){
           return '<option value="'+a.i+'"'+(a.i===iTo?' selected':'')+'>'+esc(a.n)+' \u00b7 '
             +(exact?'':'\u2248 ')+(exact?rk:a.km)+' km</option>'; }).join('')
       +'</select><button class="valid-other" data-day="'+st.day+'">Valider</button></div>'
-;
+      +'<div class="btn-row"><button class="pickmap-btn" data-day="'+st.day+'" data-stage="'+st.id+'">\ud83d\udccd Choisir un point sur la carte</button></div>'
+      +'<p class="muted" style="font-size:.76rem;margin-top:6px">Arrêtés entre deux villages ? Touche ce bouton puis le point exact sur la carte.</p>';
   }
   h += '</div>';                       /* fin du bloc « où avez-vous dormi » */
 
@@ -3262,6 +3314,12 @@ mainEl.addEventListener('click', function(ev){
     }
     return;
   }
+  var pk = t.closest ? t.closest('.pickmap-btn') : null;
+  if(pk){
+    if(PICK.on){ disarmPick(); render(); }
+    else{ armPick(pk.getAttribute('data-day'), pk.getAttribute('data-stage')); }
+    return;
+  }
   var vb = t.closest ? t.closest('.valid-btn') : null;
   if(vb){ validateDay(vb.getAttribute('data-day'), vb.getAttribute('data-node')); return; }
   var vo = t.closest ? t.closest('.valid-other') : null;
@@ -3302,11 +3360,94 @@ mainEl.addEventListener('click', function(ev){
   if(t.closest && t.closest('.share-btn')){ toggleShare(); return; }
 });
 
+var PICK = {on:false, day:null, sid:null};
+function armPick(day, sid){
+  PICK.on = true; PICK.day = parseInt(day,10); PICK.sid = sid;
+  var note = document.getElementById('rt-'+sid);
+  if(note){ note.textContent = 'Touche la carte à l\u2019endroit exact où vous vous êtes arrêtés.'; note.style.color = 'var(--gold)'; }
+  var b = document.querySelector('.pickmap-btn[data-day="'+PICK.day+'"]');
+  if(b){ b.textContent = '\u2716 Annuler la sélection'; b.classList.add('arm'); }
+  var m = maps[sid];
+  if(m && m._container){ m._container.style.cursor = 'crosshair'; }
+}
+function disarmPick(){
+  var sid = PICK.sid;
+  PICK.on = false; PICK.day = null; PICK.sid = null;
+  var note = sid ? document.getElementById('rt-'+sid) : null;
+  if(note){ note.style.color = ''; }
+  var m = sid ? maps[sid] : null;
+  if(m && m._container){ m._container.style.cursor = ''; }
+}
+/* Enregistre un arrêt libre : le point est projeté sur le parcours, inséré
+   dans la chaîne comme un village, et la journée est validée dessus. */
+function setStop(day, latlng){
+  var key = 'd'+day;
+  /* Refus explicite si le point choisi est hors de portée pour cette journée :
+     sans message, le choix était silencieusement ignoré. */
+  var stg = null;
+  RUN.stages.forEach(function(x){ if(x.type==='ride' && x.day===day) stg = x; });
+  if(stg){
+    var i0 = stg.chain.indexOf(stg.from);
+    var bi = 0, bd = Infinity, bt = 0;
+    for(var j=0;j<stg.chain.length-1;j++){
+      var rr = segCalc([latlng.lat, latlng.lng], stg.chain[j].ll, stg.chain[j+1].ll);
+      if(rr.d < bd){ bd = rr.d; bi = j; bt = rr.t; }
+    }
+    var kmTo = stg.cum[bi] + (stg.cum[bi+1]-stg.cum[bi])*bt - stg.cum[i0];
+    var note = document.getElementById('rt-'+stg.id);
+    if(bd > 4000){
+      if(note){ note.textContent = 'Ce point est à '+Math.round(bd/1000)+' km du parcours \u2014 choisis un endroit plus proche du tracé.'; }
+      return;
+    }
+    if(kmTo <= 2 || kmTo > 120){
+      if(note){ note.textContent = kmTo <= 2
+        ? 'Ce point est au départ de la journée \u2014 choisis un endroit plus loin sur le parcours.'
+        : 'Ce point est à '+Math.round(kmTo)+' km du départ du jour \u2014 trop loin pour une seule journée.'; }
+      return;
+    }
+  }
+  STATE.stops[key] = {lat:+latlng.lat.toFixed(5), lng:+latlng.lng.toFixed(5)};
+  STATE.done[key] = 's'+key;
+  Object.keys(STATE.done).forEach(function(k){
+    var d2 = parseInt(k.slice(1),10);
+    if(d2 === day) return;
+    if(d2 > day && STATE.done[k]==='s'+k){ return; }
+  });
+  delete STATE.days[key];
+  saveState();
+  RUN = computeStages();
+  /* validations devenues contradictoires */
+  var pos = -1;
+  RUN.chain.forEach(function(n,i){ if(n.key===STATE.done[key]) pos = i; });
+  if(pos>-1){
+    Object.keys(STATE.done).forEach(function(k){
+      var d2 = parseInt(k.slice(1),10);
+      if(d2===day) return;
+      var p2 = -1;
+      RUN.chain.forEach(function(n,i){ if(n.key===STATE.done[k] || i===STATE.done[k]) p2 = i; });
+      if(p2<0) return;
+      if((d2 < day && p2 >= pos) || (d2 > day && p2 <= pos)){
+        delete STATE.done[k];
+        if(STATE.stops[k]) delete STATE.stops[k];
+      }
+    });
+    saveState();
+    RUN = computeStages();
+  }
+  disarmPick();
+  openStage = null; currentTab = 'etapes';
+  render(); window.scrollTo(0,0);
+}
 function validateDay(day, nodeIdx){
   if(nodeIdx===null || nodeIdx===undefined || nodeIdx==='') return;
-  var idx = parseInt(nodeIdx, 10);
   var dn = parseInt(day, 10);
-  STATE.done['d'+dn] = idx;
+  var idx = parseInt(nodeIdx, 10);
+  var node = RUN.chain[idx];
+  if(!node) return;
+  /* on enregistre la CLÉ, pas la position : elle survit à l'insertion
+     d'arrêts libres qui décalent tous les index suivants */
+  STATE.done['d'+dn] = node.key;
+  if(!node.custom && STATE.stops['d'+dn]){ delete STATE.stops['d'+dn]; }
   /* Une correction peut rendre d'autres validations impossibles : on ne peut
      pas être plus loin un jour antérieur, ni moins loin un jour postérieur.
      On retire donc celles qui deviennent contradictoires plutôt que de
@@ -3314,9 +3455,16 @@ function validateDay(day, nodeIdx){
   Object.keys(STATE.done).forEach(function(k){
     var d2 = parseInt(k.slice(1), 10);
     var v2 = STATE.done[k];
-    if(d2 === dn || typeof v2 !== 'number') return;
-    if(d2 < dn && v2 >= idx){ delete STATE.done[k]; }
-    if(d2 > dn && v2 <= idx){ delete STATE.done[k]; }
+    if(d2 === dn) return;
+    var p2 = -1;
+    for(var z=0; z<RUN.chain.length; z++){
+      if(RUN.chain[z].key===v2 || z===v2){ p2 = z; break; }
+    }
+    if(p2 < 0) return;
+    if((d2 < dn && p2 >= idx) || (d2 > dn && p2 <= idx)){
+      delete STATE.done[k];
+      if(STATE.stops[k]) delete STATE.stops[k];
+    }
   });
   delete STATE.days['d'+day];          /* le fait remplace le choix théorique */
   saveState();
