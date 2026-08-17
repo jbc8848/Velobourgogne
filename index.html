@@ -221,8 +221,35 @@ body.noscroll{overflow:hidden}
   padding:12px 14px; display:flex; align-items:center; gap:10px;
 }
 /* --- mode navigation plein écran --- */
-.navbar{position:absolute; z-index:1200; left:0; right:0; top:0;
+.navbar{position:fixed; z-index:4000; left:0; right:0; top:0;
   display:flex; flex-direction:column; pointer-events:none}
+/* --- rotation de la carte (cap en haut) ---
+   Leaflet ne sait pas pivoter : on tourne l'élément carte en CSS et on
+   agrandit de 45 % pour qu'aucun coin vide n'apparaisse. Les contrôles
+   Leaflet sont masqués (nos propres boutons sont hors de l'élément) et les
+   pastilles de marqueurs sont contre-tournées pour rester lisibles. */
+.maprot{transform-origin:50% 50%; transition:transform .25s linear}
+.maprot .leaflet-control-container{display:none}
+.maprot .leaflet-marker-icon > div,
+.maprot .stagelbl,
+.maprot .leaflet-popup-content-wrapper{transform:rotate(var(--counter,0deg))}
+.navcompass{position:fixed; z-index:4000; right:12px;
+  top:calc(112px + env(safe-area-inset-top));
+  width:52px; height:52px; border-radius:14px; border:1px solid rgba(255,255,255,.18);
+  background:rgba(8,37,46,.95); color:#eaf4f2; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:1px; cursor:pointer; pointer-events:auto;
+  font:600 .58rem/1 'Spline Sans Mono',monospace; box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.navcompass .cico{font-size:1.25rem; line-height:1}
+.navcompass.head{background:#f0b860; color:#08252e; border-color:#f0b860}
+.navlocate{position:fixed; z-index:4000; right:12px;
+  top:calc(174px + env(safe-area-inset-top));
+  width:52px; height:52px; border-radius:14px; border:1px solid rgba(255,255,255,.18);
+  background:rgba(8,37,46,.95); color:#eaf4f2; display:flex; align-items:center;
+  justify-content:center; font-size:1.3rem; cursor:pointer; pointer-events:auto;
+  box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.navlocate.on{background:#f0b860; color:#08252e; border-color:#f0b860}
+.navattr{font-family:'Spline Sans Mono',monospace; font-size:.6rem; color:#8fb3ad}
+[data-theme="light"] .navcompass, [data-theme="light"] .navlocate{background:rgba(255,255,255,.96); color:var(--ink)}
 .navtop{margin:calc(8px + env(safe-area-inset-top)) 10px 0; background:rgba(8,37,46,.95);
   border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:14px 16px;
   display:flex; align-items:center; gap:16px; pointer-events:auto;
@@ -535,7 +562,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v7.1.0</span>
+      <span class="ver" id="app-version">v7.2.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -548,14 +575,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v7.1.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v7.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v7.1.0
+   Tour de Bourgogne à vélo — PWA · v7.2.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -874,7 +901,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.1.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.2.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1356,7 +1383,9 @@ function addLocate(m){
     if(m._follow){ m.setView(e.latlng, Math.max(m.getZoom(),16), {animate:true}); }
     paintLoc(m);
     if(GUIDON.active && maps[GUIDON.id]===m){
-      navUpdate({lat:e.latlng.lat, lng:e.latlng.lng, speed:(e.speed!=null?e.speed:null)});
+      navUpdate({lat:e.latlng.lat, lng:e.latlng.lng,
+                 speed:(e.speed!=null?e.speed:null),
+                 heading:(e.heading!=null?e.heading:null)});
     }
   });
   m.on('locationerror', function(){
@@ -2287,7 +2316,52 @@ function projectOn(co, pt, hintIdx){
   return {i:best, d:bd};
 }
 
-var GUIDON = {active:false, id:null, wl:null};
+var GUIDON = {active:false, id:null, wl:null, headUp:false, hdg:0, shown:0};
+try{ GUIDON.headUp = localStorage.getItem('bourg-headup')==='1'; }catch(e){}
+
+/* Cap courant : celui du GPS s'il est fourni, sinon calculé entre deux points
+   successifs (plus fiable à vélo, le cap GPS étant souvent absent à l'arrêt). */
+function navHeading(pos){
+  if(pos && pos.heading!=null && !isNaN(pos.heading) && pos.speed>0.7){
+    return pos.heading;
+  }
+  if(GUIDON.prevPt && pos){
+    var d = distM([GUIDON.prevPt.lat, GUIDON.prevPt.lng], [pos.lat, pos.lng]);
+    if(d > 8){ return bearing([GUIDON.prevPt.lat, GUIDON.prevPt.lng], [pos.lat, pos.lng]); }
+  }
+  return null;
+}
+/* Applique la rotation, en lissant pour éviter que la carte tremble. */
+function applyRotation(){
+  var el = GUIDON.id ? document.getElementById('map-'+GUIDON.id) : null;
+  if(!el) return;
+  if(!GUIDON.headUp){
+    el.classList.remove('maprot');
+    el.style.transform = '';
+    el.style.setProperty('--counter','0deg');
+    return;
+  }
+  el.classList.add('maprot');
+  /* on tourne de -cap : la direction de marche pointe vers le haut */
+  var target = -GUIDON.hdg;
+  var diff = ((target - GUIDON.shown + 540) % 360) - 180;
+  GUIDON.shown = GUIDON.shown + diff*0.35;          /* lissage */
+  el.style.transform = 'rotate('+GUIDON.shown.toFixed(1)+'deg) scale(1.45)';
+  el.style.setProperty('--counter', (-GUIDON.shown).toFixed(1)+'deg');
+}
+function setHeadUp(on){
+  GUIDON.headUp = !!on;
+  try{ localStorage.setItem('bourg-headup', on?'1':'0'); }catch(e){}
+  var c = document.querySelector('.navcompass');
+  if(c){
+    c.className = 'navcompass' + (on?' head':'');
+    c.innerHTML = '<span class="cico">'+(on?'\u27a4':'\u2b06')+'</span><span>'+(on?'CAP':'NORD')+'</span>';
+  }
+  if(!on){ GUIDON.shown = 0; }
+  applyRotation();
+  var m = GUIDON.id ? maps[GUIDON.id] : null;
+  if(m){ setTimeout(function(){ m.invalidateSize(); }, 60); }
+}
 function enterGuidon(sid){
   var st = null;
   RUN.stages.forEach(function(x){ if(x.id===sid) st = x; });
@@ -2308,6 +2382,7 @@ function enterGuidon(sid){
   }
   recenter(m);        /* GPS + suivi, et le bouton reflète l'état */
 
+  GUIDON.prevPt = null; GUIDON.hdg = 0; GUIDON.shown = 0;
   var bar = document.createElement('div');
   bar.className = 'navbar';
   bar.innerHTML =
@@ -2321,10 +2396,38 @@ function enterGuidon(sid){
     +  '<span id="nav-speed">\u2014</span>'
     +  '<button class="gexit" aria-label="Quitter la navigation">\u2715</button>'
     +'</div>';
-  box.appendChild(bar);
+  /* hors de l'élément carte : sinon la rotation ferait tourner le texte */
+  document.body.appendChild(bar);
+  GUIDON.bar = bar;
   bar.querySelector('.gexit').addEventListener('click', function(ev){
     ev.stopPropagation(); exitGuidon();
   });
+  var attr = document.createElement('span');
+  attr.className = 'navattr';
+  attr.textContent = '© OpenStreetMap';
+  bar.querySelector('.navbot').insertBefore(attr, bar.querySelector('.navbot .gexit'));
+
+  var comp = document.createElement('button');
+  comp.className = 'navcompass';
+  comp.setAttribute('aria-label','Orientation de la carte');
+  document.body.appendChild(comp);
+  GUIDON.comp = comp;
+  comp.addEventListener('click', function(ev){
+    ev.stopPropagation(); setHeadUp(!GUIDON.headUp);
+  });
+
+  var loc = document.createElement('button');
+  loc.className = 'navlocate' + (m._follow?' on':'');
+  loc.innerHTML = '\u25c9';
+  loc.setAttribute('aria-label','Revenir à ma position');
+  document.body.appendChild(loc);
+  GUIDON.locBtn = loc;
+  loc.addEventListener('click', function(ev){
+    ev.stopPropagation(); recenter(m);
+    loc.className = 'navlocate' + (m._follow?' on':'');
+  });
+
+  setHeadUp(GUIDON.headUp);
   setTimeout(function(){ m.invalidateSize(); },250);
   navUpdate();
 }
@@ -2341,6 +2444,16 @@ function navUpdate(pos){
 
   if(pos && pos.speed!=null && pos.speed>=0 && elS){
     elS.textContent = (pos.speed*3.6).toFixed(0)+' km/h';
+  }
+  if(pos){
+    var hd = navHeading(pos);
+    if(hd!==null){ GUIDON.hdg = hd; }
+    GUIDON.prevPt = {lat:pos.lat, lng:pos.lng};
+    applyRotation();
+    if(GUIDON.locBtn){
+      var mm = maps[GUIDON.id];
+      GUIDON.locBtn.className = 'navlocate' + (mm && mm._follow?' on':'');
+    }
   }
   if(!GUIDON.nav || !GUIDON.co){ return; }
   if(!pos){ return; }
@@ -2386,13 +2499,18 @@ function exitGuidon(){
   var box = document.getElementById('map-'+GUIDON.id), m = maps[GUIDON.id];
   if(box){
     box.classList.remove('guidon-fs');
-    var b = box.querySelector('.navbar'); if(b) b.remove();
+    box.classList.remove('maprot');
+    box.style.transform = '';
   }
+  ['bar','comp','locBtn'].forEach(function(k){
+    if(GUIDON[k] && GUIDON[k].parentNode){ GUIDON[k].parentNode.removeChild(GUIDON[k]); }
+    GUIDON[k] = null;
+  });
   document.body.classList.remove('noscroll');
   if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
   if(m){ m._follow=false; setTimeout(function(){ m.invalidateSize(); },250); }
   if(GUIDON.wl){ try{ GUIDON.wl.release(); }catch(e){} GUIDON.wl=null; }
-  GUIDON.active=false; GUIDON.id=null; GUIDON.nav=null; GUIDON.co=null;
+  GUIDON.active=false; GUIDON.id=null; GUIDON.nav=null; GUIDON.co=null; GUIDON.prevPt=null;
 }
 document.addEventListener('fullscreenchange', function(){
   if(GUIDON.active && !document.fullscreenElement){ exitGuidon(); }
