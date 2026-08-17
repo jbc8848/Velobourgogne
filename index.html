@@ -220,6 +220,31 @@ body.noscroll{overflow:hidden}
   background:rgba(8,37,46,.92); border:1px solid var(--line); border-radius:14px;
   padding:12px 14px; display:flex; align-items:center; gap:10px;
 }
+/* --- mode navigation plein écran --- */
+.navbar{position:absolute; z-index:1200; left:0; right:0; top:0;
+  display:flex; flex-direction:column; pointer-events:none}
+.navtop{margin:calc(8px + env(safe-area-inset-top)) 10px 0; background:rgba(8,37,46,.95);
+  border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:14px 16px;
+  display:flex; align-items:center; gap:16px; pointer-events:auto;
+  box-shadow:0 6px 22px rgba(0,0,0,.4)}
+.navarrow{font-size:2.6rem; line-height:1; color:#6fd6c9; width:56px; text-align:center; flex:none}
+.navarrow.soon{color:#f0b860}
+.navarrow.warn{color:#e58a7a; font-size:2.1rem}
+.navtxt{flex:1; min-width:0}
+.navtxt b{display:block; font-family:'Spline Sans Mono',monospace; font-size:1.9rem; line-height:1.1; color:#fff}
+.navtxt span{display:block; font-size:.86rem; color:#c8dcd8; margin-top:3px; line-height:1.3}
+.navbot{position:fixed; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom));
+  background:rgba(8,37,46,.95); border:1px solid rgba(255,255,255,.14); border-radius:14px;
+  padding:11px 14px; display:flex; align-items:center; gap:12px; pointer-events:auto}
+.navbot #nav-prog{flex:1; font-size:.86rem; color:#eaf4f2; line-height:1.3}
+.navbot #nav-speed{font-family:'Spline Sans Mono',monospace; font-size:.86rem; color:#f0b860}
+.navbot .gexit{flex:none; width:38px; height:38px; border-radius:50%;
+  border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.1); color:#fff;
+  font-size:1rem; cursor:pointer}
+[data-theme="light"] .navtop, [data-theme="light"] .navbot{background:rgba(255,255,255,.96)}
+[data-theme="light"] .navtxt b{color:var(--ink)}
+[data-theme="light"] .navtxt span, [data-theme="light"] .navbot #nav-prog{color:var(--ink)}
+[data-theme="light"] .navbot .gexit{background:rgba(0,0,0,.06); color:var(--ink)}
 .guidon-bar .gstep{flex:1; font-size:.92rem; line-height:1.35; color:#eaf4f2}
 .guidon-bar .gexit{
   flex:none; width:38px; height:38px; border-radius:50%; border:1px solid var(--line);
@@ -510,7 +535,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v6.2.0</span>
+      <span class="ver" id="app-version">v7.1.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -523,14 +548,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v6.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v7.1.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v6.2.0
+   Tour de Bourgogne à vélo — PWA · v7.1.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -849,7 +874,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v6.2.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.1.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1282,27 +1307,107 @@ function makeMap(elId){
   return m;
 }
 function addLocate(m){
+  /* Bouton « revenir à ma position ».
+     Un appui recentre TOUJOURS sur la position courante et réactive le suivi,
+     où que l'on se soit déplacé sur la carte. Un appui long (600 ms) coupe le
+     GPS — auparavant un simple appui l'éteignait, ce qui rendait le bouton
+     inutilisable comme raccourci de recentrage. */
   var btn = L.control({position:'topright'});
   btn.onAdd = function(){
     var a = L.DomUtil.create('a','loc-btn');
-    a.href='#'; a.title='Ma position'; a.innerHTML='\ud83d\udccd';
-    a.style.cssText='width:34px;height:34px;display:flex;align-items:center;justify-content:center;'
-      +'background:#10394a;border:1px solid #1c4a5c;border-radius:8px;font-size:17px;text-decoration:none';
+    a.href='#'; a.title='Revenir à ma position (appui long : couper le GPS)';
+    a.innerHTML='\u25c9';
+    m._locEl = a;
+    paintLoc(m);
+    var lp = null, longPressed = false;
+    function start(){
+      longPressed = false;
+      lp = setTimeout(function(){
+        longPressed = true;
+        stopLocating(m);
+      }, 600);
+    }
+    function cancel(){ if(lp){ clearTimeout(lp); lp=null; } }
+    L.DomEvent.on(a,'mousedown', start);
+    L.DomEvent.on(a,'touchstart', start);
+    L.DomEvent.on(a,'mouseup', cancel);
+    L.DomEvent.on(a,'mouseleave', cancel);
+    L.DomEvent.on(a,'touchend', cancel);
+    L.DomEvent.on(a,'touchcancel', cancel);
     L.DomEvent.on(a,'click',function(ev){
       L.DomEvent.stop(ev);
-      if(m._locating){ m.stopLocate(); m._locating=false; a.style.background='#10394a'; if(m._lm){ m.removeLayer(m._lm); m._lm=null; } return; }
-      m._locating = true; a.style.background='#f0b860';
-      m.locate({watch:true, enableHighAccuracy:true});
+      cancel();
+      if(longPressed){ longPressed=false; return; }
+      recenter(m);
     });
+    L.DomEvent.disableClickPropagation(a);
     return a;
   };
   btn.addTo(m);
+
   m.on('locationfound', function(e){
+    m._lastFix = e.latlng;
     if(m._lm){ m.removeLayer(m._lm); }
     m._lm = L.circleMarker(e.latlng,{radius:8,color:'#fff',weight:2,fillColor:'#4a9eff',fillOpacity:1}).addTo(m);
-    if(m._follow){ m.setView(e.latlng, Math.max(m.getZoom(),14)); }
+    if(m._acc){ m.removeLayer(m._acc); m._acc = null; }
+    if(e.accuracy && e.accuracy > 25){
+      m._acc = L.circle(e.latlng,{radius:e.accuracy, color:'#4a9eff', weight:1, opacity:.35, fillOpacity:.08}).addTo(m);
+    }
+    if(m._follow){ m.setView(e.latlng, Math.max(m.getZoom(),16), {animate:true}); }
+    paintLoc(m);
+    if(GUIDON.active && maps[GUIDON.id]===m){
+      navUpdate({lat:e.latlng.lat, lng:e.latlng.lng, speed:(e.speed!=null?e.speed:null)});
+    }
   });
+  m.on('locationerror', function(){
+    m._locError = true; paintLoc(m);
+  });
+  /* Se déplacer sur la carte suspend le suivi : le bouton devient alors
+     l'invitation claire à revenir sur soi. */
+  m.on('dragstart zoomstart', function(){
+    m._userMoved = true;
+    if(m._follow && !m._selfMove){ m._follow = false; paintLoc(m); }
+  });
+  m.on('moveend', function(){ m._selfMove = false; });
   m._locBtn = btn;
+}
+function paintLoc(m){
+  var a = m._locEl;
+  if(!a) return;
+  var base = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;'
+           + 'border-radius:10px;font-size:19px;text-decoration:none;border:1px solid ';
+  if(!m._locating){
+    a.style.cssText = base + '#1c4a5c;background:#10394a;color:#cfe6e2';
+  }else if(m._follow){
+    a.style.cssText = base + '#f0b860;background:#f0b860;color:#08252e';   /* suivi actif */
+  }else{
+    a.style.cssText = base + '#f0b860;background:#10394a;color:#f0b860';   /* GPS actif, suivi suspendu */
+  }
+}
+function recenter(m){
+  m._locError = false;
+  if(!m._locating){
+    m._locating = true;
+    m._follow = true;
+    paintLoc(m);
+    m.locate({watch:true, enableHighAccuracy:true, maximumAge:5000});
+    return;
+  }
+  m._follow = true;
+  if(m._lastFix){
+    m._selfMove = true;
+    m.setView(m._lastFix, Math.max(m.getZoom(),16), {animate:true});
+  }
+  paintLoc(m);
+}
+function stopLocating(m){
+  if(!m._locating) return;
+  try{ m.stopLocate(); }catch(e){}
+  m._locating = false;
+  m._follow = false;
+  if(m._lm){ m.removeLayer(m._lm); m._lm = null; }
+  if(m._acc){ m.removeLayer(m._acc); m._acc = null; }
+  paintLoc(m);
 }
 
 function initStageMap(st){
@@ -1332,6 +1437,8 @@ function initStageMap(st){
   setTimeout(fitStage, 160);
   setTimeout(fitStage, 600);
   m.on('zoomstart dragstart', function(){ m._userMoved = true; });
+  /* un appui sur la carte de l'étape ouvre la navigation plein écran */
+  m.on('click', function(){ if(!GUIDON.active){ enterGuidon(st.id); } });
 
   var note = document.getElementById('rt-'+st.id);
   if(note){ note.textContent = 'Tracé schématique — affinage par routage en cours…'; }
@@ -2072,40 +2179,220 @@ function getVeloInner(st, key, routed, cb){
 }
 
 /* ---------- mode guidon ---------- */
+/* =========================================================
+   NAVIGATION — instructions calculées depuis la géométrie
+   BRouter renvoie un tracé, pas des instructions : ses « voice
+   hints » dépendent du profil serveur et leur format a changé
+   entre versions. On détecte donc les virages nous-mêmes à
+   partir du tracé — ça fonctionne hors ligne, sur les tracés
+   déjà en cache, et ne dépend d'aucun format externe.
+   ========================================================= */
+
+/* cap (bearing) de a vers b, en degrés 0..360 */
+function bearing(a, b){
+  var la1 = a[0]*Math.PI/180, la2 = b[0]*Math.PI/180;
+  var dLo = (b[1]-a[1])*Math.PI/180;
+  var y = Math.sin(dLo)*Math.cos(la2);
+  var x = Math.cos(la1)*Math.sin(la2) - Math.sin(la1)*Math.cos(la2)*Math.cos(dLo);
+  return (Math.atan2(y,x)*180/Math.PI + 360) % 360;
+}
+function angleDiff(a, b){
+  var d = ((b - a + 540) % 360) - 180;
+  return d;                     /* négatif = gauche, positif = droite */
+}
+/* distances cumulées le long du tracé */
+function cumDist(co){
+  var c = [0];
+  for(var i=1;i<co.length;i++){ c.push(c[i-1] + distM(co[i-1], co[i])); }
+  return c;
+}
+/* cap moyen sur `span` mètres avant / après l'indice i */
+function bearingAround(co, cum, i, span, forward){
+  var j = i;
+  if(forward){
+    while(j < co.length-1 && cum[j]-cum[i] < span){ j++; }
+    if(j === i) return null;
+    return bearing(co[i], co[j]);
+  }
+  while(j > 0 && cum[i]-cum[j] < span){ j--; }
+  if(j === i) return null;
+  return bearing(co[j], co[i]);
+}
+var TURN = {
+  sharpL:{ico:'\u21b0', lab:'Tourner franchement à gauche'},
+  left:  {ico:'\u2190', lab:'Tourner à gauche'},
+  slightL:{ico:'\u2196', lab:'Légèrement à gauche'},
+  slightR:{ico:'\u2197', lab:'Légèrement à droite'},
+  right: {ico:'\u2192', lab:'Tourner à droite'},
+  sharpR:{ico:'\u21b1', lab:'Tourner franchement à droite'},
+  start: {ico:'\u25b6', lab:'Départ'},
+  end:   {ico:'\ud83c\udfc1', lab:'Arrivée'}
+};
+function classify(d){
+  var a = Math.abs(d);
+  if(a >= 115) return d<0 ? 'sharpL' : 'sharpR';
+  if(a >= 60)  return d<0 ? 'left'   : 'right';
+  return d<0 ? 'slightL' : 'slightR';
+}
+/* Détecte les virages : on compare le cap 30 m avant et 30 m après chaque
+   point. Un simple changement de cap point à point produirait des dizaines
+   de faux virages sur un halage sinueux ; la fenêtre lisse les méandres. */
+function buildTurns(co){
+  var cum = cumDist(co);
+  var raw = [];
+  for(var i=3;i<co.length-3;i++){
+    var b1 = bearingAround(co, cum, i, 30, false);
+    var b2 = bearingAround(co, cum, i, 30, true);
+    if(b1===null || b2===null) continue;
+    var d = angleDiff(b1, b2);
+    if(Math.abs(d) < 32) continue;               /* virage trop doux */
+    raw.push({i:i, d:d, m:cum[i]});
+  }
+  /* fusionne les points d'un même virage (moins de 45 m d'écart) */
+  var turns = [], k = 0;
+  while(k < raw.length){
+    var j = k, best = k;
+    while(j+1 < raw.length && raw[j+1].m - raw[j].m < 45){
+      j++;
+      if(Math.abs(raw[j].d) > Math.abs(raw[best].d)) best = j;
+    }
+    /* angle réel du virage : cap AVANT l'entrée vs cap APRÈS la sortie.
+       Additionner les diffs de chaque point les compterait plusieurs fois,
+       les fenêtres de 30 m se chevauchant. */
+    var bIn  = bearingAround(co, cum, raw[k].i, 30, false);
+    var bOut = bearingAround(co, cum, raw[j].i, 30, true);
+    var tot = (bIn!==null && bOut!==null) ? angleDiff(bIn, bOut) : raw[best].d;
+    if(Math.abs(tot) >= 38){                     /* le virage doit être net */
+      turns.push({i:raw[best].i, m:raw[best].m, d:tot, k:classify(tot)});
+    }
+    k = j+1;
+  }
+  return {turns:turns, cum:cum, total:cum[cum.length-1]};
+}
+/* Projette une position sur le tracé : indice le plus proche + écart */
+function projectOn(co, pt, hintIdx){
+  var best = -1, bd = Infinity;
+  var from = 0, to = co.length;
+  if(hintIdx!=null){                             /* recherche locale, plus rapide */
+    from = Math.max(0, hintIdx-150);
+    to   = Math.min(co.length, hintIdx+400);
+  }
+  for(var i=from;i<to;i++){
+    var d = distM(pt, co[i]);
+    if(d < bd){ bd = d; best = i; }
+  }
+  if(hintIdx!=null && bd > 120){                 /* perdu : on rebalaie tout */
+    return projectOn(co, pt, null);
+  }
+  return {i:best, d:bd};
+}
+
 var GUIDON = {active:false, id:null, wl:null};
 function enterGuidon(sid){
-  var st = RUN.stages.find(function(s){ return s.id===sid; });
+  var st = null;
+  RUN.stages.forEach(function(x){ if(x.id===sid) st = x; });
   var box = document.getElementById('map-'+sid), m = maps[sid];
   if(!st || !box || !m) return;
-  GUIDON.active = true; GUIDON.id = sid;
+  GUIDON.active = true; GUIDON.id = sid; GUIDON.st = st;
+
+  var co = ROUTED[sid];
+  GUIDON.nav = (co && co.length>10) ? buildTurns(co.map(function(c){ return [c[0],c[1]]; })) : null;
+  GUIDON.co = co ? co.map(function(c){ return [c[0],c[1]]; }) : null;
+  GUIDON.lastIdx = null;
+
   box.classList.add('guidon-fs');
   document.body.classList.add('noscroll');
   if(box.requestFullscreen){ box.requestFullscreen().catch(function(){}); }
   if('wakeLock' in navigator){
-    navigator.wakeLock.request('screen').then(function(w){ GUIDON.wl=w; }).catch(function(){});
+    navigator.wakeLock.request('screen').then(function(x){ GUIDON.wl=x; }).catch(function(){});
   }
-  m._follow = true;
-  if(!m._locating){ m._locating=true; m.locate({watch:true, enableHighAccuracy:true}); }
+  recenter(m);        /* GPS + suivi, et le bouton reflète l'état */
+
   var bar = document.createElement('div');
-  bar.className = 'guidon-bar';
-  bar.innerHTML = '<span class="gstep">J'+st.day+' · '+esc(st.from.n)+' \u2192 '+esc(st.to.n)+' · '+kmLabel(st)+'</span>'
-    +'<button class="gexit" aria-label="Quitter le mode guidon">\u2715</button>';
+  bar.className = 'navbar';
+  bar.innerHTML =
+     '<div class="navtop">'
+    +  '<div class="navarrow" id="nav-arrow">\u25b6</div>'
+    +  '<div class="navtxt"><b id="nav-dist">\u2014</b><span id="nav-lab">'
+    +    (GUIDON.nav ? 'En attente du GPS\u2026' : 'Tracé non chargé \u2014 affiche la carte seule')+'</span></div>'
+    +'</div>'
+    +'<div class="navbot">'
+    +  '<span id="nav-prog">J'+st.day+' \u00b7 '+esc(st.to.n)+'</span>'
+    +  '<span id="nav-speed">\u2014</span>'
+    +  '<button class="gexit" aria-label="Quitter la navigation">\u2715</button>'
+    +'</div>';
   box.appendChild(bar);
-  bar.querySelector('.gexit').addEventListener('click', exitGuidon);
+  bar.querySelector('.gexit').addEventListener('click', function(ev){
+    ev.stopPropagation(); exitGuidon();
+  });
   setTimeout(function(){ m.invalidateSize(); },250);
+  navUpdate();
 }
+
+/* Met à jour l'affichage à chaque point GPS */
+function navUpdate(pos){
+  if(!GUIDON.active) return;
+  var elA = document.getElementById('nav-arrow');
+  var elD = document.getElementById('nav-dist');
+  var elL = document.getElementById('nav-lab');
+  var elP = document.getElementById('nav-prog');
+  var elS = document.getElementById('nav-speed');
+  if(!elA) return;
+
+  if(pos && pos.speed!=null && pos.speed>=0 && elS){
+    elS.textContent = (pos.speed*3.6).toFixed(0)+' km/h';
+  }
+  if(!GUIDON.nav || !GUIDON.co){ return; }
+  if(!pos){ return; }
+
+  var nav = GUIDON.nav, co = GUIDON.co;
+  var pr = projectOn(co, [pos.lat, pos.lng], GUIDON.lastIdx);
+  GUIDON.lastIdx = pr.i;
+
+  /* hors tracé */
+  if(pr.d > 80){
+    elA.textContent = '\u26a0';
+    elA.className = 'navarrow warn';
+    elD.textContent = Math.round(pr.d)+' m';
+    elL.textContent = 'Vous semblez hors du tracé';
+    return;
+  }
+  elA.className = 'navarrow';
+
+  var here = nav.cum[pr.i];
+  var next = null;
+  for(var i=0;i<nav.turns.length;i++){
+    if(nav.turns[i].m > here + 8){ next = nav.turns[i]; break; }
+  }
+  var restKm = Math.max(0, (nav.total - here)/1000);
+  if(elP){ elP.textContent = 'J'+GUIDON.st.day+' \u00b7 '+restKm.toFixed(1)+' km \u2192 '+GUIDON.st.to.n; }
+
+  if(!next){
+    elA.textContent = TURN.end.ico;
+    elD.textContent = restKm < 1 ? Math.round(restKm*1000)+' m' : restKm.toFixed(1)+' km';
+    elL.textContent = 'Tout droit jusqu\u2019à l\u2019arrivée';
+    return;
+  }
+  var dm = Math.round(next.m - here);
+  var t = TURN[next.k];
+  elA.textContent = t.ico;
+  elD.textContent = dm >= 1000 ? (dm/1000).toFixed(1)+' km' : dm+' m';
+  elL.textContent = t.lab;
+  if(dm < 60){ elA.classList.add('soon'); } else { elA.classList.remove('soon'); }
+}
+
 function exitGuidon(){
   if(!GUIDON.active) return;
   var box = document.getElementById('map-'+GUIDON.id), m = maps[GUIDON.id];
   if(box){
     box.classList.remove('guidon-fs');
-    var b = box.querySelector('.guidon-bar'); if(b) b.remove();
+    var b = box.querySelector('.navbar'); if(b) b.remove();
   }
   document.body.classList.remove('noscroll');
   if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
   if(m){ m._follow=false; setTimeout(function(){ m.invalidateSize(); },250); }
   if(GUIDON.wl){ try{ GUIDON.wl.release(); }catch(e){} GUIDON.wl=null; }
-  GUIDON.active=false; GUIDON.id=null;
+  GUIDON.active=false; GUIDON.id=null; GUIDON.nav=null; GUIDON.co=null;
 }
 document.addEventListener('fullscreenchange', function(){
   if(GUIDON.active && !document.fullscreenElement){ exitGuidon(); }
@@ -2317,9 +2604,10 @@ function stageHtml(st){
 
   h += '<div class="card"><h3>Carte</h3><div class="map" id="map-'+st.id+'" style="position:relative"></div>'
     +'<p class="map-note" id="rt-'+st.id+'">Chargement…</p>'
+    +'<p class="map-note">Touche la carte pour la navigation plein écran.</p>'
     + surfBar(st.surfs, st.km)
     +'<div id="eau-'+st.id+'"></div>'
-    +'<div class="btn-row"><button class="guidon-btn" data-stage="'+st.id+'">\ud83d\udeb4 Mode guidon</button>'
+    +'<div class="btn-row"><button class="guidon-btn" data-stage="'+st.id+'">\ud83e\udded Navigation</button>'
     +'<button class="gpx-btn" data-stage="'+st.id+'">\u2b07\ufe0f GPX</button></div></div>';
 
   h += '<div class="card"><h3>Profil de dénivelé</h3><div class="profile" id="prof-'+st.id+'"></div>'
