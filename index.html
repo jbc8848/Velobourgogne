@@ -228,7 +228,7 @@ body.noscroll{overflow:hidden}
    agrandit de 45 % pour qu'aucun coin vide n'apparaisse. Les contrôles
    Leaflet sont masqués (nos propres boutons sont hors de l'élément) et les
    pastilles de marqueurs sont contre-tournées pour rester lisibles. */
-.maprot{transform-origin:50% 50%; transition:transform .25s linear}
+.maprot{transform-origin:50% 50%; transition:transform .25s linear; position:fixed!important}
 .maprot .leaflet-control-container{display:none}
 .navmode .guidon-fs .leaflet-control-zoom{display:none}
 .navmode .guidon-fs .leaflet-control-attribution{display:none}
@@ -251,6 +251,8 @@ body.noscroll{overflow:hidden}
   box-shadow:0 4px 16px rgba(0,0,0,.4)}
 .navlocate.on{background:#f0b860; color:#08252e; border-color:#f0b860}
 .navattr{font-family:'Spline Sans Mono',monospace; font-size:.6rem; color:#8fb3ad}
+.navhint{position:fixed; left:10px; right:10px; bottom:calc(74px + env(safe-area-inset-bottom));
+  font-size:.72rem; color:#f0b860; text-align:center; pointer-events:none; text-shadow:0 1px 4px rgba(0,0,0,.8)}
 [data-theme="light"] .navcompass, [data-theme="light"] .navlocate{background:rgba(255,255,255,.96); color:var(--ink)}
 .navtop{margin:calc(8px + env(safe-area-inset-top)) 10px 0; background:rgba(8,37,46,.95);
   border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:14px 16px;
@@ -564,7 +566,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v7.3.0</span>
+      <span class="ver" id="app-version">v7.6.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -577,14 +579,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v7.3.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v7.6.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v7.3.0
+   Tour de Bourgogne à vélo — PWA · v7.6.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -678,7 +680,11 @@ var CHAIN = [
   gare:'—', svc:['eau','commerces'],
   voir:'Centre d\u2019interprétation de la ligne de démarcation (1940-1943).',
   camps:[{n:'Camping municipal de Génelard', t:'★★ · port'}]},
- {n:'Paray-le-Monial', ll:[46.4524,4.1213], km:25, surf:'vv', vr:'V50 · canal du Centre',
+ {n:'Palinges', ll:[46.5486,4.2172], km:7, surf:'vv', vr:'V50 · canal du Centre',
+  gare:'Gare de Palinges', svc:['eau','commerces','baignade'],
+  camps:[{n:'Camping du Lac de Palinges', t:'★★ · plan d\u2019eau'},
+         {n:'Halte fluviale de Palinges', t:'aire'}]},
+ {n:'Paray-le-Monial', ll:[46.4524,4.1213], km:18, surf:'vv', vr:'V50 · canal du Centre',
   gare:'Gare de Paray-le-Monial', svc:['eau','supermarché','pharmacie','boulangerie'],
   voir:'Basilique romane du XIe siècle, sœur cadette de Cluny.',
   camps:[{n:'Camping de Mambré', t:'★★★ · bord de Bourbince'},
@@ -903,7 +909,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.3.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v7.6.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1055,15 +1061,22 @@ function computeStages(){
       var target = remain / left;
       var choice = (STATE.days['d'+day]===-1 || STATE.days['d'+day]===1) ? STATE.days['d'+day] : 0;
 
+      /* On n'exige plus de remplir TOUS les jours restants : la condition
+         « restDays <= maxD[j] » supprimait les alternatives dès qu'on prenait
+         de l'avance, puisqu'il devenait impossible d'étirer le reste du
+         parcours sur autant de journées. Seule contrainte conservée : depuis
+         le point choisi, l'arrivée doit rester atteignable dans le temps qui
+         reste. Boucler plus tôt est donc permis — les jours en trop
+         deviennent des journées libres. */
       var hard = [], soft = [];
-      for(var j=at+1; j<=M-1-(left-1); j++){
+      for(var j=at+1; j<=M-1; j++){
         var seg = cum[j]-cum[at];
         if(seg > CAP) break;
-        if(seg < MINSEG && left>1) continue;
+        if(seg < MINSEG && left>1 && j<M-1) continue;
         var restDays = left-1;
-        if(restDays > 0 && !(minD[j] <= restDays && restDays <= maxD[j])) continue;
+        if(restDays > 0 && minD[j] > restDays) continue;
         hard.push(j);
-        if(restDays === 0 || (T-cum[j])/restDays <= LIMIT){ soft.push(j); }
+        if(restDays === 0 || (T-cum[j])/restDays <= LIMIT || j===M-1){ soft.push(j); }
       }
       var cands = soft.length ? soft : hard;
       if(!cands.length){
@@ -1115,6 +1128,12 @@ function computeStages(){
     }
   }
 
+  /* Nombre minimal de journées encore nécessaires depuis le point atteint :
+     permet de dire à quelle date la boucle pourrait se refermer au plus tôt. */
+  var atNow = 0;
+  stages.forEach(function(x){ if(x.type==='ride' && x.confirmed){ atNow = chain.indexOf(x.to); } });
+  var minLeft = (atNow>=0 && minD[atNow]!==Infinity) ? minD[atNow] : null;
+
   var rideNo = 0;
   stages.forEach(function(st,i){
     var dt = new Date(DATE0.getTime());
@@ -1128,7 +1147,7 @@ function computeStages(){
   });
   return {stages:stages, chain:chain, total:T, rideDays:rideDays, rest:0, restReduced:0,
           cap:CAP, capRaised:capRaised, behind:behind,
-          lastDoneDay:lastDoneDay, doneKm:cum[lastDone], remainKm:remainKm, remainDays:remainDays,
+          lastDoneDay:lastDoneDay, doneKm:cum[lastDone], remainKm:remainKm, remainDays:remainDays, minLeft:minLeft,
           needAvg:needAvg};
 }
 
@@ -1387,7 +1406,8 @@ function addLocate(m){
     if(GUIDON.active && maps[GUIDON.id]===m){
       navUpdate({lat:e.latlng.lat, lng:e.latlng.lng,
                  speed:(e.speed!=null?e.speed:null),
-                 heading:(e.heading!=null?e.heading:null)});
+                 heading:(e.heading!=null?e.heading:null),
+                 accuracy:(e.accuracy!=null?e.accuracy:null)});
     }
   });
   m.on('locationerror', function(){
@@ -1400,6 +1420,25 @@ function addLocate(m){
     if(m._follow && !m._selfMove){ m._follow = false; paintLoc(m); }
   });
   m.on('moveend', function(){ m._selfMove = false; });
+
+  /* Correction du glissement quand la carte est pivotée.
+     Leaflet calcule le déplacement en pixels écran et l'applique tel quel au
+     panneau, qui est ensuite tourné et agrandi par CSS : le doigt et la carte
+     partaient donc dans des directions différentes. On convertit le décalage
+     de l'espace écran vers l'espace interne de la carte, avant application. */
+  var dr = m.dragging && m.dragging._draggable;
+  if(dr && dr.on){
+    dr.on('predrag', function(){
+      if(!GUIDON.active || !GUIDON.headUp || GUIDON.id==null) return;
+      if(maps[GUIDON.id] !== m) return;
+      var th = -GUIDON.shown * Math.PI/180;
+      var sc = 1/1.45;
+      var off = dr._newPos.subtract(dr._startPos);
+      var x = (off.x*Math.cos(th) - off.y*Math.sin(th)) * sc;
+      var y = (off.x*Math.sin(th) + off.y*Math.cos(th)) * sc;
+      dr._newPos = dr._startPos.add(L.point(x, y));
+    });
+  }
   m._locBtn = btn;
 }
 function paintLoc(m){
@@ -2089,13 +2128,35 @@ function withRoute(st, cb){
   });
 }
 /* distance minimale d'un point au tracé, en mètres */
+/* Distance d'un point au SEGMENT [a,b], et non au sommet le plus proche.
+   BRouter ne place un point qu'aux nœuds OSM : sur un halage rectiligne ils
+   peuvent être à plusieurs centaines de mètres. Mesurer la distance au sommet
+   le plus proche faisait donc croire qu'on était « hors du tracé » alors
+   qu'on roulait exactement dessus. */
+/* Géométrie point/segment. Renvoie une DISTANCE EN MÈTRES (un nombre) :
+   deux versions incompatibles coexistaient, l'une renvoyant un objet, ce qui
+   faisait échouer silencieusement toutes les comparaisons de distance. */
+function segCalc(p, a, b){
+  var latRef = (a[0]+b[0])/2 * Math.PI/180;
+  var kx = 111320*Math.cos(latRef), ky = 110540;
+  var ax = a[1]*kx, ay = a[0]*ky;
+  var bx = b[1]*kx, by = b[0]*ky;
+  var px = p[1]*kx, py = p[0]*ky;
+  var dx = bx-ax, dy = by-ay;
+  var L2 = dx*dx + dy*dy;
+  var t = L2 ? ((px-ax)*dx + (py-ay)*dy) / L2 : 0;
+  if(t < 0) t = 0; else if(t > 1) t = 1;
+  var cx = ax + t*dx, cy = ay + t*dy;
+  return {d: Math.sqrt((px-cx)*(px-cx) + (py-cy)*(py-cy)), t: t};
+}
+function distToSeg(p, a, b){ return segCalc(p, a, b).d; }
+function segFrac(p, a, b){ return segCalc(p, a, b).t; }
 function distToLine(pt, line){
-  /* on parcourt TOUS les points : un pas trop grand faisait manquer des
-     portions entières de tracé et rejetait des points d'eau bien placés. */
+  if(line.length===1){ return distM(pt, line[0]); }
   var best = Infinity;
-  for(var i=0;i<line.length;i++){
-    var d = distM(pt, line[i]);
-    if(d < best){ best = d; if(best < 40) return best; }
+  for(var i=0;i<line.length-1;i++){
+    var r = distToSeg(pt, line[i], line[i+1]);
+    if(r < best){ best = r; if(best < 20) return best; }
   }
   return best;
 }
@@ -2300,24 +2361,30 @@ function buildTurns(co){
   }
   return {turns:turns, cum:cum, total:cum[cum.length-1]};
 }
-/* Projette une position sur le tracé : indice le plus proche + écart */
+/* Distance d'un point au SEGMENT [a,b] (et non au sommet le plus proche).
+   Avec un tracé échantillonné tous les 50 m, ne mesurer que vers les sommets
+   surestimait l'écart de plusieurs dizaines de mètres — de quoi déclencher une
+   fausse alerte « hors du tracé » alors qu'on roule dessus. */
+/* Projette une position sur le tracé : indice le plus proche + écart réel */
 function projectOn(co, pt, hintIdx){
-  var best = -1, bd = Infinity;
-  var from = 0, to = co.length;
-  if(hintIdx!=null){                             /* recherche locale, plus rapide */
-    from = Math.max(0, hintIdx-150);
-    to   = Math.min(co.length, hintIdx+400);
+  function scan(from, to){
+    var bi = from, bd = Infinity;
+    for(var i=from;i<to-1;i++){
+      var d = distToSeg(pt, co[i], co[i+1]);
+      if(d < bd){ bd = d; bi = i; }
+    }
+    return {i:bi, d:bd};
   }
-  for(var i=from;i<to;i++){
-    var d = distM(pt, co[i]);
-    if(d < bd){ bd = d; best = i; }
+  var r;
+  if(hintIdx!=null){
+    r = scan(Math.max(0, hintIdx-200), Math.min(co.length, hintIdx+500));
+    /* seuil de reprise abaissé : au-delà de 60 m, on rebalaie tout le tracé
+       plutôt que de faire confiance à une fenêtre peut-être périmée */
+    if(r.d <= 60) return r;
   }
-  if(hintIdx!=null && bd > 120){                 /* perdu : on rebalaie tout */
-    return projectOn(co, pt, null);
-  }
-  return {i:best, d:bd};
+  var full = scan(0, co.length);
+  return (r && r.d < full.d) ? r : full;
 }
-
 var GUIDON = {active:false, id:null, wl:null, headUp:false, hdg:0, shown:0};
 try{ GUIDON.headUp = localStorage.getItem('bourg-headup')==='1'; }catch(e){}
 
@@ -2336,33 +2403,73 @@ function navHeading(pos){
 /* Applique la rotation, en lissant pour éviter que la carte tremble. */
 function applyRotation(){
   var el = GUIDON.id ? document.getElementById('map-'+GUIDON.id) : null;
+  var m  = GUIDON.id ? maps[GUIDON.id] : null;
   if(!el) return;
   if(!GUIDON.headUp){
     el.classList.remove('maprot');
     el.style.transform = '';
+    el.style.width = ''; el.style.height = ''; el.style.left = ''; el.style.top = '';
     el.style.setProperty('--counter','0deg');
+    if(m && m.dragging){ m.dragging.enable(); }
     return;
   }
-  el.classList.add('maprot');
-  /* on tourne de -cap : la direction de marche pointe vers le haut */
+  /* L'élément est porté à la taille de la DIAGONALE de l'écran et recentré :
+     en tournant, ses coins ne peuvent plus laisser de zone vide. Un simple
+     scale() aurait fallu 2,2× sur un écran de téléphone, donc un zoom énorme. */
+  if(!el.classList.contains('maprot')){
+    el.classList.add('maprot');
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var D = Math.ceil(Math.sqrt(vw*vw + vh*vh));
+    el.style.width  = D+'px';
+    el.style.height = D+'px';
+    el.style.left   = Math.round((vw-D)/2)+'px';
+    el.style.top    = Math.round((vh-D)/2)+'px';
+    if(m){ setTimeout(function(){ m.invalidateSize(); }, 40); }
+  }
   var target = -GUIDON.hdg;
   var diff = ((target - GUIDON.shown + 540) % 360) - 180;
   GUIDON.shown = GUIDON.shown + diff*0.35;          /* lissage */
-  el.style.transform = 'rotate('+GUIDON.shown.toFixed(1)+'deg) scale(1.45)';
+  el.style.transform = 'rotate('+GUIDON.shown.toFixed(1)+'deg)';
   el.style.setProperty('--counter', (-GUIDON.shown).toFixed(1)+'deg');
 }
 function setHeadUp(on){
   GUIDON.headUp = !!on;
+  /* La rotation est purement visuelle (CSS) : Leaflet continue de raisonner
+     dans un repère non tourné. Un glisser du doigt serait donc appliqué de
+     travers, voire à l'envers quand on roule vers le sud. Plutôt que de laisser
+     une carte qui part dans le mauvais sens, on désactive le déplacement manuel
+     en mode CAP — la carte suit le GPS — et on le rétablit en mode NORD. */
+  var mm0 = GUIDON.id ? maps[GUIDON.id] : null;
+  if(mm0 && mm0.dragging){
+    if(on){ mm0.dragging.disable(); } else { mm0.dragging.enable(); }
+  }
   try{ localStorage.setItem('bourg-headup', on?'1':'0'); }catch(e){}
   var c = document.querySelector('.navcompass');
   if(c){
     c.className = 'navcompass' + (on?' head':'');
     c.innerHTML = '<span class="cico">'+(on?'\u27a4':'\u2b06')+'</span><span>'+(on?'CAP':'NORD')+'</span>';
+    c.title = on ? 'Cap en haut — déplacement manuel désactivé (la carte suit le GPS). Touche pour repasser au Nord.'
+                 : 'Nord en haut — tu peux déplacer la carte. Touche pour orienter selon ta direction.';
   }
   if(!on){ GUIDON.shown = 0; }
   applyRotation();
   var m = GUIDON.id ? maps[GUIDON.id] : null;
-  if(m){ setTimeout(function(){ m.invalidateSize(); }, 60); }
+  if(m){
+    /* En mode CAP, la carte est tournée en CSS : un glissement du doigt ne
+       correspondrait plus aux axes de la carte et le déplacement partirait de
+       travers. On verrouille donc la carte sur la position, comme un GPS de
+       voiture ; pour explorer librement, il suffit de repasser en NORD. */
+    if(on){
+      m.dragging.disable();
+      m._follow = true;
+      if(m._lastFix){ m._selfMove = true; m.setView(m._lastFix, Math.max(m.getZoom(),16)); }
+    }else{
+      m.dragging.enable();
+    }
+    setTimeout(function(){ m.invalidateSize(); }, 60);
+  }
+  var hint = document.getElementById('nav-hint');
+  if(hint){ hint.textContent = on ? 'Carte verrouillée sur votre position \u2014 passez en NORD pour explorer' : ''; }
 }
 function enterGuidon(sid){
   var st = null;
@@ -2398,6 +2505,7 @@ function enterGuidon(sid){
     +  '<div class="navtxt"><b id="nav-dist">\u2014</b><span id="nav-lab">'
     +    (GUIDON.nav ? 'En attente du GPS\u2026' : 'Tracé non chargé \u2014 affiche la carte seule')+'</span></div>'
     +'</div>'
+    +'<div class="navhint" id="nav-hint"></div>'
     +'<div class="navbot">'
     +  '<span id="nav-prog">J'+st.day+' \u00b7 '+esc(st.to.n)+'</span>'
     +  '<span id="nav-speed">\u2014</span>'
@@ -2466,20 +2574,29 @@ function navUpdate(pos){
   if(!pos){ return; }
 
   var nav = GUIDON.nav, co = GUIDON.co;
-  var pr = projectOn(co, [pos.lat, pos.lng], GUIDON.lastIdx);
+  var pr = projectOn(co, [pos.lat, pos.lng]);
   GUIDON.lastIdx = pr.i;
 
-  /* hors tracé */
-  if(pr.d > 80){
+  /* Hors tracé : le seuil s'adapte à la précision GPS annoncée. Sous les
+     arbres du halage elle dépasse souvent 30 m, ce qui provoquait des alertes
+     alors qu'on roulait exactement sur le tracé. */
+  var tol = Math.max(90, (pos.accuracy||0) * 2.5);
+  if(pr.d > tol){
     elA.textContent = '\u26a0';
     elA.className = 'navarrow warn';
     elD.textContent = Math.round(pr.d)+' m';
-    elL.textContent = 'Vous semblez hors du tracé';
+    elL.textContent = 'Écart au tracé';
+    if(elP){ elP.textContent = 'J'+GUIDON.st.day+' \u00b7 revenir vers le tracé'; }
     return;
   }
   elA.className = 'navarrow';
 
+  /* position exacte le long du tracé : sommet + fraction du segment en cours */
   var here = nav.cum[pr.i];
+  if(pr.i < co.length-1 && pr.i < nav.cum.length-1){
+    var frac = segFrac([pos.lat, pos.lng], co[pr.i], co[pr.i+1]);
+    here += (nav.cum[pr.i+1] - nav.cum[pr.i]) * frac;
+  }
   var next = null;
   for(var i=0;i<nav.turns.length;i++){
     if(nav.turns[i].m > here + 8){ next = nav.turns[i]; break; }
@@ -2497,7 +2614,7 @@ function navUpdate(pos){
   var t = TURN[next.k];
   elA.textContent = t.ico;
   elD.textContent = dm >= 1000 ? (dm/1000).toFixed(1)+' km' : dm+' m';
-  elL.textContent = t.lab;
+  elL.textContent = t.lab + (GUIDON.off ? ' \u00b7 '+GUIDON.off+' m du tracé (autre rive ?)' : '');
   if(dm < 60){ elA.classList.add('soon'); } else { elA.classList.remove('soon'); }
 }
 
@@ -2509,6 +2626,7 @@ function exitGuidon(){
     box.classList.remove('maprot');
     box.style.transform = '';
   }
+  if(m && m.dragging){ m.dragging.enable(); }
   ['bar','comp','locBtn'].forEach(function(k){
     if(GUIDON[k] && GUIDON[k].parentNode){ GUIDON[k].parentNode.removeChild(GUIDON[k]); }
     GUIDON[k] = null;
@@ -2571,7 +2689,7 @@ function chainList(){
   RUN.stages.forEach(function(st){
     if(st.type==='free'){
       h += '<li class="repos"><span class="dj">J'+st.day+'<i>'+st.dstr+'</i></span>'
-        +'<span class="nm">Journée libre \u2014 arrivée déjà atteinte<i>'+esc(st.at.n)+'</i></span>'
+        +'<span class="nm">Journée libre \u2014 boucle déjà refermée<i>'+esc(st.at.n)+'</i></span>'
         +'<span class="st">\u2014</span></li>';
       return;
     }
@@ -2687,7 +2805,18 @@ function stageHtml(st){
     return (o.exact ? '' : '\u2248 ') + o.km + ' km \u00b7 ' + o.n;
   }
   var oc = optLabel(st.opts.court), on2 = optLabel(st.opts.normal), ol = optLabel(st.opts.long);
-  if(!STATE.done['d'+st.day]){
+  /* --- validation / correction de la journée : toujours accessible --- */
+  var doneName = STATE.done['d'+st.day] || null;
+  var i0 = st.chain.indexOf(st.from);
+  var alts = [];
+  for(var q=i0+1; q<st.chain.length; q++){
+    var dk = st.cum[q]-st.cum[i0];
+    if(dk > 95) break;
+    alts.push({i:q, n:st.chain[q].n, km:Math.round(dk)});
+  }
+  /* Le réglage « longueur du jour » n'a plus de sens une fois la journée
+     faite : c'est la correction du lieu de nuit qui prend le relais. */
+  if(!doneName){
   h += '<div class="vbox"><h4>Longueur de cette journée</h4>'
     +'<div class="seg">'
     +'<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1"'+(oc?'':' disabled')+'>Plus court'
@@ -2697,18 +2826,21 @@ function stageHtml(st){
     +'<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1"'+(ol?'':' disabled')+'>Plus long'
       +'<b>'+(ol?optTxt(ol):'indisponible')+'</b></button>'
     +'</div>';
-  /* --- validation de la journée : la réalité prime sur le plan --- */
-  var doneName = STATE.done['d'+st.day] || null;
-  var i0 = st.chain.indexOf(st.from);
-  var alts = [];
-  for(var q=i0+1; q<st.chain.length; q++){
-    var dk = st.cum[q]-st.cum[i0];
-    if(dk > 95) break;
-    alts.push({i:q, n:st.chain[q].n, km:Math.round(dk)});
+  h += '</div>';
   }
   h += '<div class="vbox"><h4>Où avez-vous dormi ce soir-là ?</h4>';
   if(doneName){
+    /* Une journée validée reste corrigeable : erreur de saisie, ou décision
+       d'avancer plus loin le même jour. Le reste du séjour se recalcule. */
     h += '<p class="okmsg">\u2713 '+esc(st.to.n)+' \u00b7 '+Math.round(st.km)+' km</p>'
+      +'<p class="muted" style="font-size:.78rem;margin-top:8px">Corriger le lieu de nuit :</p>'
+      +'<div class="addrow" style="margin-top:5px">'
+      +'<select class="done-sel" data-day="'+st.day+'">'
+      + alts.map(function(a){
+          var exact = (a.i===iTo && rk!==null);
+          return '<option value="'+a.i+'"'+(a.i===iTo?' selected':'')+'>'+esc(a.n)+' \u00b7 '
+            +(exact?'':'\u2248 ')+(exact?rk:a.km)+' km</option>'; }).join('')
+      +'</select><button class="valid-other" data-day="'+st.day+'">Corriger</button></div>'
       +'<div class="btn-row"><button class="unvalid-btn" data-day="'+st.day+'">\u21ba Annuler cette validation</button></div>';
   }else{
     h += '<div class="btn-row"><button class="valid-btn" data-day="'+st.day+'" data-node="'+esc(st.to.n)+'">\u2713 Fait comme prévu \u2014 '+esc(st.to.n)+'</button></div>'
@@ -2721,12 +2853,10 @@ function stageHtml(st){
       +'</select><button class="valid-other" data-day="'+st.day+'">Valider</button></div>'
 ;
   }
-  h += '</div>';
+  h += '</div>';                       /* fin du bloc « où avez-vous dormi » */
 
   if(st.forced){ h += '<div class="warnbox" style="margin-top:10px">Étape imposée par le retard accumulé.</div>'; }
-  h += '</div>';
-  }
-  h += '</div>';
+  h += '</div>';                       /* fin de la carte d'en-tête */
 
   h += '<div class="card"><h3>Carte</h3><div class="map" id="map-'+st.id+'" style="position:relative"></div>'
     +'<p class="map-note" id="rt-'+st.id+'">Chargement…</p>'
@@ -3174,7 +3304,20 @@ mainEl.addEventListener('click', function(ev){
 
 function validateDay(day, nodeIdx){
   if(nodeIdx===null || nodeIdx===undefined || nodeIdx==='') return;
-  STATE.done['d'+day] = parseInt(nodeIdx, 10);
+  var idx = parseInt(nodeIdx, 10);
+  var dn = parseInt(day, 10);
+  STATE.done['d'+dn] = idx;
+  /* Une correction peut rendre d'autres validations impossibles : on ne peut
+     pas être plus loin un jour antérieur, ni moins loin un jour postérieur.
+     On retire donc celles qui deviennent contradictoires plutôt que de
+     laisser un déroulé incohérent. */
+  Object.keys(STATE.done).forEach(function(k){
+    var d2 = parseInt(k.slice(1), 10);
+    var v2 = STATE.done[k];
+    if(d2 === dn || typeof v2 !== 'number') return;
+    if(d2 < dn && v2 >= idx){ delete STATE.done[k]; }
+    if(d2 > dn && v2 <= idx){ delete STATE.done[k]; }
+  });
   delete STATE.days['d'+day];          /* le fait remplace le choix théorique */
   saveState();
   RUN = computeStages();
