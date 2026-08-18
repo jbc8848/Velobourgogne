@@ -493,6 +493,8 @@ footer{
 .dbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:9px;
   padding:9px 0;font:600 .78rem/1 'Spline Sans Mono',monospace;cursor:pointer}
 .dbtn.ok{background:rgba(159,196,143,.22);border-color:rgba(159,196,143,.6);color:var(--ink)}
+.dch.pickalt{border-style:dashed; color:var(--gold); border-color:rgba(240,184,96,.55)}
+.dch.pickalt b{color:var(--gold)}
 .dbtn.off{background:transparent;border-color:rgba(159,196,143,.55);color:var(--muted);
   text-decoration:line-through;text-decoration-color:rgba(159,196,143,.7)}
 .dlegend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-family:'Spline Sans Mono',monospace;
@@ -506,6 +508,15 @@ footer{
 .dbtn.off{background:var(--panel);border-color:var(--line);color:var(--muted);text-decoration:line-through;
   text-decoration-color:var(--aqua)}
 .dgrid-help{font-size:.72rem;color:var(--muted);margin:7px 0 2px;line-height:1.4}
+.pickbar{position:absolute; z-index:900; left:8px; right:8px; top:8px;
+  background:rgba(8,37,46,.95); color:#eaf4f2; border:1px solid rgba(255,255,255,.16);
+  border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:10px;
+  font-size:.82rem; line-height:1.35; box-shadow:0 4px 16px rgba(0,0,0,.35)}
+.pickbar span{flex:1}
+.pickbar.ok{border-color:rgba(159,196,143,.7)}
+.pickbar.bad{border-color:rgba(229,138,122,.7); color:#ffd9d2}
+.pickbar .pk-ok{flex:none; background:var(--sage); color:#08252e; border:none; border-radius:9px;
+  padding:9px 14px; font:600 .82rem/1 'Spline Sans',sans-serif; cursor:pointer}
 .pickmap-btn{width:100%;background:var(--panel);border:1px dashed var(--line);color:var(--ink);
   border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .pickmap-btn.arm{border-style:solid;border-color:var(--gold);background:rgba(240,184,96,.16);color:var(--gold)}
@@ -569,7 +580,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v8.0.0</span>
+      <span class="ver" id="app-version">v8.2.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -582,14 +593,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v8.0.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v8.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v8.0.0
+   Tour de Bourgogne à vélo — PWA · v8.2.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -912,7 +923,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v8.0.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v8.2.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1070,7 +1081,7 @@ function computeStages(){
   var lastDone = 0, lastDoneDay = 0;
   for(var dd=1; dd<=rideDays; dd++){
     var di = doneIdx(dd, lastDone);
-    if(di > lastDone && (cum[di]-cum[lastDone]) <= 120){ lastDone = di; lastDoneDay = dd; }
+    if(di > lastDone && (cum[di]-cum[lastDone]) <= 100){ lastDone = di; lastDoneDay = dd; }
   }
   var remainKm = T - cum[lastDone], remainDays = rideDays - lastDoneDay;
   var needAvg = remainDays > 0 ? remainKm/remainDays : 0;
@@ -1093,7 +1104,7 @@ function computeStages(){
     var fixed = doneIdx(day, at);
     /* garde-fou : une journée validée à plus de 120 km est une donnée aberrante
        (stockage corrompu, ancien format mal résolu) — on l'ignore. */
-    if(fixed > at && (cum[fixed]-cum[at]) > 120){ fixed = -1; delete STATE.done['d'+day]; }
+    if(fixed > at && (cum[fixed]-cum[at]) > 100){ fixed = -1; delete STATE.done['d'+day]; }
     if(fixed > at || (fixed === at && day <= lastDoneDay)){
       /* journée validée : le point d'arrivée est un fait, pas un calcul */
       to = Math.max(fixed, at);
@@ -1115,11 +1126,26 @@ function computeStages(){
          le point choisi, l'arrivée doit rester atteignable dans le temps qui
          reste. Boucler plus tôt est donc permis — les jours en trop
          deviennent des journées libres. */
+      /* Une journée validée plus loin dans le séjour doit être atteinte CE
+         jour-là : les journées précédentes ne doivent donc pas la dépasser,
+         ni s'y arrêter. Sans cette borne, un arrêt fixé au J4 pouvait être
+         « consommé » dès le J3, qui l'atteignait naturellement le premier. */
+      var nfIdx = null, nfDay = null;
+      for(var q2=day+1; q2<=rideDays; q2++){
+        var fq = doneIdx(q2, at);
+        if(fq > at){ nfIdx = fq; nfDay = q2; break; }
+      }
+      var jMax = M-1;
+      if(nfIdx != null){ jMax = Math.min(jMax, nfIdx - (nfDay - day)); }
+
       var hard = [], soft = [];
-      for(var j=at+1; j<=M-1; j++){
+      for(var j=at+1; j<=jMax; j++){
         var seg = cum[j]-cum[at];
         if(seg > CAP) break;
-        if(seg < MINSEG && left>1 && j<M-1) continue;
+        /* La longueur minimale d'étape cède devant un arrêt fixé par
+           l'utilisateur : son choix de jour prime sur notre règle de confort,
+           sinon l'arrêt était purement et simplement ignoré. */
+        if(seg < MINSEG && left>1 && j<M-1 && nfIdx==null) continue;
         var restDays = left-1;
         if(restDays > 0 && minD[j] > restDays) continue;
         hard.push(j);
@@ -1556,7 +1582,7 @@ function initStageMap(st){
   m.on('zoomstart dragstart', function(){ m._userMoved = true; });
   /* un appui sur la carte de l'étape ouvre la navigation plein écran */
   m.on('click', function(ev){
-    if(PICK.on && PICK.sid===st.id){ setStop(PICK.day, ev.latlng); return; }
+    if(PICK.on && PICK.sid===st.id){ proposeStop(st, ev.latlng); return; }
     if(!GUIDON.active){ enterGuidon(st.id); }
   });
 
@@ -2861,7 +2887,7 @@ function stageHtml(st){
   var alts = [];
   for(var q=i0+1; q<st.chain.length; q++){
     var dk = st.cum[q]-st.cum[i0];
-    if(dk > 95) break;
+    if(dk > 100) break;
     alts.push({i:q, n:st.chain[q].n, km:Math.round(dk)});
   }
   /* Le réglage « longueur du jour » n'a plus de sens une fois la journée
@@ -2869,16 +2895,25 @@ function stageHtml(st){
   if(!doneName){
   h += '<div class="vbox"><h4>Longueur de cette journée</h4>'
     +'<div class="seg">'
-    +'<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1"'+(oc?'':' disabled')+'>Plus court'
-      +'<b>'+(oc?optTxt(oc):'indisponible')+'</b></button>'
+    + (oc
+        ? ('<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1">Plus court'
+           +'<b>'+optTxt(oc)+'</b></button>')
+        /* Aucun village ne convient : plutôt que « indisponible », on propose
+           de désigner soi-même le point d'arrêt sur la carte. */
+        : ('<button class="dch pickalt" data-day="'+st.day+'" data-stage="'+st.id+'">Plus court'
+           +'<b>\ud83d\udccd à choisir</b></button>'))
     +'<button class="dch'+(cur===0?' on':'')+'" data-day="'+st.day+'" data-c="0">Normal'
       +'<b>'+(on2?optTxt(on2):'\u2014')+'</b></button>'
-    +'<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1"'+(ol?'':' disabled')+'>Plus long'
-      +'<b>'+(ol?optTxt(ol):'indisponible')+'</b></button>'
+    + (ol
+        ? ('<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1">Plus long'
+           +'<b>'+optTxt(ol)+'</b></button>')
+        : ('<button class="dch pickalt" data-day="'+st.day+'" data-stage="'+st.id+'">Plus long'
+           +'<b>\ud83d\udccd à choisir</b></button>'))
     +'</div>';
   h += '</div>';
   }
-  h += '<div class="vbox"><h4>Où avez-vous dormi ce soir-là ?</h4>';
+  var passe = (st.day <= (RUN.lastDoneDay||0) + 1);
+  h += '<div class="vbox"><h4>'+(passe ? 'Où avez-vous dormi ce soir-là ?' : 'Arrivée de cette journée')+'</h4>';
   if(doneName){
     /* Une journée validée reste corrigeable : erreur de saisie, ou décision
        d'avancer plus loin le même jour. Le reste du séjour se recalcule. */
@@ -3236,6 +3271,14 @@ mainEl.addEventListener('click', function(ev){
     return;
   }
   if(t.closest && t.closest('.back-btn')){ openStage=null; render(); window.scrollTo(0,0); return; }
+  /* Le bouton « à choisir » porte aussi la classe .dch : il doit être traité
+     comme une sélection sur carte, pas comme un réglage de longueur. */
+  var pa0 = t.closest ? t.closest('.pickalt') : null;
+  if(pa0){
+    if(PICK.on){ disarmPick(); }
+    armPick(pa0.getAttribute('data-day'), pa0.getAttribute('data-stage'));
+    return;
+  }
   var dc = t.closest ? t.closest('.dch') : null;
   if(dc && !dc.disabled){
     var dnum = dc.getAttribute('data-day'), val = parseInt(dc.getAttribute('data-c'),10);
@@ -3314,6 +3357,11 @@ mainEl.addEventListener('click', function(ev){
     }
     return;
   }
+  var pko = t.closest ? t.closest('.pk-ok') : null;
+  if(pko){
+    if(PICK.pending){ setStop(parseInt(pko.getAttribute('data-day'),10), {lat:PICK.pending.lat, lng:PICK.pending.lng}); }
+    return;
+  }
   var pk = t.closest ? t.closest('.pickmap-btn') : null;
   if(pk){
     if(PICK.on){ disarmPick(); render(); }
@@ -3363,23 +3411,102 @@ mainEl.addEventListener('click', function(ev){
 var PICK = {on:false, day:null, sid:null};
 function armPick(day, sid){
   PICK.on = true; PICK.day = parseInt(day,10); PICK.sid = sid;
-  var note = document.getElementById('rt-'+sid);
-  if(note){ note.textContent = 'Touche la carte à l\u2019endroit exact où vous vous êtes arrêtés.'; note.style.color = 'var(--gold)'; }
   var b = document.querySelector('.pickmap-btn[data-day="'+PICK.day+'"]');
   if(b){ b.textContent = '\u2716 Annuler la sélection'; b.classList.add('arm'); }
   var m = maps[sid];
   if(m && m._container){ m._container.style.cursor = 'crosshair'; }
+  pickBanner(sid, 'Touche la carte à l\u2019endroit de votre arrêt.', '');
+  /* Sans cela, la carte reste souvent hors de l'écran : on tapait dans le vide
+     et le message de refus s'affichait sous le pli, invisible. */
+  var el = document.getElementById('map-'+sid);
+  if(el && el.scrollIntoView){
+    try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ el.scrollIntoView(); }
+  }
 }
 function disarmPick(){
   var sid = PICK.sid;
-  PICK.on = false; PICK.day = null; PICK.sid = null;
-  var note = sid ? document.getElementById('rt-'+sid) : null;
-  if(note){ note.style.color = ''; }
+  clearPickBanner(sid);
+  PICK.on = false; PICK.day = null; PICK.sid = null; PICK.pending = null;
   var m = sid ? maps[sid] : null;
   if(m && m._container){ m._container.style.cursor = ''; }
 }
+/* Bandeau posé SUR la carte : le retour doit être visible là où l'on touche. */
+function pickBanner(sid, txt, kind, html){
+  var el = document.getElementById('map-'+sid);
+  if(!el) return;
+  var b = el.querySelector('.pickbar');
+  if(!b){
+    b = document.createElement('div');
+    b.className = 'pickbar';
+    el.appendChild(b);
+  }
+  b.className = 'pickbar' + (kind ? ' '+kind : '');
+  b.innerHTML = html || ('<span>'+txt+'</span>');
+}
+function clearPickBanner(sid){
+  var el = sid ? document.getElementById('map-'+sid) : null;
+  var b = el ? el.querySelector('.pickbar') : null;
+  if(b) b.remove();
+  if(el && el._pickMk){ try{ maps[sid].removeLayer(el._pickMk); }catch(e){} el._pickMk = null; }
+}
 /* Enregistre un arrêt libre : le point est projeté sur le parcours, inséré
    dans la chaîne comme un village, et la journée est validée dessus. */
+/* Premier temps : on montre le point touché, la distance calculée, et on
+   demande confirmation. Le retour est immédiat et visible sur la carte. */
+function proposeStop(st, latlng){
+  var el = document.getElementById('map-'+st.id);
+  var m = maps[st.id];
+  if(!el || !m) return;
+  var i0 = st.chain.indexOf(st.from);
+
+  /* Projection sur la CHAÎNE (villages) : donne le segment d'insertion. */
+  var bi = 0, bd = Infinity, bt = 0;
+  for(var j=0;j<st.chain.length-1;j++){
+    var rr = segCalc([latlng.lat, latlng.lng], st.chain[j].ll, st.chain[j+1].ll);
+    if(rr.d < bd){ bd = rr.d; bi = j; bt = rr.t; }
+  }
+  var kmTo = st.cum[bi] + (st.cum[bi+1]-st.cum[bi])*bt - st.cum[i0];
+
+  /* Écart réel : mesuré sur le TRACÉ ROUTÉ quand il est chargé. La chaîne
+     n'est qu'une ligne droite de village en village ; un point pile sur le
+     halage pouvait s'en écarter de plusieurs kilomètres et être refusé. */
+  var co = ROUTED[st.id];
+  var off = bd, tol = 8000;
+  if(co && co.length > 1){
+    var line = co.map(function(c){ return [c[0],c[1]]; });
+    off = distToLine([latlng.lat, latlng.lng], line);
+    tol = 2500;
+    /* distance parcourue mesurée sur le tracé réel, bien plus juste */
+    var pr = projectOn(line, [latlng.lat, latlng.lng]);
+    if(pr && pr.i >= 0){
+      var cum2 = cumDist(line);
+      var frac = segFrac([latlng.lat, latlng.lng], line[pr.i], line[Math.min(pr.i+1, line.length-1)]);
+      var along = cum2[pr.i] + (pr.i < line.length-1 ? (cum2[pr.i+1]-cum2[pr.i])*frac : 0);
+      if(along > 0){ kmTo = along/1000; }
+    }
+  }
+
+  if(el._pickMk){ try{ m.removeLayer(el._pickMk); }catch(e){} }
+  el._pickMk = L.marker(latlng, {icon: dotIcon('\ud83d\udccd','#e07b39')}).addTo(m);
+  PICK.pending = {lat:latlng.lat, lng:latlng.lng, km:kmTo, off:off};
+
+  if(off > tol){
+    pickBanner(st.id, '', 'bad', '<span>Ce point est à '+(off>=1000?Math.round(off/1000)+' km':Math.round(off)+' m')
+      +' du parcours. Touche plus près du tracé.</span>');
+    return;
+  }
+  if(kmTo <= 2){
+    pickBanner(st.id, '', 'bad', '<span>Ce point est au départ de la journée. Touche plus loin sur le parcours.</span>');
+    return;
+  }
+  if(kmTo > 100){
+    pickBanner(st.id, '', 'bad', '<span>Ce point est à '+Math.round(kmTo)+' km du départ du jour \u2014 maximum 100 km.</span>');
+    return;
+  }
+  pickBanner(st.id, '', 'ok',
+    '<span><b>\u2248 '+Math.round(kmTo)+' km</b> depuis '+esc(st.from.n)+'</span>'
+    +'<button class="pk-ok" data-day="'+st.day+'">Confirmer</button>');
+}
 function setStop(day, latlng){
   var key = 'd'+day;
   /* Refus explicite si le point choisi est hors de portée pour cette journée :
@@ -3394,17 +3521,7 @@ function setStop(day, latlng){
       if(rr.d < bd){ bd = rr.d; bi = j; bt = rr.t; }
     }
     var kmTo = stg.cum[bi] + (stg.cum[bi+1]-stg.cum[bi])*bt - stg.cum[i0];
-    var note = document.getElementById('rt-'+stg.id);
-    if(bd > 4000){
-      if(note){ note.textContent = 'Ce point est à '+Math.round(bd/1000)+' km du parcours \u2014 choisis un endroit plus proche du tracé.'; }
-      return;
-    }
-    if(kmTo <= 2 || kmTo > 120){
-      if(note){ note.textContent = kmTo <= 2
-        ? 'Ce point est au départ de la journée \u2014 choisis un endroit plus loin sur le parcours.'
-        : 'Ce point est à '+Math.round(kmTo)+' km du départ du jour \u2014 trop loin pour une seule journée.'; }
-      return;
-    }
+    if(bd > 8000 || kmTo <= 2 || kmTo > 100){ return; }
   }
   STATE.stops[key] = {lat:+latlng.lat.toFixed(5), lng:+latlng.lng.toFixed(5)};
   STATE.done[key] = 's'+key;
