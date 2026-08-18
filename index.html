@@ -588,7 +588,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v8.5.0</span>
+      <span class="ver" id="app-version">v8.7.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -601,14 +601,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v8.5.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v8.7.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v8.5.0
+   Tour de Bourgogne à vélo — PWA · v8.7.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -931,7 +931,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v8.5.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v8.7.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1011,12 +1011,21 @@ function buildChain(){
   Object.keys(STATE.stops||{}).forEach(function(k){
     var sp = STATE.stops[k];
     if(!sp || sp.lat==null) return;
-    stops.push({k:k, lat:sp.lat, lng:sp.lng, name:sp.name, off:sp.off||0});
+    stops.push({k:k, lat:sp.lat, lng:sp.lng, name:sp.name, off:sp.off||0,
+                after:sp.after||null, t:sp.t});
   });
   if(!stops.length){ return base; }
 
   stops.forEach(function(sp){
-    /* segment du parcours le plus proche du point touché */
+    /* Ancrage mémorisé au moment du choix : le segment est celui de la
+       JOURNÉE concernée. Reprojeter le point sur toute la boucle à chaque
+       calcul le faisait atterrir n'importe où — un arrêt près de Génelard
+       se retrouvait inséré entre Bourbon-Lancy et Decize. */
+    if(sp.after){
+      for(var a=0;a<base.length-1;a++){
+        if(base[a].key === sp.after){ sp._i = a; sp._t = (sp.t!=null?sp.t:0.5); return; }
+      }
+    }
     var bi = 0, bd = Infinity, bt = 0;
     for(var j=0;j<base.length-1;j++){
       var r = segCalc([sp.lat, sp.lng], base[j].ll, base[j+1].ll);
@@ -1095,7 +1104,7 @@ function computeStages(){
   var lastDone = 0, lastDoneDay = 0;
   for(var dd=1; dd<=rideDays; dd++){
     var di = doneIdx(dd, lastDone);
-    if(di > lastDone && (cum[di]-cum[lastDone]) <= 130){ lastDone = di; lastDoneDay = dd; }
+    if(di > lastDone && (cum[di]-cum[lastDone]) <= 115){ lastDone = di; lastDoneDay = dd; }
   }
   var remainKm = T - cum[lastDone], remainDays = rideDays - lastDoneDay;
   var needAvg = remainDays > 0 ? remainKm/remainDays : 0;
@@ -1118,7 +1127,7 @@ function computeStages(){
     var fixed = doneIdx(day, at);
     /* garde-fou : une journée validée à plus de 120 km est une donnée aberrante
        (stockage corrompu, ancien format mal résolu) — on l'ignore. */
-    if(fixed > at && (cum[fixed]-cum[at]) > 130){ fixed = -1; delete STATE.done['d'+day]; }
+    if(fixed > at && (cum[fixed]-cum[at]) > 115){ fixed = -1; delete STATE.done['d'+day]; }
     if(fixed > at || (fixed === at && day <= lastDoneDay)){
       /* journée validée : le point d'arrivée est un fait, pas un calcul */
       to = Math.max(fixed, at);
@@ -1612,7 +1621,12 @@ function initStageMap(st){
   m.on('click', function(ev){
     if(VIA.on && VIA.sid===st.id){ viaAdd(ev.latlng); return; }
     if(PICK.on && PICK.sid===st.id){ proposeStop(st, ev.latlng); return; }
-    if(!GUIDON.active){ enterGuidon(st.id); }
+    /* On n'ignore l'appui que si le plein écran est RÉELLEMENT ouvert sur
+       cette étape : se fier au seul drapeau laissait la navigation
+       définitivement inaccessible en cas d'état résiduel. */
+    var dejaOuvert = GUIDON.active && GUIDON.id===st.id
+                     && document.querySelector('.guidon-fs') && document.querySelector('.navbar');
+    if(!dejaOuvert){ enterGuidon(st.id); }
   });
 
   var note = document.getElementById('rt-'+st.id);
@@ -2577,6 +2591,10 @@ function setHeadUp(on){
   if(hint){ hint.textContent = on ? 'Carte verrouillée sur votre position \u2014 passez en NORD pour explorer' : ''; }
 }
 function enterGuidon(sid){
+  /* Si un plein écran précédent n'a pas été refermé proprement (bouton retour
+     d'Android, changement d'onglet, re-rendu), l'état restait « actif » et
+     tout appui suivant était ignoré : la navigation devenait inaccessible. */
+  if(GUIDON.active){ exitGuidon(); }
   var st = null;
   RUN.stages.forEach(function(x){ if(x.id===sid) st = x; });
   var box = document.getElementById('map-'+sid), m = maps[sid];
@@ -2724,7 +2742,26 @@ function navUpdate(pos){
 }
 
 function exitGuidon(){
-  if(!GUIDON.active) return;
+  if(!GUIDON.active){ return; }
+  try{ exitGuidonInner(); }
+  catch(e){ /* quoi qu'il arrive, l'état doit être libéré */ }
+  finally{
+    GUIDON.active=false; GUIDON.id=null; GUIDON.nav=null; GUIDON.co=null; GUIDON.prevPt=null;
+    document.body.classList.remove('noscroll');
+    document.documentElement.classList.remove('navmode');
+    ['bar','comp','locBtn'].forEach(function(k){
+      if(GUIDON[k] && GUIDON[k].parentNode){ try{ GUIDON[k].parentNode.removeChild(GUIDON[k]); }catch(e){} }
+      GUIDON[k] = null;
+    });
+    document.querySelectorAll('.navbar,.navcompass,.navlocate').forEach(function(n){
+      if(n.parentNode) n.parentNode.removeChild(n);
+    });
+    document.querySelectorAll('.guidon-fs').forEach(function(n){
+      n.classList.remove('guidon-fs'); n.classList.remove('maprot'); n.style.transform='';
+    });
+  }
+}
+function exitGuidonInner(){
   var box = document.getElementById('map-'+GUIDON.id), m = maps[GUIDON.id];
   if(box){
     box.classList.remove('guidon-fs');
@@ -2743,6 +2780,13 @@ function exitGuidon(){
   if(GUIDON.wl){ try{ GUIDON.wl.release(); }catch(e){} GUIDON.wl=null; }
   GUIDON.active=false; GUIDON.id=null; GUIDON.nav=null; GUIDON.co=null; GUIDON.prevPt=null;
 }
+/* Bouton retour du téléphone : refermer le plein écran plutôt que de sortir. */
+window.addEventListener('popstate', function(){
+  if(GUIDON.active){ exitGuidon(); history.pushState({nav:1},''); }
+  else if(PICK.on){ disarmPick(); }
+  else if(VIA.on){ viaDisarm(); }
+});
+try{ history.pushState({nav:1},''); }catch(e){}
 document.addEventListener('fullscreenchange', function(){
   if(GUIDON.active && !document.fullscreenElement){ exitGuidon(); }
 });
@@ -3222,6 +3266,9 @@ function etapesHtml(){
     + chainList() +'</div>';
 }
 function render(){
+  /* les cartes vont être détruites : un plein écran encore ouvert pointerait
+     vers une carte inexistante */
+  if(GUIDON.active){ exitGuidon(); }
   Object.keys(maps).forEach(function(k){ try{ maps[k].remove(); }catch(e){} });
   maps = {};
   mainEl.innerHTML = '';
@@ -3629,14 +3676,17 @@ function proposeStop(st, latlng){
 
   if(el._pickMk){ try{ m.removeLayer(el._pickMk); }catch(e){} }
   el._pickMk = L.marker(latlng, {icon: dotIcon('\ud83d\udccd','#e07b39')}).addTo(m);
-  PICK.pending = {lat:latlng.lat, lng:latlng.lng, km:kmTo, off:off};
+  PICK.pending = {lat:latlng.lat, lng:latlng.lng, km:kmTo, off:off,
+                  after: st.chain[bi] ? st.chain[bi].key : null, t: bt};
 
   /* Un arrêt n'est pas toujours sur le canal : camping à 6 km, hébergement
      dans un village voisin, détour imprévu. On accepte donc l'écart et on le
      COMPTE dans la distance du jour, au lieu de refuser le point. */
   var offKm = off/1000;
-  if(offKm > 60){
-    pickBanner(st.id, '', 'bad', '<span>Ce point est à '+Math.round(offKm)+' km du parcours \u2014 au-delà de ce qui reste rattachable à cette étape.</span>');
+  /* 15 km est déjà un grand détour à vélo chargé ; au-delà, le point n'est
+     plus rattachable à l'étape et fausse tous les calculs. */
+  if(offKm > 15){
+    pickBanner(st.id, '', 'bad', '<span>Ce point est à '+Math.round(offKm)+' km du parcours \u2014 trop loin pour être rattaché à cette étape.</span>');
     return;
   }
   var totKm = kmTo + offKm;
@@ -3673,7 +3723,9 @@ function setStop(day, latlng){
 
   }
   STATE.stops[key] = {lat:+latlng.lat.toFixed(5), lng:+latlng.lng.toFixed(5),
-                      off: (PICK.pending && PICK.pending.off) ? Math.round(PICK.pending.off) : 0};
+                      off: (PICK.pending && PICK.pending.off) ? Math.round(PICK.pending.off) : 0,
+                      after: (PICK.pending && PICK.pending.after) || null,
+                      t: (PICK.pending && PICK.pending.t!=null) ? +PICK.pending.t.toFixed(3) : 0.5};
   STATE.done[key] = 's'+key;
   Object.keys(STATE.done).forEach(function(k){
     var d2 = parseInt(k.slice(1),10);
