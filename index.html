@@ -534,14 +534,10 @@ footer{
 .pickmap-btn{width:100%;background:var(--panel);border:1px dashed var(--line);color:var(--ink);
   border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .pickmap-btn.arm{border-style:solid;border-color:var(--gold);background:rgba(240,184,96,.16);color:var(--gold)}
-.dreload-all{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);
-  border-radius:10px;padding:10px 8px;font:600 .78rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .dbtn.fail{background:rgba(229,138,122,.2);border-color:rgba(229,138,122,.6);color:var(--danger)}
 .hideall-osm{flex:none;background:var(--panel);border:1px solid var(--line);color:var(--muted);
   border-radius:10px;padding:10px 14px;font:600 .78rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .loadall-osm{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);
-  border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
-.retry-osm{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);
   border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .valid-btn{width:100%;background:var(--sage);color:#08252e;border:none;border-radius:10px;
   padding:11px 14px;font:600 .84rem/1 'Spline Sans',sans-serif;cursor:pointer}
@@ -594,7 +590,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v9.2.0</span>
+      <span class="ver" id="app-version">v9.3.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -607,14 +603,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v9.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v9.3.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v9.2.0
+   Tour de Bourgogne à vélo — PWA · v9.3.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -627,7 +623,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'b9';
+var GEN = 'c1';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -667,7 +663,7 @@ var CHAIN = [
   voir:'Le plus grand port fluvial de France intérieure : gare d\u2019eau, quais, péniches.',
   camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking'},
          {n:'Chambres d\u2019hôtes du port', t:'repli'}]},
- {n:'Pagny-le-Château', ll:[47.0167,5.1667], km:11, surf:'vv', vr:'La Voie Bleue \u00b7 Saône',
+ {n:'Pagny-le-Château', ll:[47.0167,5.1667], km:14, surf:'vv', vr:'La Voie Bleue \u00b7 Saône',
   gare:'\u2014', svc:['eau','commerces'],
   camps:[{n:'Halte nautique de Pagny', t:'aire au bord de Saône'}]},
  {n:'Seurre', ll:[46.9951,5.1503], km:11, surf:'vv', vr:'La Voie Bleue · Saône',
@@ -679,7 +675,7 @@ var CHAIN = [
   gare:'—', svc:['eau','commerces'],
   voir:'La confluence du Doubs et de la Saône ; patrie de la pochouse.',
   camps:[{n:'Camping municipal La Plage', t:'★★ · confluence'}]},
- {n:'Chalon-sur-Saône', ll:[46.7806,4.8539], km:16, surf:'vv', vr:'V50 · début canal du Centre',
+ {n:'Chalon-sur-Saône', ll:[46.7806,4.8539], km:21, surf:'vv', vr:'V50 · début canal du Centre',
   gare:'Gare de Chalon (Dijon–Mâcon, fréquente)', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
   voir:'Île Saint-Laurent, musée Nicéphore-Niépce (berceau de la photo), quais animés.',
   camps:[{n:'Camping du Pont de Bourgogne', t:'★★★ · bord de Saône'},
@@ -698,7 +694,7 @@ var CHAIN = [
   voir:'Port de plaisance, écluses, capitainerie.',
   camps:[{n:'Halte nautique &amp; camping de St-Léger', t:'★★ · port'},
          {n:'Camping du lac de Saint-Sernin', t:'★★ · 4 km'}]},
- {n:'Montchanin', ll:[46.7480,4.4670], km:16, surf:'vv', vr:'V50 · bief de partage',
+ {n:'Montchanin', ll:[46.7480,4.4670], km:19, surf:'vv', vr:'V50 · bief de partage',
   gare:'Gare de Montchanin (TGV Le Creusot à 8 km)', svc:['eau','commerces','pharmacie'],
   voir:'Le point haut du canal du Centre et ses réservoirs.',
   camps:[{n:'Camping des étangs de Montchanin', t:'★★ · plan d\u2019eau'}]},
@@ -728,17 +724,17 @@ var CHAIN = [
   voir:'Le pont-canal de 243 m qui enjambe la Loire — on pédale au-dessus du fleuve.',
   camps:[{n:'Camping de la Chevrette', t:'★★★ · bord de Loire'},
          {n:'Camping de Bourbon-Lancy (35 km)', t:'★★★ · thermal'}]},
- {n:'Diou', ll:[46.5333,3.7500], km:15, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
+ {n:'Diou', ll:[46.5333,3.7500], km:21, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
   gare:'Gare de Diou', svc:['eau','commerces'],
   camps:[{n:'Camping de Diou', t:'bord de canal'}]},
  {n:'Dompierre-sur-Besbre', ll:[46.5167,3.6833], km:8, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
   gare:'Gare de Dompierre', svc:['eau','commerces','marché'],
   camps:[{n:'Camping municipal de Dompierre', t:'\u2605\u2605 \u00b7 proche du Pal'}]},
- {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:12, surf:'vv', vr:'EV6 · canal latéral à la Loire',
+ {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:15, surf:'vv', vr:'EV6 · canal latéral à la Loire',
   gare:'—', svc:['eau','commerces','thermes','piscine'],
   voir:'Ville thermale médiévale : beffroi, maisons à colombages, sources chaudes.',
   camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal'}]},
- {n:'Gannay-sur-Loire', ll:[46.7500,3.6000], km:18, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
+ {n:'Gannay-sur-Loire', ll:[46.7500,3.6000], km:22, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
   gare:'\u2014', svc:['eau'],
   camps:[{n:'Halte de Gannay', t:'aire simple'}]},
  {n:'Decize', ll:[46.8283,3.4624], km:17, surf:'vv', vr:'EV6 → V51 · Loire &amp; Nivernais',
@@ -748,7 +744,7 @@ var CHAIN = [
  {n:'Champvert', ll:[46.8500,3.4333], km:12, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
   gare:'\u2014', svc:['eau'],
   camps:[{n:'Halte de Champvert', t:'bord de canal'}]},
- {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:13, surf:'vv', vr:'V51 · canal du Nivernais',
+ {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:19, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'Gare de Cercy-la-Tour', svc:['eau','commerces','baignade'],
   voir:'Statue monumentale de la Vierge dominant la vallée de l\u2019Aron.',
   camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal'}]},
@@ -763,7 +759,7 @@ var CHAIN = [
  {n:'Mont-et-Marré', ll:[47.0333,3.6667], km:7, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
   gare:'\u2014', svc:['eau'],
   camps:[{n:'Halte de Mont-et-Marré', t:'aire simple'}]},
- {n:'Étangs de Baye', ll:[47.1903,3.6553], km:15, surf:'vv', vr:'V51 · 16 écluses de la Collancelle',
+ {n:'Étangs de Baye', ll:[47.1903,3.6553], km:20, surf:'vv', vr:'V51 · 16 écluses de la Collancelle',
   gare:'—', svc:['eau','baignade','buvette'],
   voir:'Les réservoirs qui alimentent le canal, après l\u2019échelle des 16 écluses.',
   camps:[{n:'Camping de la base de loisirs de Baye', t:'★★ · plage'},
@@ -812,7 +808,7 @@ var CHAIN = [
  {n:'Gurgy', ll:[47.8833,3.5667], km:12, surf:'vv', vr:'V51 \u00b7 Yonne canalisée',
   gare:'\u2014', svc:['eau','commerces','baignade'],
   camps:[{n:'Camping de Gurgy', t:'\u2605\u2605 \u00b7 plage sur l\u2019Yonne'}]},
- {n:'Migennes', ll:[47.9650,3.5172], km:8, surf:'vv', vr:'V51 · départ canal de Bourgogne',
+ {n:'Migennes', ll:[47.9650,3.5172], km:11, surf:'vv', vr:'V51 · départ canal de Bourgogne',
   gare:'Gare de Laroche-Migennes (grande ligne)', svc:['eau','supermarché','pharmacie'],
   voir:'Confluence Yonne–canal de Bourgogne ; le point de bascule du voyage.',
   camps:[{n:'Camping du Confluent', t:'★★ · port'}]},
@@ -865,16 +861,16 @@ var CHAIN = [
   gare:'—', svc:['eau'],
   voir:'Château fort sur motte et échelle d\u2019écluses de l\u2019Auxois.',
   camps:[{n:'Bivouac d\u2019écluse de Marigny', t:'bivouac'}]},
- {n:'Vandenesse-en-Auxois', ll:[47.2360,4.6250], km:16, surf:'vv', vr:'V51 · sous Châteauneuf',
+ {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:24, surf:'vv', vr:'V51 · point culminant',
+  gare:'—', svc:['eau','commerces','boulangerie'],
+  voir:'Le sommet du canal : voûte souterraine de 3 333 m, toueur électrique du musée.',
+  camps:[{n:'Camping du Vert Auxois', t:'★★ · centre'}]},
+ {n:'Vandenesse-en-Auxois', ll:[47.2360,4.6250], km:8, surf:'vv', vr:'V51 · sous Châteauneuf',
   gare:'—', svc:['eau','commerces'],
   voir:'Le port sous la forteresse de Châteauneuf-en-Auxois, un des plus beaux villages de France.',
   camps:[{n:'Camping du lac de Panthier', t:'★★★ · 3 km'},
          {n:'Halte fluviale de Vandenesse', t:'aire'}]},
- {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:8, surf:'vv', vr:'V51 · point culminant',
-  gare:'—', svc:['eau','commerces','boulangerie'],
-  voir:'Le sommet du canal : voûte souterraine de 3 333 m, toueur électrique du musée.',
-  camps:[{n:'Camping du Vert Auxois', t:'★★ · centre'}]},
- {n:'Pont-d\u2019Ouche', ll:[47.2130,4.6900], km:12, surf:'vv', vr:'V51 · entrée vallée de l\u2019Ouche',
+ {n:'Pont-d\u2019Ouche', ll:[47.2130,4.6900], km:9, surf:'vv', vr:'V51 · entrée vallée de l\u2019Ouche',
   gare:'—', svc:['eau','commerces'],
   voir:'Jonction du canal et de l\u2019Ouche, port de plaisance au pied des collines.',
   camps:[{n:'Camping du Pont d\u2019Ouche', t:'★★ · rivière'}]},
@@ -971,7 +967,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.2.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.3.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -2245,83 +2241,8 @@ function overpassRun(q, onDone, onNote){
   go();
 }
 
-/* Interroge un corridor découpé en tronçons, à la file. cb(elements|null, nbEchecs) */
-function corridorQuery(line, nChunks, build, onNote, cb){
-  var parts = chunkLine(line, nChunks);
-  var all = [], failed = 0;
-  (function next(k){
-    if(k >= parts.length){ cb((failed===parts.length) ? null : all, failed); return; }
-    if(onNote){ onNote('Interrogation d\u2019OpenStreetMap \u2014 tronçon '+(k+1)+'/'+parts.length
-      +(all.length?(' \u00b7 '+all.length+' trouvés'):'')+'\u2026'); }
-    overpassQueue(build(coordList(parts[k])), function(j){
-      if(!j){ failed++; }
-      else { (j.elements||[]).forEach(function(e){ all.push(e); }); }
-      next(k+1);
-    }, onNote);
-  })(0);
-}
 
-/* Polyligne complète du parcours, sous-échantillonnée */
-function fullRouteLine(rides, stepM){
-  var line = [];
-  rides.forEach(function(st){
-    var co = ROUTED[st.id];
-    var seg = (co && co.length>1) ? co.map(function(c){ return [c[0],c[1]]; })
-                                  : densify(st.pts.map(function(p){ return p.ll; }), 300);
-    seg.forEach(function(p){ line.push(p); });
-  });
-  if(!line.length) return line;
-  var out = [line[0]], acc = 0;
-  for(var i=1;i<line.length;i++){
-    acc += distM(line[i-1], line[i]);
-    if(acc >= stepM){ out.push(line[i]); acc = 0; }
-  }
-  var last = line[line.length-1];
-  if(out[out.length-1] !== last) out.push(last);
-  return out;
-}
-function chunkLine(line, n){
-  var out = [], per = Math.ceil(line.length/n);
-  for(var i=0;i<line.length;i+=per){
-    var seg = line.slice(i, Math.min(line.length, i+per+1));   /* +1 : recouvrement */
-    if(seg.length>1) out.push(seg);
-  }
-  return out.length ? out : [line];
-}
-function routeBlocks(rides, n){
-  var per = Math.ceil(rides.length/n), out = [];
-  for(var i=0;i<rides.length;i+=per){ out.push(rides.slice(i, i+per)); }
-  return out;
-}
-function blockLine(block){
-  var line = [];
-  block.forEach(function(st){
-    var co = ROUTED[st.id];
-    var seg = (co && co.length>1) ? co.map(function(c){ return [c[0],c[1]]; })
-                                  : densify(st.pts.map(function(p){ return p.ll; }), 300);
-    seg.forEach(function(p){ line.push(p); });
-  });
-  return line;
-}
-function coordList(line){
-  return line.map(function(p){ return p[0].toFixed(4)+','+p[1].toFixed(4); }).join(',');
-}
 
-/* Charge toutes les routes d'abord (séquentiel, mis en cache), puis rappelle cb */
-function ensureAllRoutes(rides, onProgress, cb){
-  var i = 0;
-  (function next(){
-    if(i >= rides.length){ cb(); return; }
-    var st = rides[i];
-    if(ROUTED[st.id] && ROUTED[st.id].length>1){ i++; next(); return; }
-    if(onProgress){ onProgress('Calcul des tracés \u2014 étape '+(i+1)+'/'+rides.length+'\u2026'); }
-    getRoute(st, function(co, src){
-      if(co){ ROUTED[st.id] = co; }
-      i++;
-      setTimeout(next, src==='cache' ? 0 : 120);
-    });
-  })();
-}
 
 /* =========================================================
    POINTS D'EAU POTABLE — données OpenStreetMap en direct
@@ -2460,64 +2381,7 @@ var VSTYLE = {
   bike: {ico:'\ud83d\udd27', col:'#e07b39', lab:'Vélociste'},
   deca: {ico:'\ud83c\udfea', col:'#1d5fa8', lab:'Decathlon'}
 };
-function veloKey(st){ return 'bourgvelo-'+GEN+'-'+st.id+'-'+Math.round(st.km); }
-function getVelo(st, cb){
-  var key = veloKey(st);
-  try{
-    var c = localStorage.getItem(key);
-    if(c){ cb(JSON.parse(c), 'cache'); return; }
-  }catch(e){}
-  withRoute(st, function(routed){ getVeloInner(st, key, routed, cb); });
-}
-function getVeloInner(st, key, routed, cb){
-  var line = routeLine(st);
-  var bb = bboxOf(line, 0.07);
-  var B = bb.join(',');
-  var q = '[out:json][timeout:50];('
-    + 'nwr["shop"="bicycle"]('+B+');'
-    + 'nwr["brand"~"Decathlon",i]('+B+');'
-    + 'nwr["name"~"Decathlon",i]('+B+');'
-    + ');out center 300;';
-  fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q))
-   .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
-   .then(function(j){
-     var out = [], seen = {};
-     (j.elements||[]).forEach(function(e){
-       var la = e.lat!=null ? e.lat : (e.center && e.center.lat);
-       var lo = e.lon!=null ? e.lon : (e.center && e.center.lon);
-       if(la==null || lo==null) return;
-       var t = e.tags||{};
-       var nm = (t.name||'').trim();
-       var isDeca = /decathlon/i.test(nm) || /decathlon/i.test(t.brand||'');
-       if(!isDeca && t.shop!=='bicycle') return;
-       var id = la.toFixed(4)+','+lo.toFixed(4);
-       if(seen[id]) return;
-       seen[id] = 1;
-       var d = distToLine([la,lo], line);
-       if(d > VELO_MAX_M) return;
-       out.push([+la.toFixed(5), +lo.toFixed(5), isDeca?'deca':'bike', Math.round(d),
-                 nm.replace(/[<>&"]/g,' ').slice(0,40),
-                 (t.phone||t['contact:phone']||'').replace(/[<>&"]/g,' ').slice(0,20)]);
-     });
-     out.sort(function(a,b){ return a[3]-b[3]; });
-     out = out.slice(0,80);
-     if(routed){ try{ localStorage.setItem(key, JSON.stringify(out)); }catch(e){} }
-     cb(out, 'live');
-   })
-   .catch(function(){ cb(null,'fail'); });
-}
-
-/* ---------- mode guidon ---------- */
-/* =========================================================
-   NAVIGATION — instructions calculées depuis la géométrie
-   BRouter renvoie un tracé, pas des instructions : ses « voice
-   hints » dépendent du profil serveur et leur format a changé
-   entre versions. On détecte donc les virages nous-mêmes à
-   partir du tracé — ça fonctionne hors ligne, sur les tracés
-   déjà en cache, et ne dépend d'aucun format externe.
-   ========================================================= */
-
-/* cap (bearing) de a vers b, en degrés 0..360 */
+/* cap (azimut) de a vers b, en degrés 0..360 */
 function bearing(a, b){
   var la1 = a[0]*Math.PI/180, la2 = b[0]*Math.PI/180;
   var dLo = (b[1]-a[1])*Math.PI/180;
@@ -3533,52 +3397,9 @@ mainEl.addEventListener('click', function(ev){
     mm0._loadDay(dn, false);
     return;
   }
-  var dbr = t.closest ? t.closest('.dreload') : null;
-  if(dbr){
-    var mm2 = maps.apercu;
-    if(!mm2) return;
-    var dn2 = parseInt(dbr.getAttribute('data-day'),10);
-    var rr2 = RUN.stages.filter(function(x){ return x.type==='ride' && x.day===dn2; })[0];
-    if(rr2){
-      var base = (rr2.from.n+'_'+rr2.to.n).replace(/[^A-Za-z0-9_]/g,'').slice(0,50);
-      try{
-        localStorage.removeItem('bourgday-eau-'+base);
-        localStorage.removeItem('bourgday-velo-'+base);
-      }catch(e){}
-    }
-    ['eau','velo'].forEach(function(k){
-      var g = mm2._dayG && mm2._dayG[k+dn2];
-      if(g){ g.clearLayers(); delete mm2._dayG[k+dn2]; }
-    });
-    mm2._dayState[dn2] = '';
-    mm2._loadDay(dn2, false);
-    return;
-  }
-  if(t.closest && t.closest('.dreload-all')){
-    var rw = document.getElementById('dreload-row');
-    if(rw){ rw.style.display = (rw.style.display==='none' ? 'block' : 'none'); }
-    return;
-  }
   if(t.closest && t.closest('.loadall-osm')){
     var mm1 = maps.apercu;
     if(mm1 && mm1._loadAllDays) mm1._loadAllDays();
-    return;
-  }
-  if(t.closest && t.closest('.retry-osm')){
-    try{
-      var kill=[];
-      for(var ri=0; ri<localStorage.length; ri++){
-        var rk=localStorage.key(ri);
-        if(rk && (rk.indexOf('bourgwaterall')===0 || rk.indexOf('bourgveloall')===0)) kill.push(rk);
-      }
-      kill.forEach(function(k){ localStorage.removeItem(k); });
-    }catch(e){}
-    var mm = maps.apercu;
-    if(mm){ mm._eauLoaded = false; mm._veloLoaded = false;
-      if(mm._g){ if(mm._g.eau) mm._g.eau.clearLayers(); if(mm._g.velo) mm._g.velo.clearLayers(); }
-      if(LAYERS.eau && mm._loadEau) mm._loadEau();
-      if(LAYERS.velo && mm._loadVelo) setTimeout(function(){ mm._loadVelo(); }, 1500);
-    }
     return;
   }
   var pko = t.closest ? t.closest('.pk-ok') : null;
