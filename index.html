@@ -229,6 +229,12 @@ body.noscroll{overflow:hidden}
    Leaflet sont masqués (nos propres boutons sont hors de l'élément) et les
    pastilles de marqueurs sont contre-tournées pour rester lisibles. */
 .maprot{transform-origin:50% 50%; transition:transform .25s linear; position:fixed!important}
+/* .guidon-fs impose inset:0 et la taille de l'écran en !important ; sans ces
+   règles, l'élément agrandi à la diagonale reprenait la taille du viewport et
+   la rotation laissait de larges coins vides. */
+.maprot.guidon-fs{inset:auto!important;
+  width:var(--rotd,100vw)!important; height:var(--rotd,100vh)!important;
+  left:var(--rotx,0)!important; top:var(--roty,0)!important}
 .maprot .leaflet-control-container{display:none}
 .navmode .guidon-fs .leaflet-control-zoom{display:none}
 .navmode .guidon-fs .leaflet-control-attribution{display:none}
@@ -588,7 +594,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v8.9.0</span>
+      <span class="ver" id="app-version">v9.0.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -601,14 +607,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v8.9.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v9.0.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v8.9.0
+   Tour de Bourgogne à vélo — PWA · v9.0.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -931,7 +937,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v8.9.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.0.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1530,7 +1536,18 @@ function addLocate(m){
     if(e.accuracy && e.accuracy > 25){
       m._acc = L.circle(e.latlng,{radius:e.accuracy, color:'#4a9eff', weight:1, opacity:.35, fillOpacity:.08}).addTo(m);
     }
-    if(m._follow){ m.setView(e.latlng, Math.max(m.getZoom(),16), {animate:true}); }
+    if(m._follow){
+      /* Marquer le recentrage comme automatique : le zoom qu'il déclenche
+         était pris pour un geste de l'utilisateur et coupait le suivi dès le
+         premier point GPS — la carte ne suivait donc jamais. */
+      m._selfMove = true;
+      if(m._selfT) clearTimeout(m._selfT);
+      m._selfT = setTimeout(function(){ m._selfMove = false; }, 900);
+      /* sans animation : à 1 point GPS par seconde, les animations
+         s'empilaient et la carte accusait un retard permanent sur la
+         position réelle. */
+      m.setView(e.latlng, Math.max(m.getZoom(),16), {animate:false});
+    }
     paintLoc(m);
     if(GUIDON.active && maps[GUIDON.id]===m){
       navUpdate({lat:e.latlng.lat, lng:e.latlng.lng,
@@ -1544,11 +1561,14 @@ function addLocate(m){
   });
   /* Se déplacer sur la carte suspend le suivi : le bouton devient alors
      l'invitation claire à revenir sur soi. */
-  m.on('dragstart zoomstart', function(){
+  m.on('dragstart', function(){
     m._userMoved = true;
-    if(m._follow && !m._selfMove){ m._follow = false; paintLoc(m); }
+    if(m._follow){ m._follow = false; paintLoc(m); }
   });
-  m.on('moveend', function(){ m._selfMove = false; });
+  m.on('zoomstart', function(){
+    /* seul un zoom NON provoqué par l'app suspend le suivi */
+    if(m._follow && !m._selfMove){ m._userMoved = true; m._follow = false; paintLoc(m); }
+  });
 
   /* Correction du glissement quand la carte est pivotée.
      Leaflet calcule le déplacement en pixels écran et l'applique tel quel au
@@ -1561,7 +1581,7 @@ function addLocate(m){
       if(!GUIDON.active || !GUIDON.headUp || GUIDON.id==null) return;
       if(maps[GUIDON.id] !== m) return;
       var th = -GUIDON.shown * Math.PI/180;
-      var sc = 1/1.45;
+      var sc = 1;   /* l'élément est agrandi par sa taille, non par scale() */
       var off = dr._newPos.subtract(dr._startPos);
       var x = (off.x*Math.cos(th) - off.y*Math.sin(th)) * sc;
       var y = (off.x*Math.sin(th) + off.y*Math.cos(th)) * sc;
@@ -1595,6 +1615,8 @@ function recenter(m){
   m._follow = true;
   if(m._lastFix){
     m._selfMove = true;
+    if(m._selfT) clearTimeout(m._selfT);
+    m._selfT = setTimeout(function(){ m._selfMove = false; }, 900);
     m.setView(m._lastFix, Math.max(m.getZoom(),16), {animate:true});
   }
   paintLoc(m);
@@ -2546,7 +2568,8 @@ function applyRotation(){
   if(!GUIDON.headUp){
     el.classList.remove('maprot');
     el.style.transform = '';
-    el.style.width = ''; el.style.height = ''; el.style.left = ''; el.style.top = '';
+    el.style.removeProperty('--rotd'); el.style.removeProperty('--rotx'); el.style.removeProperty('--roty');
+    GUIDON.rotD = 0;
     el.style.setProperty('--counter','0deg');
     if(m && m.dragging){ m.dragging.enable(); }
     return;
@@ -2558,10 +2581,14 @@ function applyRotation(){
     el.classList.add('maprot');
     var vw = window.innerWidth, vh = window.innerHeight;
     var D = Math.ceil(Math.sqrt(vw*vw + vh*vh));
-    el.style.width  = D+'px';
-    el.style.height = D+'px';
-    el.style.left   = Math.round((vw-D)/2)+'px';
-    el.style.top    = Math.round((vh-D)/2)+'px';
+    el.style.setProperty('--rotd', D+'px');
+    el.style.setProperty('--rotx', Math.round((vw-D)/2)+'px');
+    el.style.setProperty('--roty', Math.round((vh-D)/2)+'px');
+    GUIDON.rotD = D;
+    /* Leaflet doit reprendre la mesure : sans cela il croit encore faire la
+       taille de l'écran et centre la vue à côté — la carte semblait ne pas
+       suivre la position. */
+    if(m){ setTimeout(function(){ try{ m.invalidateSize(false); if(m._lastFix && m._follow){ m.setView(m._lastFix, m.getZoom()); } }catch(e){} }, 40); }
     if(m){ setTimeout(function(){ m.invalidateSize(); }, 40); }
   }
   var target = -GUIDON.hdg;
@@ -2591,6 +2618,9 @@ function setHeadUp(on){
   }
   if(!on){ GUIDON.shown = 0; }
   applyRotation();
+  /* en mode CAP la carte doit rester verrouillée sur la position */
+  var mm0 = GUIDON.id ? maps[GUIDON.id] : null;
+  if(mm0 && on){ recenter(mm0); }
   var m = GUIDON.id ? maps[GUIDON.id] : null;
   if(m){
     /* En mode CAP, la carte est tournée en CSS : un glissement du doigt ne
