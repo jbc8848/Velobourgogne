@@ -586,7 +586,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v9.9.0</span>
+      <span class="ver" id="app-version">v10.0.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -599,14 +599,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v9.9.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v10.0.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v9.9.0
+   Tour de Bourgogne à vélo — PWA · v10.0.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -619,7 +619,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'c6';
+var GEN = 'c8';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -723,10 +723,7 @@ var CHAIN = [
  {n:'Diou', ll:[46.5333,3.7500], km:21, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
   gare:'Gare de Diou', svc:['eau','commerces'],
   camps:[{n:'Camping de Diou', t:'bord de canal'}]},
- {n:'Dompierre-sur-Besbre', ll:[46.5167,3.6833], km:8, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
-  gare:'Gare de Dompierre', svc:['eau','commerces','marché'],
-  camps:[{n:'Camping municipal de Dompierre', t:'\u2605\u2605 \u00b7 proche du Pal'}]},
- {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:15, surf:'vv', vr:'EV6 · canal latéral à la Loire',
+ {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:14, surf:'vv', vr:'EV6 · canal latéral à la Loire',
   gare:'—', svc:['eau','commerces','thermes','piscine'],
   voir:'Ville thermale médiévale : beffroi, maisons à colombages, sources chaudes.',
   camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal'}]},
@@ -737,14 +734,14 @@ var CHAIN = [
   gare:'Gare de Decize (Nevers–Dijon)', svc:['eau','supermarché','pharmacie','baignade'],
   voir:'Ville insulaire entre Loire et canal ; promenade des Halles sous les tilleuls.',
   camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île'}]},
- {n:'Champvert', ll:[46.8500,3.4333], km:12, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
+ {n:'Champvert', ll:[46.8580,3.5170], km:7, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
   gare:'\u2014', svc:['eau'],
   camps:[{n:'Halte de Champvert', t:'bord de canal'}]},
- {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:19, surf:'vv', vr:'V51 · canal du Nivernais',
+ {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:14, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'Gare de Cercy-la-Tour', svc:['eau','commerces','baignade'],
   voir:'Statue monumentale de la Vierge dominant la vallée de l\u2019Aron.',
   camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal'}]},
- {n:'Panneçot', ll:[46.9333,3.5667], km:10, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
+ {n:'Panneçot', ll:[46.9250,3.6080], km:10, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
   gare:'\u2014', svc:['eau','baignade'],
   camps:[{n:'Halte fluviale de Panneçot', t:'écluse et guinguette'}]},
  {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:17, surf:'vv', vr:'V51 · canal du Nivernais',
@@ -963,7 +960,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.9.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v10.0.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
