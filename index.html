@@ -586,7 +586,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v9.7.0</span>
+      <span class="ver" id="app-version">v9.9.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -599,14 +599,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v9.7.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v9.9.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v9.7.0
+   Tour de Bourgogne à vélo — PWA · v9.9.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -619,7 +619,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'c4';
+var GEN = 'c6';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -963,7 +963,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.7.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.9.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1377,14 +1377,19 @@ function distM(a,b){
 /* Points de passage d'une étape : uniquement les villages du parcours.
    Un arrêt libre n'y figure que s'il est le départ ou l'arrivée du jour ;
    au milieu, il imposerait un détour hors tracé. */
-/* Points de passage : uniquement le départ et l'arrivée de la journée.
-   Les coordonnées des villages sont celles du centre-bourg, alors que le
-   parcours longe le canal en contrebas : les imposer forçait le tracé à
-   monter au village puis redescendre. BRouter, en profil trekking, suit de
-   lui-même la voie verte et le chemin de halage, qui sont l'itinéraire
-   cyclable naturel entre deux points. */
+/* Points de passage envoyés au routage.
+   Règle : on reste collé au parcours prévu — tous les villages de l'étape
+   sont imposés, dans l'ordre. Un arrêt libre n'est jamais traversé : il n'est
+   ajouté qu'en toute fin, comme destination. L'itinéraire suit donc le canal
+   jusqu'au dernier village avant de bifurquer vers l'arrêt. */
 function stageWps(st){
-  return [st.from.ll, st.to.ll];
+  var villages = st.pts.filter(function(p){ return !p.custom; }).map(function(p){ return p.ll; });
+  var fin = st.pts[st.pts.length-1];
+  if(fin && fin.custom){ villages.push(fin.ll); }
+  var dep = st.pts[0];
+  if(dep && dep.custom){ villages.unshift(dep.ll); }
+  if(villages.length < 2){ return [st.from.ll, st.to.ll]; }
+  return villages;
 }
 function stageKey(st){
   return 'bourgrt-'+GEN+'-'+st.pts.map(function(p){return p.n;}).join('_').replace(/[^A-Za-z0-9_]/g,'').slice(0,90);
@@ -1444,8 +1449,11 @@ function getRoute(st, cb){
     var c = localStorage.getItem(key);
     if(c){ cb(JSON.parse(c), 'cache'); return; }
   }catch(e){}
-  var wps = stageWps(st).map(function(p){ return p[1].toFixed(5)+','+p[0].toFixed(5); });
-  var url = 'https://brouter.de/brouter?lonlats='+wps.join('|')+'&profile=trekking&alternativeidx=0&format=geojson';
+  /* Un seul tracé, fidèle au parcours : plus d'essai « au plus court » qui
+     pouvait abandonner l'itinéraire officiel (Decize évité, par exemple). */
+  var url = 'https://brouter.de/brouter?lonlats='
+    + stageWps(st).map(function(p){ return p[1].toFixed(5)+','+p[0].toFixed(5); }).join('|')
+    + '&profile=trekking&alternativeidx=0&format=geojson';
   function attempt(left){
     fetch(url).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
     .then(function(gj){
