@@ -524,6 +524,9 @@ footer{
 .pickbar.warn{border-color:rgba(240,184,96,.8)}
 .pickbar .pk-ok{flex:none; background:var(--sage); color:#08252e; border:none; border-radius:9px;
   padding:9px 14px; font:600 .82rem/1 'Spline Sans',sans-serif; cursor:pointer}
+.wipe-btn{width:100%;background:var(--panel);border:1px dashed rgba(229,138,122,.5);color:var(--danger);
+  border-radius:10px;padding:10px 14px;font:600 .8rem/1.3 'Spline Sans',sans-serif;cursor:pointer}
+.wipe-btn.danger{border-style:solid;background:rgba(229,138,122,.16)}
 .pickmap-btn{width:100%;background:var(--panel);border:1px dashed var(--line);color:var(--ink);
   border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .pickmap-btn.arm{border-style:solid;border-color:var(--gold);background:rgba(240,184,96,.16);color:var(--gold)}
@@ -583,7 +586,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v9.4.0</span>
+      <span class="ver" id="app-version">v9.7.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -596,14 +599,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v9.4.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v9.7.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v9.4.0
+   Tour de Bourgogne à vélo — PWA · v9.7.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -616,7 +619,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'c2';
+var GEN = 'c4';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -960,7 +963,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.4.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.7.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1064,7 +1067,7 @@ function buildChain(){
        un aller-retour. On l'ignore, où qu'il vienne. */
     if(STATE.done[k] !== 's'+k){ return; }
     stops.push({k:k, lat:sp.lat, lng:sp.lng, name:sp.name, off:sp.off||0,
-                after:sp.after||null, t:sp.t, a:sp.a, b:sp.b});
+                after:sp.after||null, afterN:sp.afterN||null, t:sp.t, a:sp.a, b:sp.b});
   });
   if(!stops.length){ return base; }
 
@@ -1073,9 +1076,20 @@ function buildChain(){
        JOURNÉE concernée. Reprojeter le point sur toute la boucle à chaque
        calcul le faisait atterrir n'importe où — un arrêt près de Génelard
        se retrouvait inséré entre Bourbon-Lancy et Decize. */
+    /* L'ancre est vérifiée sur le terrain avant d'être utilisée : les clés
+       sont des numéros d'ordre, et toute insertion ou permutation dans la
+       liste des villages les décale. Un arrêt pouvait ainsi se retrouver
+       rattaché à un segment situé 20 km plus loin. */
     if(sp.after){
       for(var a=0;a<base.length-1;a++){
-        if(base[a].key === sp.after){ sp._i = a; sp._t = (sp.t!=null?sp.t:0.5); return; }
+        if(base[a].key === sp.after || base[a].n === sp.afterN){
+          var ctrl = segCalc([sp.lat, sp.lng], base[a].ll, base[a+1].ll);
+          if(ctrl.d <= 6000){                       /* ancre plausible : on la garde */
+            sp._i = a; sp._t = (sp.t!=null ? sp.t : ctrl.t); return;
+          }
+          sp._reproj = true;
+          break;                                    /* incohérente : on reprojette */
+        }
       }
     }
     var bi = 0, bd = Infinity, bt = 0;
@@ -1097,6 +1111,8 @@ function buildChain(){
     /* Si les deux moitiés ont été mesurées par routage, on les prend telles
        quelles : c'est exact, même pour un point très éloigné du tracé. Sinon
        on retombe sur l'estimation géométrique plus l'écart au tracé. */
+    /* mesures liées à l'ancre : inutilisables si celle-ci a été reprojetée */
+    if(sp._reproj){ sp.a = null; sp.b = null; }
     if(sp.a != null && sp.b != null){
       part = Math.max(1, sp.a); rest = Math.max(1, sp.b);
     }else{
@@ -1361,10 +1377,14 @@ function distM(a,b){
 /* Points de passage d'une étape : uniquement les villages du parcours.
    Un arrêt libre n'y figure que s'il est le départ ou l'arrivée du jour ;
    au milieu, il imposerait un détour hors tracé. */
+/* Points de passage : uniquement le départ et l'arrivée de la journée.
+   Les coordonnées des villages sont celles du centre-bourg, alors que le
+   parcours longe le canal en contrebas : les imposer forçait le tracé à
+   monter au village puis redescendre. BRouter, en profil trekking, suit de
+   lui-même la voie verte et le chemin de halage, qui sont l'itinéraire
+   cyclable naturel entre deux points. */
 function stageWps(st){
-  return st.pts.filter(function(p, i){
-    return !p.custom || i===0 || i===st.pts.length-1;
-  }).map(function(p){ return p.ll; });
+  return [st.from.ll, st.to.ll];
 }
 function stageKey(st){
   return 'bourgrt-'+GEN+'-'+st.pts.map(function(p){return p.n;}).join('_').replace(/[^A-Za-z0-9_]/g,'').slice(0,90);
@@ -2898,6 +2918,7 @@ function sejourHtml(){
     +'</div>';
   h += '<div class="card">'
     + chainList()
+    +'<div class="btn-row"><button class="wipe-btn">\u26a0 Tout réinitialiser</button></div>'
     +'<div class="btn-row"><button class="reset-btn">\u21ba Longueurs par défaut</button></div>'
     +'<div class="btn-row"><button class="allgpx-btn">\u2b07\ufe0f GPX complet</button>'
     +'<button class="share-btn">\ud83d\udd17 Partager</button></div>'
@@ -3348,6 +3369,33 @@ mainEl.addEventListener('click', function(ev){
     return;
   }
   if(t.closest && t.closest('.reset-btn')){ resetDays(); recompute(); return; }
+  /* Sortie de secours : efface TOUT ce qui est enregistré et repart du plan
+     d'origine. À utiliser si le déroulé devient incohérent. */
+  if(t.closest && t.closest('.wipe-btn')){
+    var b0 = t.closest('.wipe-btn');
+    if(b0.getAttribute('data-sure')!=='1'){
+      b0.setAttribute('data-sure','1');
+      b0.textContent = '\u26a0 Confirmer : effacer validations, arrêts et tracés';
+      b0.classList.add('danger');
+      return;
+    }
+    try{
+      var kill=[];
+      for(var wi=0; wi<localStorage.length; wi++){
+        var wk=localStorage.key(wi);
+        if(wk && wk.indexOf('bourg')===0 && wk.indexOf('bourg-ck-')!==0){ kill.push(wk); }
+      }
+      kill.forEach(function(k){ localStorage.removeItem(k); });
+    }catch(e){}
+    STATE = {v:STATEVER, opts:{}, days:{}, done:{}, stops:{}, via:{}};
+    OPTIONS.forEach(function(o){ STATE.opts[o.id] = o.on; });
+    ROUTED = {}; REAL = {};
+    saveState();
+    RUN = computeStages();
+    openStage = null; currentTab = 'sejour';
+    render(); window.scrollTo(0,0);
+    return;
+  }
   if(t.closest && t.closest('.undone-btn')){ resetDone(); recompute(); return; }
   var db = t.closest ? t.closest('.dbtn') : null;
   if(db){
@@ -3563,7 +3611,8 @@ function proposeStop(st, latlng){
   if(el._pickMk){ try{ m.removeLayer(el._pickMk); }catch(e){} }
   el._pickMk = L.marker(latlng, {icon: dotIcon('\ud83d\udccd','#e07b39')}).addTo(m);
   PICK.pending = {lat:latlng.lat, lng:latlng.lng, km:kmTo, off:off,
-                  after: st.chain[bi] ? st.chain[bi].key : null, t: bt};
+                  after: st.chain[bi] ? st.chain[bi].key : null,
+                  afterN: st.chain[bi] ? st.chain[bi].n : null, t: bt};
 
   /* Un arrêt n'est pas toujours sur le canal : camping à 6 km, hébergement
      dans un village voisin, détour imprévu. On accepte donc l'écart et on le
@@ -3611,6 +3660,7 @@ function setStop(day, latlng){
   STATE.stops[key] = {lat:+latlng.lat.toFixed(5), lng:+latlng.lng.toFixed(5),
                       off: (PICK.pending && PICK.pending.off) ? Math.round(PICK.pending.off) : 0,
                       after: (PICK.pending && PICK.pending.after) || null,
+                      afterN: (PICK.pending && PICK.pending.afterN) || null,
                       t: (PICK.pending && PICK.pending.t!=null) ? +PICK.pending.t.toFixed(3) : 0.5};
   STATE.done[key] = 's'+key;
   Object.keys(STATE.done).forEach(function(k){
