@@ -594,7 +594,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v9.0.0</span>
+      <span class="ver" id="app-version">v9.1.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -607,14 +607,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v9.0.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v9.1.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v9.0.0
+   Tour de Bourgogne à vélo — PWA · v9.1.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -667,7 +667,10 @@ var CHAIN = [
   voir:'Le plus grand port fluvial de France intérieure : gare d\u2019eau, quais, péniches.',
   camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking'},
          {n:'Chambres d\u2019hôtes du port', t:'repli'}]},
- {n:'Seurre', ll:[46.9951,5.1503], km:22, surf:'vv', vr:'La Voie Bleue · Saône',
+ {n:'Pagny-le-Château', ll:[47.0167,5.1667], km:11, surf:'vv', vr:'La Voie Bleue \u00b7 Saône',
+  gare:'\u2014', svc:['eau','commerces'],
+  camps:[{n:'Halte nautique de Pagny', t:'aire au bord de Saône'}]},
+ {n:'Seurre', ll:[46.9951,5.1503], km:11, surf:'vv', vr:'La Voie Bleue · Saône',
   gare:'Gare de Seurre', svc:['eau','commerces','boulangerie','pharmacie'],
   voir:'Maisons à pans de bois, écomusée de la Saône, plage fluviale surveillée.',
   camps:[{n:'Camping municipal de Seurre', t:'★★ · bord de Saône'},
@@ -704,7 +707,10 @@ var CHAIN = [
   voir:'Ville-canal, musée de la Mine à Blanzy : chevalement et galerie souterraine.',
   camps:[{n:'Camping du Lac de la Sorme', t:'★★★ · 5 km'},
          {n:'Hôtels du centre', t:'repli'}]},
- {n:'Génelard', ll:[46.5773,4.2394], km:20, surf:'vv', vr:'V50 · canal du Centre',
+ {n:'Ciry-le-Noble', ll:[46.6167,4.2833], km:10, surf:'vv', vr:'V50 \u00b7 canal du Centre',
+  gare:'\u2014', svc:['eau','commerces'],
+  camps:[{n:'Halte de Ciry-le-Noble', t:'bord de canal'}]},
+ {n:'Génelard', ll:[46.5773,4.2394], km:10, surf:'vv', vr:'V50 · canal du Centre',
   gare:'—', svc:['eau','commerces'],
   voir:'Centre d\u2019interprétation de la ligne de démarcation (1940-1943).',
   camps:[{n:'Camping municipal de Génelard', t:'★★ · port'}]},
@@ -722,24 +728,42 @@ var CHAIN = [
   voir:'Le pont-canal de 243 m qui enjambe la Loire — on pédale au-dessus du fleuve.',
   camps:[{n:'Camping de la Chevrette', t:'★★★ · bord de Loire'},
          {n:'Camping de Bourbon-Lancy (35 km)', t:'★★★ · thermal'}]},
- {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:35, surf:'vv', vr:'EV6 · canal latéral à la Loire',
+ {n:'Diou', ll:[46.5333,3.7500], km:15, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
+  gare:'Gare de Diou', svc:['eau','commerces'],
+  camps:[{n:'Camping de Diou', t:'bord de canal'}]},
+ {n:'Dompierre-sur-Besbre', ll:[46.5167,3.6833], km:8, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
+  gare:'Gare de Dompierre', svc:['eau','commerces','marché'],
+  camps:[{n:'Camping municipal de Dompierre', t:'\u2605\u2605 \u00b7 proche du Pal'}]},
+ {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:12, surf:'vv', vr:'EV6 · canal latéral à la Loire',
   gare:'—', svc:['eau','commerces','thermes','piscine'],
   voir:'Ville thermale médiévale : beffroi, maisons à colombages, sources chaudes.',
   camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal'}]},
- {n:'Decize', ll:[46.8283,3.4624], km:35, surf:'vv', vr:'EV6 → V51 · Loire &amp; Nivernais',
+ {n:'Gannay-sur-Loire', ll:[46.7500,3.6000], km:18, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
+  gare:'\u2014', svc:['eau'],
+  camps:[{n:'Halte de Gannay', t:'aire simple'}]},
+ {n:'Decize', ll:[46.8283,3.4624], km:17, surf:'vv', vr:'EV6 → V51 · Loire &amp; Nivernais',
   gare:'Gare de Decize (Nevers–Dijon)', svc:['eau','supermarché','pharmacie','baignade'],
   voir:'Ville insulaire entre Loire et canal ; promenade des Halles sous les tilleuls.',
   camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île'}]},
- {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:25, surf:'vv', vr:'V51 · canal du Nivernais',
+ {n:'Champvert', ll:[46.8500,3.4333], km:12, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
+  gare:'\u2014', svc:['eau'],
+  camps:[{n:'Halte de Champvert', t:'bord de canal'}]},
+ {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:13, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'Gare de Cercy-la-Tour', svc:['eau','commerces','baignade'],
   voir:'Statue monumentale de la Vierge dominant la vallée de l\u2019Aron.',
   camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal'}]},
- {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:27, surf:'vv', vr:'V51 · canal du Nivernais',
+ {n:'Panneçot', ll:[46.9333,3.5667], km:10, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
+  gare:'\u2014', svc:['eau','baignade'],
+  camps:[{n:'Halte fluviale de Panneçot', t:'écluse et guinguette'}]},
+ {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:17, surf:'vv', vr:'V51 · canal du Nivernais',
   gare:'—', svc:['eau','commerces','boulangerie'],
   voir:'Château sur l\u2019eau, port fluvial, cœur du Bazois bocager.',
   camps:[{n:'Camping municipal du Bazois', t:'★★ · port'},
          {n:'Bivouac du Bazois', t:'bivouac'}]},
- {n:'Étangs de Baye', ll:[47.1903,3.6553], km:22, surf:'vv', vr:'V51 · 16 écluses de la Collancelle',
+ {n:'Mont-et-Marré', ll:[47.0333,3.6667], km:7, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
+  gare:'\u2014', svc:['eau'],
+  camps:[{n:'Halte de Mont-et-Marré', t:'aire simple'}]},
+ {n:'Étangs de Baye', ll:[47.1903,3.6553], km:15, surf:'vv', vr:'V51 · 16 écluses de la Collancelle',
   gare:'—', svc:['eau','baignade','buvette'],
   voir:'Les réservoirs qui alimentent le canal, après l\u2019échelle des 16 écluses.',
   camps:[{n:'Camping de la base de loisirs de Baye', t:'★★ · plage'},
@@ -756,7 +780,10 @@ var CHAIN = [
   gare:'Gare de Tannay', svc:['eau','commerces'],
   voir:'Village vigneron perché, chardonnay de Tannay, collégiale Saint-Léger.',
   camps:[{n:'Camping du Bois de Tannay', t:'★★ · hauteur'}]},
- {n:'Clamecy', ll:[47.4600,3.5192], km:22, surf:'vv', vr:'V51 · Yonne',
+ {n:'Armes', ll:[47.4667,3.5000], km:16, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
+  gare:'\u2014', svc:['eau'],
+  camps:[{n:'Halte d\u2019Armes', t:'bord de canal'}]},
+ {n:'Clamecy', ll:[47.4600,3.5192], km:6, surf:'vv', vr:'V51 · Yonne',
   gare:'Gare de Clamecy', svc:['eau','supermarché','pharmacie','baignade','laverie'],
   voir:'Musée du flottage du bois, vieille ville médiévale, collégiale Saint-Martin.',
   camps:[{n:'Camping du Pont Picot', t:'★★ · entre Yonne et canal'},
@@ -782,7 +809,10 @@ var CHAIN = [
   voir:'Cathédrale Saint-Étienne, abbaye Saint-Germain et ses cryptes carolingiennes.',
   camps:[{n:'Camping municipal d\u2019Auxerre', t:'★★★ · bord d\u2019Yonne'},
          {n:'Hôtels du centre', t:'repli'}]},
- {n:'Migennes', ll:[47.9650,3.5172], km:20, surf:'vv', vr:'V51 · départ canal de Bourgogne',
+ {n:'Gurgy', ll:[47.8833,3.5667], km:12, surf:'vv', vr:'V51 \u00b7 Yonne canalisée',
+  gare:'\u2014', svc:['eau','commerces','baignade'],
+  camps:[{n:'Camping de Gurgy', t:'\u2605\u2605 \u00b7 plage sur l\u2019Yonne'}]},
+ {n:'Migennes', ll:[47.9650,3.5172], km:8, surf:'vv', vr:'V51 · départ canal de Bourgogne',
   gare:'Gare de Laroche-Migennes (grande ligne)', svc:['eau','supermarché','pharmacie'],
   voir:'Confluence Yonne–canal de Bourgogne ; le point de bascule du voyage.',
   camps:[{n:'Camping du Confluent', t:'★★ · port'}]},
@@ -866,7 +896,11 @@ var CHAIN = [
   voir:'Palais des Ducs, parcours de la Chouette, halles de Rude ; lac Kir.',
   camps:[{n:'Camping du Lac Kir', t:'★★★ · plage'},
          {n:'Hôtels de Dijon', t:'repli'}]},
- {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:35, surf:'vv', vr:'V50 · retour au parking',
+ /* maillons du bouclage final : retirés ensemble si l'option est décochée */
+ {n:'Longecourt-en-Plaine', ll:[47.1833,5.1333], km:18, surf:'route', vr:'V50 \u00b7 canal de Bourgogne',
+  loop:true, gare:'\u2014', svc:['eau','commerces'],
+  camps:[{n:'Halte de Longecourt', t:'château et canal'}]},
+ {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:17, surf:'vv', vr:'V50 · retour au parking', loop:true,
   gare:'Gare de St-Jean-de-Losne', svc:['eau','commerces'],
   voir:'La boucle refermée à la force des mollets.',
   camps:[{n:'Camping des Herlequins', t:'★★ · départ'}]}
@@ -937,7 +971,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.0.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v9.1.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1020,7 +1054,9 @@ function buildChain(){
   var base = [];
   for(var i=0;i<CHAIN.length;i++){
     var n = CHAIN[i];
-    if(n.n==='Saint-Jean-de-Losne' && i>0 && !STATE.opts.bouclage) continue;
+    /* Le bouclage compte DEUX villages : n'en retirer qu'un laissait le
+       parcours se terminer à Longecourt-en-Plaine au lieu de Dijon. */
+    if(n.loop && i>0 && !STATE.opts.bouclage) continue;
     /* clé stable : les index bougent dès qu'un arrêt libre est inséré, alors
        que les validations doivent survivre à ces insertions. */
     base.push(Object.assign({}, n, {key:'n'+i}));
@@ -1186,10 +1222,14 @@ function computeStages(){
       var jMax = M-1;
       if(nfIdx != null){ jMax = Math.min(jMax, nfIdx - (nfDay - day)); }
 
+      /* Le plafond quotidien sert à composer l'étape « normale ». Pour la
+         LISTE des choix on va un peu au-delà, sinon l'option « plus long »
+         disparaissait dès que l'étape normale approchait du plafond. */
+      var CAPOPT = Math.max(CAP, 78);
       var hard = [], soft = [];
       for(var j=at+1; j<=jMax; j++){
         var seg = cum[j]-cum[at];
-        if(seg > CAP) break;
+        if(seg > CAPOPT) break;
         /* La longueur minimale d'étape cède devant un arrêt fixé par
            l'utilisateur : son choix de jour prime sur notre règle de confort,
            sinon l'arrêt était purement et simplement ignoré. */
@@ -1213,17 +1253,44 @@ function computeStages(){
         forced = true;
         cands = [hard[hard.length-1]];
       }
-      var best = cands[0], bd = Infinity;
-      cands.forEach(function(k){
+      /* l'étape « normale » reste sous le plafond quotidien tant qu'un
+         candidat le permet ; les dépassements ne servent qu'aux options */
+      var sousCap = cands.filter(function(z){ return cum[z]-cum[at] <= CAP; });
+      var pool = sousCap.length ? sousCap : cands;
+      var best = pool[0], bd = Infinity;
+      pool.forEach(function(k){
         var dv = Math.abs((cum[k]-cum[at]) - target);
         if(dv < bd){ bd = dv; best = k; }
       });
       var pos = cands.indexOf(best);
       var pick = forced ? pos : Math.min(cands.length-1, Math.max(0, pos + choice));
       to = cands[pick];
-      opts = {court: pos>0 ? cands[pos-1] : null,
-              normal: cands[pos],
-              long: pos<cands.length-1 ? cands[pos+1] : null};
+
+      /* Les alternatives sont prises directement sur les villages VOISINS de
+         l'étape retenue, et non dans la liste filtrée : celle-ci écartait des
+         villages parfaitement praticables (Corbigny à 62 km alors que le
+         plafond du jour était à 60), d'où des « à choisir » inutiles.
+         On garde deux garde-fous : l'arrivée doit rester atteignable, et
+         l'étape doit rester dans des bornes humaines. */
+      var restD = left-1;
+      var LONGMAX = Math.max(CAP, 78);
+      function voisin(from0, dir){
+        for(var j2 = from0 + dir; j2 > at && j2 <= M-1; j2 += dir){
+          var sg = cum[j2]-cum[at];
+          if(sg < 10) return null;                       /* trop court pour une journée */
+          if(dir > 0 && sg > LONGMAX) return null;
+          if(restD > 0 && minD[j2] > restD) continue;    /* n'empêche pas la suite */
+          return j2;
+        }
+        return null;
+      }
+      var iC = voisin(pick===pos ? to : cands[pos], -1);
+      var iL = voisin(pick===pos ? to : cands[pos], 1);
+      if(choice === -1 && iC != null){ to = iC; iC = voisin(iC, -1); iL = cands[pos]; }
+      else if(choice === 1 && iL != null){ to = iL; iL = voisin(iL, 1); iC = cands[pos]; }
+      opts = {court: (iC!=null && iC!==to) ? iC : null,
+              normal: to,
+              long: (iL!=null && iL!==to) ? iL : null};
     }
     if(to <= at && at < M-1){ to = Math.min(at+1, M-1); }
 
@@ -1234,7 +1301,7 @@ function computeStages(){
     stages.push({
       type:'ride', from:chain[at], to:chain[to], via:via,
       km: cum[to]-cum[at], pts:[chain[at]].concat(via,[chain[to]]),
-      opts:opts, applied:(to===opts.normal?0:(to===opts.court?-1:(to===opts.long?1:0))),
+      opts:opts, applied:(STATE.days['d'+day]===-1?-1:(STATE.days['d'+day]===1?1:0)),
       forced:forced, confirmed:confirmed, chain:chain, cum:cum, surfs:surfs,
       kmCourt: opts.court!=null ? cum[opts.court]-cum[at] : null,
       kmLong:  opts.long!=null  ? cum[opts.long]-cum[at]  : null
