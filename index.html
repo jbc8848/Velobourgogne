@@ -594,7 +594,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v10.3.0</span>
+      <span class="ver" id="app-version">v11.2.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -607,14 +607,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v10.3.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v11.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v10.3.0
+   Tour de Bourgogne à vélo — PWA · v11.2.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -627,7 +627,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'd2';
+var GEN = 'e1';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -662,245 +662,126 @@ var SURF = {
    camps = hébergements référencés
    ========================================================= */
 var CHAIN = [
- {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:0, surf:'vv', vr:'Départ · V50',
+ {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:0, surf:'vv', vr:'Voie Bleue · Saône',
   gare:'Gare de St-Jean-de-Losne (ligne Dijon–Dole)', svc:['eau','commerces','boulangerie'],
-  voir:'Le plus grand port fluvial de France intérieure : gare d\u2019eau, quais, péniches.',
   camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking'},
          {n:'Chambres d\u2019hôtes du port', t:'repli'}]},
- {n:'Pagny-le-Château', ll:[47.0167,5.1667], km:14, surf:'vv', vr:'La Voie Bleue \u00b7 Saône',
-  gare:'\u2014', svc:['eau','commerces'],
-  camps:[{n:'Halte nautique de Pagny', t:'aire au bord de Saône'}]},
- {n:'Seurre', ll:[46.9951,5.1503], km:11, surf:'vv', vr:'La Voie Bleue · Saône',
+ {n:'Seurre', ll:[47.0003,5.1372], km:22, surf:'vv', vr:'Voie Bleue · Saône',
   gare:'Gare de Seurre', svc:['eau','commerces','boulangerie','pharmacie'],
-  voir:'Maisons à pans de bois, écomusée de la Saône, plage fluviale surveillée.',
   camps:[{n:'Camping municipal de Seurre', t:'★★ · bord de Saône'},
          {n:'Gîtes d\u2019étape de Seurre', t:'repli'}]},
- {n:'Verdun-sur-le-Doubs', ll:[46.8977,5.0221], km:16, surf:'route', vr:'Jonction · petites routes',
+ {n:'Verdun-sur-le-Doubs', ll:[46.8975,5.0225], km:16, surf:'vv', vr:'Voie Bleue · Saône',
   gare:'—', svc:['eau','commerces'],
-  voir:'La confluence du Doubs et de la Saône ; patrie de la pochouse.',
   camps:[{n:'Camping municipal La Plage', t:'★★ · confluence'}]},
- {n:'Chalon-sur-Saône', ll:[46.7806,4.8539], km:21, surf:'vv', vr:'V50 · début canal du Centre',
+ {n:'Chalon-sur-Saône', ll:[46.7806,4.8535], km:21, surf:'vv', vr:'Voie Bleue · jonction EV6',
   gare:'Gare de Chalon (Dijon–Mâcon, fréquente)', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
-  voir:'Île Saint-Laurent, musée Nicéphore-Niépce (berceau de la photo), quais animés.',
   camps:[{n:'Camping du Pont de Bourgogne', t:'★★★ · bord de Saône'},
          {n:'Auberge de jeunesse de Chalon', t:'repli'}]},
- {n:'Fragnes', ll:[46.8272,4.8322], km:9, surf:'vv', vr:'V50 · canal du Centre',
+ {n:'Fragnes', ll:[46.8325,4.83], km:9, surf:'vv', vr:'EV6 · canal du Centre',
   gare:'—', svc:['eau','commerces'],
-  voir:'Premier port de plaisance du canal du Centre, écluses en enfilade.',
   camps:[{n:'Aire de la halte fluviale', t:'aire vélo'}]},
- {n:'Chagny', ll:[46.9099,4.7508], km:11, surf:'vv', vr:'V50 · jonction Voie des Vignes',
+ {n:'Chagny', ll:[46.9099,4.7508], km:12, surf:'vv', vr:'EV6 · canal du Centre',
   gare:'Gare de Chagny', svc:['eau','supermarché','boulangerie','pharmacie'],
-  voir:'Carrefour du canal du Centre et de la Voie des Vignes ; marché du dimanche.',
   camps:[{n:'Camping du Pâquier Fané', t:'★★★ · centre'},
          {n:'Camping de Santenay (7 km)', t:'★★★ · thermal'}]},
- {n:'Saint-Léger-sur-Dheune', ll:[46.8472,4.6331], km:18, surf:'vv', vr:'V50 · canal du Centre',
+ {n:'Santenay', ll:[46.9083,4.69], km:6, surf:'vv', vr:'Voie des Vignes',
+  gare:'\u2014', svc:['eau'],
+  camps:[]},
+ {n:'Saint-Léger-sur-Dheune', ll:[46.8472,4.6331], km:8, surf:'vv', vr:'étape 13 · canal du Centre',
   gare:'Gare de Saint-Léger', svc:['eau','commerces','boulangerie'],
-  voir:'Port de plaisance, écluses, capitainerie.',
   camps:[{n:'Halte nautique &amp; camping de St-Léger', t:'★★ · port'},
          {n:'Camping du lac de Saint-Sernin', t:'★★ · 4 km'}]},
- {n:'Montchanin', ll:[46.7480,4.4670], km:19, surf:'vv', vr:'V50 · bief de partage',
+ {n:'Montchanin', ll:[46.748,4.467], km:18, surf:'route', vr:'étape 14 · itinéraire provisoire',
   gare:'Gare de Montchanin (TGV Le Creusot à 8 km)', svc:['eau','commerces','pharmacie'],
-  voir:'Le point haut du canal du Centre et ses réservoirs.',
   camps:[{n:'Camping des étangs de Montchanin', t:'★★ · plan d\u2019eau'}]},
- {n:'Montceau-les-Mines', ll:[46.6772,4.3654], km:12, surf:'vv', vr:'V50 · canal du Centre',
+ {n:'Montceau-les-Mines', ll:[46.6772,4.3654], km:14, surf:'route', vr:'étape 15 · canal du Centre',
   gare:'Gare de Montceau-les-Mines', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
-  voir:'Ville-canal, musée de la Mine à Blanzy : chevalement et galerie souterraine.',
   camps:[{n:'Camping du Lac de la Sorme', t:'★★★ · 5 km'},
          {n:'Hôtels du centre', t:'repli'}]},
- {n:'Ciry-le-Noble', ll:[46.6167,4.2833], km:10, surf:'vv', vr:'V50 \u00b7 canal du Centre',
-  gare:'\u2014', svc:['eau','commerces'],
-  camps:[{n:'Halte de Ciry-le-Noble', t:'bord de canal'}]},
- {n:'Génelard', ll:[46.5773,4.2394], km:10, surf:'vv', vr:'V50 · canal du Centre',
-  gare:'—', svc:['eau','commerces'],
-  voir:'Centre d\u2019interprétation de la ligne de démarcation (1940-1943).',
-  camps:[{n:'Camping municipal de Génelard', t:'★★ · port'}]},
- {n:'Palinges', ll:[46.5486,4.2172], km:7, surf:'vv', vr:'V50 · canal du Centre',
+ {n:'Palinges', ll:[46.5486,4.2172], km:27, surf:'route', vr:'étape 16 · canal du Centre',
   gare:'Gare de Palinges', svc:['eau','commerces','baignade'],
   camps:[{n:'Camping du Lac de Palinges', t:'★★ · plan d\u2019eau'},
          {n:'Halte fluviale de Palinges', t:'aire'}]},
- {n:'Paray-le-Monial', ll:[46.4524,4.1213], km:18, surf:'vv', vr:'V50 · canal du Centre',
+ {n:'Paray-le-Monial', ll:[46.4524,4.1213], km:22, surf:'route', vr:'étape 17 · Charolais',
   gare:'Gare de Paray-le-Monial', svc:['eau','supermarché','pharmacie','boulangerie'],
-  voir:'Basilique romane du XIe siècle, sœur cadette de Cluny.',
   camps:[{n:'Camping de Mambré', t:'★★★ · bord de Bourbince'},
          {n:'Hébergements de pèlerinage', t:'repli'}]},
- {n:'Digoin', ll:[46.4810,3.9793], km:15, surf:'vv', vr:'V50 → EV6 · pont-canal',
+ {n:'Digoin', ll:[46.481,3.9793], km:12, surf:'vv', vr:'étape 18 · pont-canal',
   gare:'Gare de Digoin', svc:['eau','supermarché','pharmacie','baignade'],
-  voir:'Le pont-canal de 243 m qui enjambe la Loire — on pédale au-dessus du fleuve.',
   camps:[{n:'Camping de la Chevrette', t:'★★★ · bord de Loire'},
          {n:'Camping de Bourbon-Lancy (35 km)', t:'★★★ · thermal'}]},
- {n:'Diou', ll:[46.5333,3.7500], km:21, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
-  gare:'Gare de Diou', svc:['eau','commerces'],
-  camps:[{n:'Camping de Diou', t:'bord de canal'}]},
- {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:14, surf:'vv', vr:'EV6 · canal latéral à la Loire',
+ {n:'Gilly-sur-Loire', ll:[46.5700,3.8250], km:20, surf:'route', vr:'étape 19 · canal latéral à la Loire',
+  gare:'\u2014', svc:['eau'],
+  camps:[]},
+ {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:9, surf:'vv', vr:'étape 20 · ancienne voie ferrée',
   gare:'—', svc:['eau','commerces','thermes','piscine'],
-  voir:'Ville thermale médiévale : beffroi, maisons à colombages, sources chaudes.',
   camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal'}]},
- {n:'Gannay-sur-Loire', ll:[46.7500,3.6000], km:22, surf:'vv', vr:'EV6 \u00b7 canal latéral à la Loire',
+ {n:'Cronat', ll:[46.7167,3.6333], km:18, surf:'route', vr:'étape 21 · collines de Loire',
   gare:'\u2014', svc:['eau'],
-  camps:[{n:'Halte de Gannay', t:'aire simple'}]},
- {n:'Decize', ll:[46.8283,3.4624], km:17, surf:'vv', vr:'EV6 → V51 · Loire &amp; Nivernais',
+  camps:[]},
+ {n:'Decize', ll:[46.8283,3.4624], km:29, surf:'vv', vr:'étape 22 · jonction Nivernais',
   gare:'Gare de Decize (Nevers–Dijon)', svc:['eau','supermarché','pharmacie','baignade'],
-  voir:'Ville insulaire entre Loire et canal ; promenade des Halles sous les tilleuls.',
   camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île'}]},
- {n:'Champvert', ll:[46.8580,3.5170], km:7, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
-  gare:'\u2014', svc:['eau'],
-  camps:[{n:'Halte de Champvert', t:'bord de canal'}]},
- {n:'Cercy-la-Tour', ll:[46.8680,3.6486], km:14, surf:'vv', vr:'V51 · canal du Nivernais',
+ {n:'Cercy-la-Tour', ll:[46.8656,3.6425], km:15, surf:'vv', vr:'étape 23 · canal du Nivernais',
   gare:'Gare de Cercy-la-Tour', svc:['eau','commerces','baignade'],
-  voir:'Statue monumentale de la Vierge dominant la vallée de l\u2019Aron.',
   camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal'}]},
- {n:'Panneçot', ll:[46.9250,3.6080], km:10, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
-  gare:'\u2014', svc:['eau','baignade'],
-  camps:[{n:'Halte fluviale de Panneçot', t:'écluse et guinguette'}]},
- {n:'Mont-et-Marré', ll:[47.0333,3.6667], km:15, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
-  gare:'\u2014', svc:['eau'],
-  camps:[{n:'Halte de Mont-et-Marré', t:'aire simple'}]},
- {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:4, surf:'vv', vr:'V51 · canal du Nivernais',
+ {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:35, surf:'vv', vr:'étape 24 · Bazois',
   gare:'—', svc:['eau','commerces','boulangerie'],
-  voir:'Château sur l\u2019eau, port fluvial, cœur du Bazois bocager.',
   camps:[{n:'Camping municipal du Bazois', t:'★★ · port'},
          {n:'Bivouac du Bazois', t:'bivouac'}]},
- {n:'Étangs de Baye', ll:[47.1903,3.6553], km:19, surf:'vv', vr:'V51 · 16 écluses de la Collancelle',
-  gare:'—', svc:['eau','baignade','buvette'],
-  voir:'Les réservoirs qui alimentent le canal, après l\u2019échelle des 16 écluses.',
-  camps:[{n:'Camping de la base de loisirs de Baye', t:'★★ · plage'},
-         {n:'Bivouac autour des étangs', t:'bivouac'}]},
- {n:'Corbigny', ll:[47.2564,3.6831], km:13, surf:'vv', vr:'V51 · canal du Nivernais',
-  gare:'Gare de Corbigny (terminus ligne du Nivernais)', svc:['eau','supermarché','pharmacie','boulangerie'],
-  voir:'Abbaye Saint-Léonard, porte du Morvan.',
-  camps:[{n:'Camping municipal de Corbigny', t:'★★ · centre'}]},
- {n:'Chitry-les-Mines', ll:[47.2830,3.6520], km:6, surf:'vv', vr:'V51 · Yonne canalisée',
+ {n:'Chitry-les-Mines', ll:[47.2500,3.5333], km:31, surf:'vv', vr:'étape 25 · échelle des 16 écluses',
   gare:'Halte de Chitry', svc:['eau'],
-  voir:'Le village de Jules Renard, château et écluses.',
   camps:[{n:'Aire naturelle de Chitry', t:'aire'}]},
- {n:'Tannay', ll:[47.3661,3.5903], km:12, surf:'vv', vr:'V51 · canal du Nivernais',
-  gare:'Gare de Tannay', svc:['eau','commerces'],
-  voir:'Village vigneron perché, chardonnay de Tannay, collégiale Saint-Léger.',
-  camps:[{n:'Camping du Bois de Tannay', t:'★★ · hauteur'}]},
- {n:'Armes', ll:[47.4667,3.5000], km:16, surf:'vv', vr:'V51 \u00b7 canal du Nivernais',
-  gare:'\u2014', svc:['eau'],
-  camps:[{n:'Halte d\u2019Armes', t:'bord de canal'}]},
- {n:'Clamecy', ll:[47.4600,3.5192], km:6, surf:'vv', vr:'V51 · Yonne',
+ {n:'Clamecy', ll:[47.46,3.52], km:32, surf:'vv', vr:'étape 26 · Yonne',
   gare:'Gare de Clamecy', svc:['eau','supermarché','pharmacie','baignade','laverie'],
-  voir:'Musée du flottage du bois, vieille ville médiévale, collégiale Saint-Martin.',
   camps:[{n:'Camping du Pont Picot', t:'★★ · entre Yonne et canal'},
          {n:'Hôtels de la vieille ville', t:'repli'}]},
- {n:'Coulanges-sur-Yonne', ll:[47.5210,3.5580], km:14, surf:'vv', vr:'V51 · Yonne',
-  gare:'Gare de Coulanges', svc:['eau','commerces','baignade'],
-  voir:'Port de plaisance, plage sur l\u2019Yonne.',
-  camps:[{n:'Camping municipal de Coulanges', t:'★★ · bord d\u2019Yonne'}]},
- {n:'Châtel-Censoir', ll:[47.5347,3.6338], km:8, surf:'vv', vr:'V51 · rochers du Saussois',
-  gare:'Gare de Châtel-Censoir', svc:['eau','commerces','baignade'],
-  voir:'Collégiale perchée ; rochers du Saussois à 3 km (école d\u2019escalade réputée).',
-  camps:[{n:'Camping du Petit Port', t:'★★ · canal'}]},
- {n:'Mailly-le-Château', ll:[47.5901,3.6503], km:15, surf:'vv', vr:'V51 · Yonne',
+ {n:'Mailly-le-Château', ll:[47.5833,3.65], km:30, surf:'vv', vr:'étape 27 · rochers du Saussois',
   gare:'—', svc:['eau','commerces','baignade'],
-  voir:'Village haut et village bas reliés par un pont médiéval ; falaises calcaires.',
   camps:[{n:'Camping le Pré du Roi', t:'★★ · bord d\u2019Yonne'}]},
- {n:'Vincelles', ll:[47.7003,3.6303], km:18, surf:'vv', vr:'V51 · Yonne',
-  gare:'Gare de Cravant-Bazarnes (3 km)', svc:['eau','commerces','baignade'],
-  voir:'Port de plaisance ; vignobles d\u2019Irancy et Saint-Bris à deux pas.',
-  camps:[{n:'Camping les Ceriselles', t:'★★★ · port'}]},
- {n:'Auxerre', ll:[47.7980,3.5731], km:14, surf:'vv', vr:'V51 · fin du Nivernais',
+ {n:'Auxerre', ll:[47.798,3.57], km:32, surf:'vv', vr:'étape 28 · Yonne',
   gare:'Gare d\u2019Auxerre-Saint-Gervais', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
-  voir:'Cathédrale Saint-Étienne, abbaye Saint-Germain et ses cryptes carolingiennes.',
   camps:[{n:'Camping municipal d\u2019Auxerre', t:'★★★ · bord d\u2019Yonne'},
          {n:'Hôtels du centre', t:'repli'}]},
- {n:'Gurgy', ll:[47.8833,3.5667], km:12, surf:'vv', vr:'V51 \u00b7 Yonne canalisée',
-  gare:'\u2014', svc:['eau','commerces','baignade'],
-  camps:[{n:'Camping de Gurgy', t:'\u2605\u2605 \u00b7 plage sur l\u2019Yonne'}]},
- {n:'Migennes', ll:[47.9650,3.5172], km:11, surf:'vv', vr:'V51 · départ canal de Bourgogne',
+ {n:'Migennes', ll:[47.9667,3.5167], km:25, surf:'vv', vr:'étape 29 · jonction canal de Bourgogne',
   gare:'Gare de Laroche-Migennes (grande ligne)', svc:['eau','supermarché','pharmacie'],
-  voir:'Confluence Yonne–canal de Bourgogne ; le point de bascule du voyage.',
   camps:[{n:'Camping du Confluent', t:'★★ · port'}]},
- {n:'Brienon-sur-Armançon', ll:[47.9860,3.6180], km:9, surf:'halage', vr:'V51 · halage non revêtu',
-  gare:'Gare de Brienon', svc:['eau','commerces'],
-  voir:'Halles du XVIIIe et lavoir circulaire.',
-  camps:[{n:'Camping municipal de Brienon', t:'★★ · Armançon'}]},
- {n:'Saint-Florentin', ll:[48.0004,3.7208], km:13, surf:'halage', vr:'V51 · halage non revêtu',
+ {n:'Saint-Florentin', ll:[48.0,3.725], km:18, surf:'halage', vr:'étape 1 · canal de Bourgogne',
   gare:'Gare de Saint-Florentin-Vergigny', svc:['eau','commerces','boulangerie','fromagerie'],
-  voir:'Le fromage de Saint-Florentin, vitraux Renaissance de l\u2019église.',
   camps:[{n:'Camping municipal de l\u2019Armançon', t:'★★ · rivière'}]},
- {n:'Flogny-la-Chapelle', ll:[47.9290,3.8880], km:15, surf:'halage', vr:'V51 · halage non revêtu',
-  gare:'Halte de Flogny', svc:['eau','commerces'],
-  voir:'Village-étape du Tonnerrois, bief calme.',
-  camps:[{n:'Aire communale de Flogny', t:'aire'}]},
- {n:'Tonnerre', ll:[47.8562,3.9734], km:11, surf:'halage', vr:'V51 · canal de Bourgogne',
+ {n:'Tonnerre', ll:[47.8567,3.9739], km:26, surf:'halage', vr:'étape 2 · Tonnerrois',
   gare:'Gare de Tonnerre', svc:['eau','supermarché','pharmacie','boulangerie'],
-  voir:'La Fosse Dionne : source turquoise en pleine ville, lavoir circulaire.',
   camps:[{n:'Camping de la Cascade', t:'★★ · Armançon'},
          {n:'Hôtels de Tonnerre', t:'repli'}]},
- {n:'Tanlay', ll:[47.8402,4.0903], km:12, surf:'vv', vr:'V51 · canal de Bourgogne',
-  gare:'Halte de Tanlay', svc:['eau','commerces'],
-  voir:'Château Renaissance et ses douves, l\u2019un des plus beaux de Bourgogne.',
-  camps:[{n:'Camping municipal de Tanlay', t:'★★ · canal'}]},
- {n:'Ancy-le-Franc', ll:[47.7752,4.1626], km:10, surf:'vv', vr:'V51 · canal de Bourgogne',
+ {n:'Ancy-le-Franc', ll:[47.7736,4.1594], km:30, surf:'vv', vr:'étape 3 · Tanlay, Ancy',
   gare:'—', svc:['eau','commerces'],
-  voir:'Château Renaissance italienne de Serlio, décors peints exceptionnels.',
   camps:[{n:'Camping municipal d\u2019Ancy', t:'★★ · canal'}]},
- {n:'Ravières', ll:[47.7360,4.2280], km:9, surf:'vv', vr:'V51 · canal de Bourgogne',
-  gare:'Gare de Nuits-sous-Ravières', svc:['eau','commerces'],
-  voir:'Bief calme, carrières de pierre de Bourgogne.',
-  camps:[{n:'Aire de Ravières', t:'aire'}]},
- {n:'Aisy-sur-Armançon', ll:[47.6660,4.2760], km:10, surf:'vv', vr:'V51 · canal de Bourgogne',
-  gare:'Halte d\u2019Aisy', svc:['eau','commerces'],
-  voir:'Bief tranquille de l\u2019Armançon, écluses et maisons éclusières.',
-  camps:[{n:'Aire naturelle d\u2019Aisy', t:'aire'}]},
- {n:'Montbard', ll:[47.6233,4.3371], km:14, surf:'vv', vr:'V51 · canal de Bourgogne',
+ {n:'Montbard', ll:[47.6217,4.3372], km:29, surf:'vv', vr:'étape 4 · Buffon, Ravières',
   gare:'Gare de Montbard (TGV + TER)', svc:['eau','supermarché','pharmacie','piscine'],
-  voir:'Parc Buffon en terrasses ; abbaye de Fontenay à 6 km (UNESCO).',
   camps:[{n:'Camping municipal des Treilles', t:'★★★ · piscine mitoyenne'}]},
- {n:'Venarey-les-Laumes', ll:[47.5424,4.4619], km:13, surf:'vv', vr:'V51 · canal de Bourgogne',
+ {n:'Venarey-les-Laumes', ll:[47.5417,4.4467], km:13, surf:'vv', vr:'étape 5 · Alésia',
   gare:'Gare des Laumes-Alésia', svc:['eau','commerces','boulangerie'],
-  voir:'MuséoParc Alésia : le site de la bataille de -52, reconstitutions grandeur nature.',
   camps:[{n:'Camping municipal de Venarey', t:'★★ · canal'}]},
- {n:'Pouillenay', ll:[47.5020,4.4470], km:7, surf:'vv', vr:'V51 · canal de Bourgogne',
-  gare:'Halte de Pouillenay', svc:['eau'],
-  voir:'Échelle d\u2019écluses vers le bief de partage.',
-  camps:[{n:'Bivouac d\u2019écluse', t:'bivouac'}]},
- {n:'Marigny-le-Cahouët', ll:[47.4400,4.4900], km:16, surf:'vv', vr:'V51 · vallée de la Brenne',
-  gare:'—', svc:['eau'],
-  voir:'Château fort sur motte et échelle d\u2019écluses de l\u2019Auxois.',
-  camps:[{n:'Bivouac d\u2019écluse de Marigny', t:'bivouac'}]},
- {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:24, surf:'vv', vr:'V51 · point culminant',
+ {n:'Pont-Royal', ll:[47.35,4.52], km:22, surf:'vv', vr:'étape 6 · vallée des 40 écluses',
+  gare:'\u2014', svc:['eau'],
+  camps:[]},
+ {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:19, surf:'vv', vr:'étape 7 · toit de la Bourgogne',
   gare:'—', svc:['eau','commerces','boulangerie'],
-  voir:'Le sommet du canal : voûte souterraine de 3 333 m, toueur électrique du musée.',
   camps:[{n:'Camping du Vert Auxois', t:'★★ · centre'}]},
- {n:'Vandenesse-en-Auxois', ll:[47.2360,4.6250], km:8, surf:'vv', vr:'V51 · sous Châteauneuf',
+ {n:'La Bussière-sur-Ouche', ll:[47.2167,4.7833], km:25, surf:'vv', vr:'étape 8 · vallée de l\u2019Ouche',
   gare:'—', svc:['eau','commerces'],
-  voir:'Le port sous la forteresse de Châteauneuf-en-Auxois, un des plus beaux villages de France.',
-  camps:[{n:'Camping du lac de Panthier', t:'★★★ · 3 km'},
-         {n:'Halte fluviale de Vandenesse', t:'aire'}]},
- {n:'Pont-d\u2019Ouche', ll:[47.2130,4.6900], km:9, surf:'vv', vr:'V51 · entrée vallée de l\u2019Ouche',
-  gare:'—', svc:['eau','commerces'],
-  voir:'Jonction du canal et de l\u2019Ouche, port de plaisance au pied des collines.',
-  camps:[{n:'Camping du Pont d\u2019Ouche', t:'★★ · rivière'}]},
- {n:'La Bussière-sur-Ouche', ll:[47.2298,4.7702], km:14, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
-  gare:'—', svc:['eau','commerces'],
-  voir:'Abbaye cistercienne du XIIe, vallée encaissée et ombragée.',
   camps:[{n:'Camping de la vallée de l\u2019Ouche', t:'★★ · rivière'}]},
- {n:'Fleurey-sur-Ouche', ll:[47.3080,4.8800], km:16, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
-  gare:'Halte de Fleurey', svc:['eau','commerces','boulangerie'],
-  voir:'Dernier village avant Dijon, écluses en descente continue.',
-  camps:[{n:'Aire de Fleurey', t:'aire'}]},
- {n:'Velars-sur-Ouche', ll:[47.3160,4.9250], km:9, surf:'vv', vr:'V51 · vallée de l\u2019Ouche',
-  gare:'Gare de Velars-sur-Ouche', svc:['eau','commerces','boulangerie'],
-  voir:'Dernier village avant Dijon, sous la roche de Notre-Dame d\u2019Étang.',
-  camps:[{n:'Aire de Velars', t:'aire'}]},
- {n:'Dijon', ll:[47.3220,5.0415], km:10, surf:'vv', vr:'V51 · fin du canal de Bourgogne',
-  gare:'Gare de Dijon-Ville (TER direct St-Jean-de-Losne, 15 min)',
-  svc:['eau','supermarché','pharmacie','vélociste','laverie','baignade'],
-  voir:'Palais des Ducs, parcours de la Chouette, halles de Rude ; lac Kir.',
+ {n:'Dijon', ll:[47.322,5.0415], km:34, surf:'vv', vr:'étape 9 · lac Kir',
+  gare:'Gare de Dijon-Ville (TER direct St-Jean-de-Losne, 15 min)', svc:['eau','supermarché','pharmacie','vélociste','laverie','baignade'],
   camps:[{n:'Camping du Lac Kir', t:'★★★ · plage'},
          {n:'Hôtels de Dijon', t:'repli'}]},
- /* maillons du bouclage final : retirés ensemble si l'option est décochée */
- {n:'Longecourt-en-Plaine', ll:[47.1833,5.1333], km:18, surf:'route', vr:'V50 \u00b7 canal de Bourgogne',
-  loop:true, gare:'\u2014', svc:['eau','commerces'],
+ {n:'Longecourt-en-Plaine', ll:[47.1833,5.1333], km:18, surf:'route', vr:'liaison · canal de Bourgogne', loop:true,
+  gare:'\u2014', svc:['eau','commerces'],
   camps:[{n:'Halte de Longecourt', t:'château et canal'}]},
- {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:17, surf:'vv', vr:'V50 · retour au parking', loop:true,
-  gare:'Gare de St-Jean-de-Losne', svc:['eau','commerces'],
-  voir:'La boucle refermée à la force des mollets.',
-  camps:[{n:'Camping des Herlequins', t:'★★ · départ'}]}
+ {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:17, surf:'vv', vr:'liaison · retour au parking', loop:true,
+  gare:'Gare de St-Jean-de-Losne (ligne Dijon–Dole)', svc:['eau','commerces','boulangerie'],
+  camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking'},
+         {n:'Chambres d\u2019hôtes du port', t:'repli'}]}
 ];
 
 /* Options globales (pas des variations quotidiennes) */
@@ -968,7 +849,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v10.3.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v11.2.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1187,7 +1068,10 @@ function computeStages(){
   }
   var remainKm = T - cum[lastDone], remainDays = rideDays - lastDoneDay;
   var needAvg = remainDays > 0 ? remainKm/remainDays : 0;
-  var CAP = Math.max(PLAN.cap, Math.ceil(needAvg*1.3/2)*2);
+  /* Deux étapes officielles font couramment 60 à 70 km : le plafond doit les
+     laisser passer, sinon le calcul retombe sur des journées d'une seule
+     étape, parfois 31 km. */
+  var CAP = Math.max(PLAN.cap, Math.ceil(needAvg*1.3/2)*2, 72);
   var MINSEG = 12, capRaised = Math.max(0, CAP - PLAN.cap);
   var B = bounds(CAP, MINSEG), guard = 0;
   while(B.mn[0] > rideDays && CAP < 110 && guard++ < 25){ CAP += 4; capRaised += 4; B = bounds(CAP, MINSEG); }
@@ -1218,7 +1102,14 @@ function computeStages(){
       opts = {court:null, normal:M-1, long:null};
     }else{
       var remain = T - cum[at];
-      var target = remain / left;
+      /* Rythme visé : environ 60 km, soit deux étapes officielles par jour.
+         Répartir simplement le reste sur les jours restants donnait des
+         journées trop courtes (29 km) au regard de l'allure réellement tenue.
+         Si l'arrivée est atteinte avant la fin, les jours en trop deviennent
+         des journées libres. */
+      var PREF = 60;
+      var target = Math.min(CAP, Math.max(remain / left, PREF));
+      if(remain < PREF){ target = remain; }
       var choice = (STATE.days['d'+day]===-1 || STATE.days['d'+day]===1) ? STATE.days['d'+day] : 0;
 
       /* On n'exige plus de remplir TOUS les jours restants : la condition
@@ -1291,11 +1182,14 @@ function computeStages(){
          On garde deux garde-fous : l'arrivée doit rester atteignable, et
          l'étape doit rester dans des bornes humaines. */
       var restD = left-1;
-      var LONGMAX = Math.max(CAP, 78);
+      /* Le « plus » reste proposé même au-delà du plafond quotidien : à toi de
+         juger si la journée est faisable, l'app ne décide pas à ta place.
+         Seule borne conservée : l'arrivée doit rester atteignable ensuite. */
+      var LONGMAX = 130;
       function voisin(from0, dir){
         for(var j2 = from0 + dir; j2 > at && j2 <= M-1; j2 += dir){
           var sg = cum[j2]-cum[at];
-          if(sg < 10) return null;                       /* trop court pour une journée */
+          if(sg < 6) return null;             /* une étape officielle fait au moins 8 km */
           if(dir > 0 && sg > LONGMAX) return null;
           if(restD > 0 && minD[j2] > restD) continue;    /* n'empêche pas la suite */
           return j2;
@@ -2972,9 +2866,12 @@ function stageHtml(st){
     if(idx===iTo && rk!==null){ return {km:rk, n:chain[idx].n, exact:true}; }
     return {km:est, n:chain[idx].n, exact:false};
   }
-  function optTxt(o){
+  var iFrom = chain.indexOf(st.from);
+  function optTxt(o, idx){
     if(!o) return null;
-    return (o.exact ? '' : '\u2248 ') + o.km + ' km \u00b7 ' + o.n;
+    var nb = (idx!=null) ? idx - iFrom : 0;
+    return (nb>0 ? nb+' ét. \u00b7 ' : '')
+      + (o.exact ? '' : '\u2248 ') + o.km + ' km \u00b7 ' + o.n;
   }
   var oc = optLabel(st.opts.court), on2 = optLabel(st.opts.normal), ol = optLabel(st.opts.long);
   /* --- validation / correction de la journée : toujours accessible --- */
@@ -2990,20 +2887,21 @@ function stageHtml(st){
      faite : c'est la correction du lieu de nuit qui prend le relais. */
   if(!doneName){
   h += '<div class="vbox"><h4>Longueur de cette journée</h4>'
+    +'<p class="muted" style="font-size:.76rem;margin:-2px 0 8px">Découpage officiel France Vélo Tourisme \u2014 29 étapes de 8 à 35 km.</p>'
     +'<div class="seg">'
     + (oc
-        ? ('<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1">Plus court'
-           +'<b>'+optTxt(oc)+'</b></button>')
+        ? ('<button class="dch'+(cur===-1?' on':'')+'" data-day="'+st.day+'" data-c="-1">Moins'
+           +'<b>'+optTxt(oc, st.opts.court)+'</b></button>')
         /* Aucun village ne convient : plutôt que « indisponible », on propose
            de désigner soi-même le point d'arrêt sur la carte. */
-        : ('<button class="dch pickalt" data-day="'+st.day+'" data-stage="'+st.id+'">Plus court'
+        : ('<button class="dch pickalt" data-day="'+st.day+'" data-stage="'+st.id+'">Moins'
            +'<b>\ud83d\udccd à choisir</b></button>'))
     +'<button class="dch'+(cur===0?' on':'')+'" data-day="'+st.day+'" data-c="0">Normal'
-      +'<b>'+(on2?optTxt(on2):'\u2014')+'</b></button>'
+      +'<b>'+kmLabel(st)+' \u00b7 '+esc(st.to.n)+'</b></button>'
     + (ol
-        ? ('<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1">Plus long'
-           +'<b>'+optTxt(ol)+'</b></button>')
-        : ('<button class="dch pickalt" data-day="'+st.day+'" data-stage="'+st.id+'">Plus long'
+        ? ('<button class="dch'+(cur===1?' on':'')+'" data-day="'+st.day+'" data-c="1">Plus'
+           +'<b>'+optTxt(ol, st.opts.long)+'</b></button>')
+        : ('<button class="dch pickalt" data-day="'+st.day+'" data-stage="'+st.id+'">Plus'
            +'<b>\ud83d\udccd à choisir</b></button>'))
     +'</div>';
   h += '</div>';
