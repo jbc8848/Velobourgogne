@@ -601,7 +601,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v11.5.0</span>
+      <span class="ver" id="app-version">v11.7.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -614,14 +614,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v11.5.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v11.7.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v11.5.0
+   Tour de Bourgogne à vélo — PWA · v11.7.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -634,7 +634,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'e3';
+var GEN = 'f2';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -847,7 +847,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v11.5.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v11.7.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -1295,12 +1295,118 @@ function stageTrace(st){
 function stageWps(st){
   var t = stageTrace(st);
   if(t){ return [st.from.ll].concat(t.map(function(p){ return [p[0],p[1]]; }), [st.to.ll]); }
+  var o = OFFI[st.id];
+  if(o && o.length){ return [st.from.ll].concat(o, [st.to.ll]); }
   return [st.from.ll, st.to.ll];
 }
+var OFFI = {};
+/* =====================================================================
+   TRACÉ OFFICIEL — véloroutes balisées d'OpenStreetMap
+   Le Tour de Bourgogne à vélo est cartographié dans OSM sous forme de
+   relations « route=bicycle » (réseaux ncn et rcn). On récupère leurs
+   chemins le long de l'étape, on y échantillonne des points de passage, et
+   BRouter n'a plus qu'à les relier : le tracé colle alors au halage et à la
+   voie verte au lieu de couper par le plateau.
+   ===================================================================== */
+/* Mot-clé de la voie suivie ce jour-là, tiré de la fiche d'étape. */
+/* Véloroute suivie, déterminée par les VILLES d'étape et non par un libellé :
+   c'est la seule donnée stable. Sert à filtrer les relations OpenStreetMap,
+   car plusieurs véloroutes peuvent traverser la même zone. */
+var VOIES = {
+  'Saint-Jean-de-Losne':'Sa.ne',    'Seurre':'Sa.ne',            'Verdun-sur-le-Doubs':'Sa.ne',
+  'Chalon-sur-Saône':'Centre',      'Fragnes':'Centre',          'Chagny':'Centre',
+  'Santenay':'Centre',              'Saint-Léger-sur-Dheune':'Centre',
+  'Montchanin':'Centre',            'Montceau-les-Mines':'Centre','Palinges':'Centre',
+  'Paray-le-Monial':'Centre',       'Digoin':'Centre',
+  'Bourbon-Lancy':'Loire',          'Decize':'Loire',
+  'Cercy-la-Tour':'Nivernais',      'Châtillon-en-Bazois':'Nivernais',
+  'Chitry-les-Mines':'Nivernais',   'Clamecy':'Nivernais',
+  'Mailly-le-Château':'Nivernais',  'Auxerre':'Nivernais',
+  'Migennes':'Bourgogne',           'Saint-Florentin':'Bourgogne','Tonnerre':'Bourgogne',
+  'Ancy-le-Franc':'Bourgogne',      'Montbard':'Bourgogne',      'Venarey-les-Laumes':'Bourgogne',
+  'Pouilly-en-Auxois':'Bourgogne',  'La Bussière-sur-Ouche':'Bourgogne','Dijon':'Bourgogne',
+  'Longecourt-en-Plaine':'Bourgogne'
+};
+function voieMot(st){
+  if(!st || !st.to) return '';
+  /* la voie du jour est celle de l'arrivée ; au changement de canal, celle du
+     départ reste valable pour la première moitié, on prend donc l'arrivée */
+  return VOIES[st.to.n] || VOIES[st.from && st.from.n] || '';
+}
+function offKey(st){ return 'bourgoff-'+GEN+'-'+st.from.n.replace(/[^A-Za-z]/g,'')+'_'+st.to.n.replace(/[^A-Za-z]/g,''); }
+function loadOfficial(st, cb){
+  var k = offKey(st);
+  try{
+    var c = localStorage.getItem(k);
+    if(c!==null){ cb(JSON.parse(c)); return; }
+  }catch(e){}
+  var a = st.from.ll, b = st.to.ll;
+  var pad = 0.09;
+  var s0 = Math.min(a[0],b[0])-pad, n0 = Math.max(a[0],b[0])+pad;
+  var w0 = Math.min(a[1],b[1])-pad, e0 = Math.max(a[1],b[1])+pad;
+  /* Plusieurs véloroutes peuvent traverser la même zone : entre Dijon et
+     Santenay, par exemple, la Voie des Vignes et le canal de Bourgogne
+     coexistent. Prendre « toutes les relations du secteur » ferait sauter le
+     tracé de l'une à l'autre. On filtre donc sur la voie déclarée pour
+     l'étape (canal du Nivernais, du Centre, de Bourgogne, Yonne, Loire,
+     Saône), telle qu'indiquée par France Vélo Tourisme. */
+  var mot = voieMot(st);
+  var filtre = mot ? '["name"~"'+mot+'",i]' : '';
+  var q = '[out:json][timeout:60];'
+    + 'rel["route"="bicycle"]["network"~"^(ncn|rcn)$"]'+filtre+'('+s0.toFixed(4)+','+w0.toFixed(4)+','+n0.toFixed(4)+','+e0.toFixed(4)+');'
+    + 'way(r);out geom;';
+  overpassRun(q, function(data){
+    var pts = extractOfficial(data, a, b);
+    try{ localStorage.setItem(k, JSON.stringify(pts)); }catch(e){}
+    cb(pts);
+  }, function(){ cb(null); });
+}
+/* Points de passage tirés des chemins balisés, ordonnés du départ vers
+   l'arrivée et espacés d'environ 10 km. */
+function extractOfficial(data, a, b){
+  if(!data || !data.elements) return [];
+  /* Projection plane locale : à 47° de latitude, un degré de longitude vaut
+     76 km et non 111. Sans cette correction, l'écart au parcours était
+     surestimé et tous les points étaient écartés. */
+  var kx = 111320 * Math.cos((a[0]+b[0])/2 * Math.PI/180), ky = 110540;
+  var ax = a[1]*kx, ay = a[0]*ky, bx = b[1]*kx, by = b[0]*ky;
+  var dx = bx-ax, dy = by-ay;
+  var L = Math.sqrt(dx*dx + dy*dy);
+  if(L < 500) return [];
+  var ux = dx/L, uy = dy/L;
+  var cand = [];
+  data.elements.forEach(function(el){
+    if(!el.geometry) return;
+    el.geometry.forEach(function(g){
+      var px = g.lon*kx, py = g.lat*ky;
+      var t = (px-ax)*ux + (py-ay)*uy;
+      if(t <= 0 || t >= L) return;
+      var ex = (px-ax) - t*ux, ey = (py-ay) - t*uy;
+      var ecart = Math.sqrt(ex*ex + ey*ey);
+      if(ecart < 15000){ cand.push({t:t, p:[g.lat, g.lon], e:ecart}); }
+    });
+  });
+  if(cand.length < 15) return [];
+  cand.sort(function(x,y){ return x.t - y.t; });
+  /* un point de passage tous les ~10 km d'avancement, le plus proche de l'axe */
+  var out = [], pas = Math.max(8000, L/6), prochain = pas, best = null;
+  cand.forEach(function(c){
+    if(c.t > prochain){
+      if(best){ out.push([+best.p[0].toFixed(5), +best.p[1].toFixed(5)]); }
+      best = null;
+      while(c.t > prochain) prochain += pas;
+    }
+    if(!best || c.e < best.e) best = c;
+  });
+  if(best) out.push([+best.p[0].toFixed(5), +best.p[1].toFixed(5)]);
+  return out.slice(0, 10);
+}
 function stageKey(st){
+  var o = OFFI[st.id];
+  var so = (o && o.length) ? ('-o'+o.length) : '';
   var t = stageTrace(st);
   var suf = t ? ('-t'+t.length+'_'+t.map(function(p){ return Math.round(p[0]*400)+''+Math.round(p[1]*400); }).join('').slice(0,32)) : '';
-  return 'bourgrt-'+GEN+suf+'-'+st.pts.map(function(p){return p.n;}).join('_').replace(/[^A-Za-z0-9_]/g,'').slice(0,90);
+  return 'bourgrt-'+GEN+suf+so+'-'+st.pts.map(function(p){return p.n;}).join('_').replace(/[^A-Za-z0-9_]/g,'').slice(0,90);
 }
 function realKm(st){ var r = REAL[stageKey(st)]; return (typeof r==='number') ? r : null; }
 /* Longueur réelle d'un tracé routé, en km */
@@ -1311,6 +1417,25 @@ function coKm(co){
 }
 /* Enregistre la distance réelle d'une étape (garde-fou : on ignore un routage
    aberrant, écart de plus de 40 % avec l'estimation). Renvoie true si retenue. */
+/* Affiche quelle véloroute balisée a servi : on doit pouvoir le vérifier
+   soi-même, étape par étape, plutôt que me croire sur parole. */
+function noteOfficielle(st){
+  var el = document.getElementById('rt-'+st.id);
+  if(!el || !el.parentNode) return;
+  var o = OFFI[st.id];
+  var txt, col = '';
+  if(o && o.length){ txt = '\u2713 Calé sur la véloroute balisée \u00ab '+voieMot(st)+' \u00bb \u2014 '+o.length+' points OpenStreetMap.'; col='var(--sage)'; }
+  else if(o){ txt = '\u26a0 Véloroute balisée introuvable ici \u2014 routage libre entre départ et arrivée.'; col='var(--gold)'; }
+  else { txt = 'Recherche de la véloroute balisée\u2026'; }
+  var box = document.getElementById('off-'+st.id);
+  if(!box){
+    box = document.createElement('p');
+    box.className = 'map-note'; box.id = 'off-'+st.id;
+    el.parentNode.insertBefore(box, el.nextSibling);
+  }
+  box.textContent = txt;
+  box.style.color = col;
+}
 function applyRealKm(st, co){
   if(!co || co.length<2) return false;
   var km = coKm(co);
@@ -1352,10 +1477,20 @@ function kmLabel(st){
 
 /* ---------- routage BRouter ---------- */
 function getRoute(st, cb){
+  /* On récupère d'abord les points de la véloroute balisée : sans eux, le
+     routage coupe au plus court et quitte l'itinéraire officiel. */
+  if(OFFI[st.id] === undefined && !stageTrace(st)){
+    OFFI[st.id] = null;                       /* évite les demandes en double */
+    loadOfficial(st, function(pts){
+      OFFI[st.id] = pts || [];
+      getRoute(st, cb);
+    });
+    return;
+  }
   var key = stageKey(st);
   try{
     var c = localStorage.getItem(key);
-    if(c){ cb(JSON.parse(c), 'cache'); return; }
+    if(c){ cb(JSON.parse(c), 'cache'); setTimeout(function(){ noteOfficielle(st); }, 40); return; }
   }catch(e){}
   /* Un seul tracé, fidèle au parcours : plus d'essai « au plus court » qui
      pouvait abandonner l'itinéraire officiel (Decize évité, par exemple). */
@@ -1376,8 +1511,19 @@ function getRoute(st, cb){
         if(o[o.length-1]!==co[co.length-1]) o.push(co[co.length-1]);
         co = o;
       }
+      /* Sécurité : si les points issus d'OSM produisent un tracé très
+         éloigné de la distance attendue, c'est qu'ils appartiennent à une
+         autre véloroute. On les abandonne et on route simplement. */
+      var km = coKm(co);
+      if(OFFI[st.id] && OFFI[st.id].length && st.km > 0 && (km > st.km*1.45 || km < st.km*0.6)){
+        OFFI[st.id] = [];
+        try{ localStorage.setItem(offKey(st), '[]'); }catch(e){}
+        getRoute(st, cb);
+        return;
+      }
       try{ localStorage.setItem(key, JSON.stringify(co)); }catch(e){}
       cb(co, 'live');
+      setTimeout(function(){ noteOfficielle(st); }, 40);
     }).catch(function(){
       if(left>0){ setTimeout(function(){ attempt(left-1); }, 1500); }
       else{ cb(null,'fail'); }
@@ -1695,7 +1841,7 @@ function initStageMap(st){
         if(de){ de.textContent = pr.dplus+' m'; }
       }
     }
-    if(note){ note.textContent = 'Tracé réel (routage vélo BRouter'+(src==='cache'?', en cache':'')+') — suit chemins de halage et petites routes.'; }
+    if(note){ note.textContent = 'Tracé réel (routage vélo BRouter'+(src==='cache'?', en cache':'')+').'; }
     loadStageWater(st, m);
   });
   if(ROUTED[st.id]) loadStageWater(st, m);
