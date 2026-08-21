@@ -535,6 +535,13 @@ footer{
 .pickbar .tr-undo,.pickbar .tr-done{flex:none;background:rgba(255,255,255,.14);color:#fff;border:none;
   border-radius:9px;padding:9px 12px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer;margin-left:6px}
 .pickbar .tr-done{background:var(--sage);color:#08252e}
+.dstep{display:flex;align-items:center;gap:12px}
+.dstep button{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);font:600 1.3rem/1 'Spline Sans',sans-serif;cursor:pointer}
+.dstep button:disabled{opacity:.35}
+.dstep .dval{flex:1;text-align:center;font-size:1rem}
+.dstep .dval b{font-size:1.5rem;font-family:'Spline Sans Mono',monospace}
+.dstep .dval i{display:block;font-style:normal;font-size:.72rem;color:var(--muted);margin-top:2px}
 .pickmap-btn{width:100%;background:var(--panel);border:1px dashed var(--line);color:var(--ink);
   border-radius:10px;padding:10px 14px;font:600 .8rem/1 'Spline Sans',sans-serif;cursor:pointer}
 .pickmap-btn.arm{border-style:solid;border-color:var(--gold);background:rgba(240,184,96,.16);color:var(--gold)}
@@ -594,7 +601,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v11.2.0</span>
+      <span class="ver" id="app-version">v11.4.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -607,14 +614,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v11.2.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v11.4.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v11.2.0
+   Tour de Bourgogne à vélo — PWA · v11.4.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -627,7 +634,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'e1';
+var GEN = 'e2';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -710,16 +717,10 @@ var CHAIN = [
   gare:'Gare de Digoin', svc:['eau','supermarché','pharmacie','baignade'],
   camps:[{n:'Camping de la Chevrette', t:'★★★ · bord de Loire'},
          {n:'Camping de Bourbon-Lancy (35 km)', t:'★★★ · thermal'}]},
- {n:'Gilly-sur-Loire', ll:[46.5700,3.8250], km:20, surf:'route', vr:'étape 19 · canal latéral à la Loire',
-  gare:'\u2014', svc:['eau'],
-  camps:[]},
- {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:9, surf:'vv', vr:'étape 20 · ancienne voie ferrée',
+ {n:'Bourbon-Lancy', ll:[46.6203,3.7703], km:29, surf:'vv', vr:'étape 20 · ancienne voie ferrée',
   gare:'—', svc:['eau','commerces','thermes','piscine'],
   camps:[{n:'Camping du Breuil', t:'★★★ · parc thermal'}]},
- {n:'Cronat', ll:[46.7167,3.6333], km:18, surf:'route', vr:'étape 21 · collines de Loire',
-  gare:'\u2014', svc:['eau'],
-  camps:[]},
- {n:'Decize', ll:[46.8283,3.4624], km:29, surf:'vv', vr:'étape 22 · jonction Nivernais',
+ {n:'Decize', ll:[46.8283,3.4624], km:47, surf:'vv', vr:'étape 22 · jonction Nivernais',
   gare:'Gare de Decize (Nevers–Dijon)', svc:['eau','supermarché','pharmacie','baignade'],
   camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île'}]},
  {n:'Cercy-la-Tour', ll:[46.8656,3.6425], km:15, surf:'vv', vr:'étape 23 · canal du Nivernais',
@@ -729,7 +730,7 @@ var CHAIN = [
   gare:'—', svc:['eau','commerces','boulangerie'],
   camps:[{n:'Camping municipal du Bazois', t:'★★ · port'},
          {n:'Bivouac du Bazois', t:'bivouac'}]},
- {n:'Chitry-les-Mines', ll:[47.2500,3.5333], km:31, surf:'vv', vr:'étape 25 · échelle des 16 écluses',
+ {n:'Chitry-les-Mines', ll:[47.2314,3.6636], km:31, surf:'vv', vr:'étape 25 · échelle des 16 écluses',
   gare:'Halte de Chitry', svc:['eau'],
   camps:[{n:'Aire naturelle de Chitry', t:'aire'}]},
  {n:'Clamecy', ll:[47.46,3.52], km:32, surf:'vv', vr:'étape 26 · Yonne',
@@ -762,10 +763,7 @@ var CHAIN = [
  {n:'Venarey-les-Laumes', ll:[47.5417,4.4467], km:13, surf:'vv', vr:'étape 5 · Alésia',
   gare:'Gare des Laumes-Alésia', svc:['eau','commerces','boulangerie'],
   camps:[{n:'Camping municipal de Venarey', t:'★★ · canal'}]},
- {n:'Pont-Royal', ll:[47.35,4.52], km:22, surf:'vv', vr:'étape 6 · vallée des 40 écluses',
-  gare:'\u2014', svc:['eau'],
-  camps:[]},
- {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:19, surf:'vv', vr:'étape 7 · toit de la Bourgogne',
+ {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:41, surf:'vv', vr:'étape 7 · toit de la Bourgogne',
   gare:'—', svc:['eau','commerces','boulangerie'],
   camps:[{n:'Camping du Vert Auxois', t:'★★ · centre'}]},
  {n:'La Bussière-sur-Ouche', ll:[47.2167,4.7833], km:25, surf:'vv', vr:'étape 8 · vallée de l\u2019Ouche',
@@ -849,7 +847,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v11.2.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v11.4.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
@@ -859,7 +857,10 @@ try{
   oldK.forEach(function(k){ localStorage.removeItem(k); });
 }catch(e){}
 
+/* Nombre de journées pédalées. Modifiable : si vous avancez plus vite que
+   prévu, réduisez-le et l'arrivée est recalculée sur moins de jours. */
 var TOTAL_DAYS = 14;
+var DAYS_MIN = 6, DAYS_MAX = 17;
 var DATE0 = new Date(2026, 7, 16); /* dimanche 16 août 2026 */
 var JOURS = ['dim','lun','mar','mer','jeu','ven','sam'];
 var MOIS = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
@@ -870,7 +871,7 @@ var MOIS = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct'
    la nouvelle valeur, et le changement n'a aucun effet pour l'utilisateur
    existant. C'est ce qui laissait la boucle ouverte à Dijon en v3.2. */
 var STATEVER = 2;
-var STATE = {v:STATEVER, opts:{}, days:{}, done:{}, stops:{}, trace:{}};
+var STATE = {v:STATEVER, opts:{}, days:{}, done:{}, stops:{}, trace:{}, nd:TOTAL_DAYS};
 OPTIONS.forEach(function(o){ STATE.opts[o.id] = o.on; });
 try{
   var sv = JSON.parse(localStorage.getItem('bourg-state2')||'null');
@@ -885,6 +886,7 @@ try{
     if(sv.done){ STATE.done = sv.done; }
     if(sv.stops && typeof sv.stops==='object'){ STATE.stops = sv.stops; }
     if(sv.trace && typeof sv.trace==='object'){ STATE.trace = sv.trace; }
+    if(typeof sv.nd==='number' && sv.nd>=DAYS_MIN && sv.nd<=DAYS_MAX){ STATE.nd = sv.nd; }
     /* Les arrêts créés avant l'ancrage mémorisé étaient reprojetés sur toute
        la boucle : certains pointaient à des dizaines de kilomètres du tracé et
        gonflaient les distances (87 km annoncés pour 61 réels). On les écarte,
@@ -906,7 +908,7 @@ try{
     if(sv.v !== STATEVER){ try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
   }
 }catch(e){}
-function saveState(){ STATE.v = STATEVER; if(!STATE.stops) STATE.stops = {}; if(!STATE.trace) STATE.trace = {}; STATE.via = {}; try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
+function saveState(){ STATE.v = STATEVER; if(!STATE.stops) STATE.stops = {}; if(!STATE.trace) STATE.trace = {}; if(!STATE.nd) STATE.nd = TOTAL_DAYS; STATE.via = {}; try{ localStorage.setItem('bourg-state2', JSON.stringify(STATE)); }catch(e){} }
 function resetDays(){ STATE.days = {}; saveState(); }
 function resetDone(){ STATE.done = {}; STATE.stops = {}; saveState(); }
 
@@ -1027,7 +1029,7 @@ function computeStages(){
   var chain = buildChain();
   var cum = chainCum(chain);
   var M = chain.length, T = cum[M-1];
-  var rideDays = TOTAL_DAYS;
+  var rideDays = (STATE.nd || TOTAL_DAYS);
 
   function bounds(cap, minSeg){
     var mn = new Array(M).fill(Infinity), mx = new Array(M).fill(-Infinity);
@@ -2717,6 +2719,20 @@ function purgeNotice(){
     +'Créé'+(n>1?'s':'')+' avant la correction de l\u2019ancrage, il'+(n>1?'s':'')+' pouvait être inséré n\u2019importe où sur la boucle. '
     +'Replace le point avec « \ud83d\udccd Choisir un point sur la carte ».</div>';
 }
+function daysBox(){
+  var n = STATE.nd || TOTAL_DAYS;
+  var fin = new Date(DATE0.getTime());
+  fin.setDate(fin.getDate() + n - 1);
+  var faits = RUN.lastDoneDay || 0;
+  return '<div class="vbox"><h4>Durée du séjour</h4>'
+    +'<div class="dstep">'
+    +'<button class="d-minus"'+(n<=Math.max(DAYS_MIN, faits+1)?' disabled':'')+'>\u2212</button>'
+    +'<span class="dval"><b>'+n+'</b> jours<i>arrivée '+JOURS[fin.getDay()]+' '+fin.getDate()+' '+MOIS[fin.getMonth()]+'</i></span>'
+    +'<button class="d-plus"'+(n>=DAYS_MAX?' disabled':'')+'>+</button>'
+    +'</div>'
+    +'<p class="muted" style="font-size:.76rem;margin-top:7px">Si vous avancez plus vite, réduisez le nombre de jours : les étapes restantes s\u2019allongent et vous rentrez plus tôt.</p>'
+    +'</div>';
+}
 function progressBox(){
   var d = RUN.lastDoneDay;
   if(!d){ return ''; }
@@ -2826,6 +2842,7 @@ function sejourHtml(){
     +'<div class="stat"><b>'+moy+' km</b><span>moyenne</span></div>'
     +'<div class="stat"><b>'+mx+' km</b><span>max</span></div>'
     +'</div>'
+    + daysBox()
     + purgeNotice()
     + progressBox()
     +'<div class="map" id="map-apercu" style="position:relative;margin-top:14px"></div>'
@@ -3171,7 +3188,7 @@ function toggleShare(){
    ========================================================= */
 var TABS = [
   {id:'sejour', lab:'Séjour', sub:'Réglage'},
-  {id:'etapes', lab:'Étapes', sub:TOTAL_DAYS+' jours'},
+  {id:'etapes', lab:'Étapes', sub:'jours'},
   {id:'pratique', lab:'Pratique', sub:'Infos'},
   {id:'materiel', lab:'Matériel', sub:'Checklist'}
 ];
@@ -3182,7 +3199,7 @@ function etapesHtml(){
     openStage = null;
   }
   return '<div class="card"><h2><small>Toucher pour ouvrir</small>Les '+RUN.stages.length+' journées</h2>'
-    +'<p class="muted" style="margin-top:8px;font-size:.83rem">Un seul itinéraire, découpé en 17 journées. Valider une journée ou changer sa longueur réorganise instantanément tout ce qui suit.</p>'
+    +'<p class="muted" style="margin-top:8px;font-size:.83rem">Découpage officiel France Vélo Tourisme. Valider une journée ou changer sa longueur réorganise tout ce qui suit.</p>'
     + chainList() +'</div>';
 }
 function render(){
@@ -3198,6 +3215,7 @@ function render(){
   mainEl.innerHTML = '';
   tabsEl.innerHTML = '';
   TABS.forEach(function(t){
+    if(t.id==='etapes'){ t.sub = (STATE.nd||TOTAL_DAYS)+' jours'; }
     var sec = document.createElement('section');
     sec.className = 'day'+(t.id===currentTab?' on':'');
     sec.id = 'sec-'+t.id;
@@ -3321,6 +3339,19 @@ mainEl.addEventListener('click', function(ev){
     return;
   }
   if(t.closest && t.closest('.undone-btn')){ resetDone(); recompute(); return; }
+  var dm = t.closest ? t.closest('.d-minus') : null;
+  var dp = t.closest ? t.closest('.d-plus') : null;
+  if(dm || dp){
+    var n0 = STATE.nd || TOTAL_DAYS;
+    var faits = RUN.lastDoneDay || 0;
+    var n1 = dm ? n0-1 : n0+1;
+    if(n1 < Math.max(DAYS_MIN, faits+1) || n1 > DAYS_MAX) return;
+    STATE.nd = n1;
+    /* les choix quotidiens au-delà du nouveau dernier jour n'ont plus de sens */
+    Object.keys(STATE.days).forEach(function(k){ if(parseInt(k.slice(1),10) > n1) delete STATE.days[k]; });
+    Object.keys(STATE.done).forEach(function(k){ if(parseInt(k.slice(1),10) > n1) delete STATE.done[k]; });
+    saveState(); RUN = computeStages(); render(); return;
+  }
   var db = t.closest ? t.closest('.dbtn') : null;
   if(db){
     var mm0 = maps.apercu;
