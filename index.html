@@ -601,7 +601,7 @@ footer{
 <header>
   <div class="wrap">
     <div class="topline">
-      <span class="ver" id="app-version">v11.4.0</span>
+      <span class="ver" id="app-version">v11.5.0</span>
       <button id="theme-toggle" title="Basculer clair / sombre" aria-label="Basculer entre mode clair et mode sombre">☀️</button>
     </div>
     <div class="eyebrow">Saint-Jean-de-Losne · Bourgogne</div>
@@ -614,14 +614,14 @@ footer{
 
 <nav class="tabs" id="tabs"></nav>
 
-<footer>Tour de Bourgogne à vélo · v11.4.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
+<footer>Tour de Bourgogne à vélo · v11.5.0 · tracés indicatifs — vérifier l'état des chemins de halage sur place</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
-   Tour de Bourgogne à vélo — PWA · v11.4.0
+   Tour de Bourgogne à vélo — PWA · v11.5.0
    Itinérance 14 jours · départ Saint-Jean-de-Losne · sens horaire
    -------------------------------------------------------
    v2 : la chaîne suit le tracé officiel « Tour de Bourgogne à
@@ -634,7 +634,7 @@ footer{
    ========================================================= */
 
 var VER = '2.0.0';
-var GEN = 'e2';
+var GEN = 'e3';
 var START = [47.1013, 5.2632];
 var START_POPUP = '<b>Départ &amp; retour</b><br>Parking Saint-Jacques, Saint-Usage<br>Gare d\u2019eau de Saint-Jean-de-Losne';
 var DAYCOLORS = ['#f0b860','#6fd6c9','#e0679a','#9fc48f','#d98a4e','#8ab4f8','#c9a0e8'];
@@ -673,7 +673,7 @@ var CHAIN = [
   gare:'Gare de St-Jean-de-Losne (ligne Dijon–Dole)', svc:['eau','commerces','boulangerie'],
   camps:[{n:'Camping des Herlequins (Saint-Usage)', t:'★★ · 800 m du parking'},
          {n:'Chambres d\u2019hôtes du port', t:'repli'}]},
- {n:'Seurre', ll:[47.0003,5.1372], km:22, surf:'vv', vr:'Voie Bleue · Saône',
+ {n:'Seurre', ll:[46.998500,5.149636], km:22, surf:'vv', vr:'Voie Bleue · Saône',
   gare:'Gare de Seurre', svc:['eau','commerces','boulangerie','pharmacie'],
   camps:[{n:'Camping municipal de Seurre', t:'★★ · bord de Saône'},
          {n:'Gîtes d\u2019étape de Seurre', t:'repli'}]},
@@ -684,17 +684,17 @@ var CHAIN = [
   gare:'Gare de Chalon (Dijon–Mâcon, fréquente)', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
   camps:[{n:'Camping du Pont de Bourgogne', t:'★★★ · bord de Saône'},
          {n:'Auberge de jeunesse de Chalon', t:'repli'}]},
- {n:'Fragnes', ll:[46.8325,4.83], km:9, surf:'vv', vr:'EV6 · canal du Centre',
+ {n:'Fragnes', ll:[46.834634,4.841999], km:9, surf:'vv', vr:'EV6 · canal du Centre',
   gare:'—', svc:['eau','commerces'],
   camps:[{n:'Aire de la halte fluviale', t:'aire vélo'}]},
  {n:'Chagny', ll:[46.9099,4.7508], km:12, surf:'vv', vr:'EV6 · canal du Centre',
   gare:'Gare de Chagny', svc:['eau','supermarché','boulangerie','pharmacie'],
   camps:[{n:'Camping du Pâquier Fané', t:'★★★ · centre'},
          {n:'Camping de Santenay (7 km)', t:'★★★ · thermal'}]},
- {n:'Santenay', ll:[46.9083,4.69], km:6, surf:'vv', vr:'Voie des Vignes',
+ {n:'Santenay', ll:[46.912833,4.696534], km:6, surf:'vv', vr:'Voie des Vignes',
   gare:'\u2014', svc:['eau'],
   camps:[]},
- {n:'Saint-Léger-sur-Dheune', ll:[46.8472,4.6331], km:8, surf:'vv', vr:'étape 13 · canal du Centre',
+ {n:'Saint-Léger-sur-Dheune', ll:[46.8472,4.6331], km:11, surf:'vv', vr:'étape 13 · canal du Centre',
   gare:'Gare de Saint-Léger', svc:['eau','commerces','boulangerie'],
   camps:[{n:'Halte nautique &amp; camping de St-Léger', t:'★★ · port'},
          {n:'Camping du lac de Saint-Sernin', t:'★★ · 4 km'}]},
@@ -705,7 +705,7 @@ var CHAIN = [
   gare:'Gare de Montceau-les-Mines', svc:['eau','supermarché','pharmacie','vélociste','laverie'],
   camps:[{n:'Camping du Lac de la Sorme', t:'★★★ · 5 km'},
          {n:'Hôtels du centre', t:'repli'}]},
- {n:'Palinges', ll:[46.5486,4.2172], km:27, surf:'route', vr:'étape 16 · canal du Centre',
+ {n:'Palinges', ll:[46.553871,4.219499], km:27, surf:'route', vr:'étape 16 · canal du Centre',
   gare:'Gare de Palinges', svc:['eau','commerces','baignade'],
   camps:[{n:'Camping du Lac de Palinges', t:'★★ · plan d\u2019eau'},
          {n:'Halte fluviale de Palinges', t:'aire'}]},
@@ -723,21 +723,21 @@ var CHAIN = [
  {n:'Decize', ll:[46.8283,3.4624], km:47, surf:'vv', vr:'étape 22 · jonction Nivernais',
   gare:'Gare de Decize (Nevers–Dijon)', svc:['eau','supermarché','pharmacie','baignade'],
   camps:[{n:'Camping des Halles, île de la Saulaie', t:'★★ · sur l\u2019île'}]},
- {n:'Cercy-la-Tour', ll:[46.8656,3.6425], km:15, surf:'vv', vr:'étape 23 · canal du Nivernais',
+ {n:'Cercy-la-Tour', ll:[46.869834,3.645471], km:15, surf:'vv', vr:'étape 23 · canal du Nivernais',
   gare:'Gare de Cercy-la-Tour', svc:['eau','commerces','baignade'],
   camps:[{n:'Camping municipal du Plan d\u2019eau', t:'★★ · bord de canal'}]},
  {n:'Châtillon-en-Bazois', ll:[47.0552,3.6577], km:35, surf:'vv', vr:'étape 24 · Bazois',
   gare:'—', svc:['eau','commerces','boulangerie'],
   camps:[{n:'Camping municipal du Bazois', t:'★★ · port'},
          {n:'Bivouac du Bazois', t:'bivouac'}]},
- {n:'Chitry-les-Mines', ll:[47.2314,3.6636], km:31, surf:'vv', vr:'étape 25 · échelle des 16 écluses',
+ {n:'Chitry-les-Mines', ll:[47.260358,3.650988], km:31, surf:'vv', vr:'étape 25 · échelle des 16 écluses',
   gare:'Halte de Chitry', svc:['eau'],
   camps:[{n:'Aire naturelle de Chitry', t:'aire'}]},
  {n:'Clamecy', ll:[47.46,3.52], km:32, surf:'vv', vr:'étape 26 · Yonne',
   gare:'Gare de Clamecy', svc:['eau','supermarché','pharmacie','baignade','laverie'],
   camps:[{n:'Camping du Pont Picot', t:'★★ · entre Yonne et canal'},
          {n:'Hôtels de la vieille ville', t:'repli'}]},
- {n:'Mailly-le-Château', ll:[47.5833,3.65], km:30, surf:'vv', vr:'étape 27 · rochers du Saussois',
+ {n:'Mailly-le-Château', ll:[47.596428,3.636898], km:30, surf:'vv', vr:'étape 27 · rochers du Saussois',
   gare:'—', svc:['eau','commerces','baignade'],
   camps:[{n:'Camping le Pré du Roi', t:'★★ · bord d\u2019Yonne'}]},
  {n:'Auxerre', ll:[47.798,3.57], km:32, surf:'vv', vr:'étape 28 · Yonne',
@@ -754,7 +754,7 @@ var CHAIN = [
   gare:'Gare de Tonnerre', svc:['eau','supermarché','pharmacie','boulangerie'],
   camps:[{n:'Camping de la Cascade', t:'★★ · Armançon'},
          {n:'Hôtels de Tonnerre', t:'repli'}]},
- {n:'Ancy-le-Franc', ll:[47.7736,4.1594], km:30, surf:'vv', vr:'étape 3 · Tanlay, Ancy',
+ {n:'Ancy-le-Franc', ll:[47.774047,4.165437], km:30, surf:'vv', vr:'étape 3 · Tanlay, Ancy',
   gare:'—', svc:['eau','commerces'],
   camps:[{n:'Camping municipal d\u2019Ancy', t:'★★ · canal'}]},
  {n:'Montbard', ll:[47.6217,4.3372], km:29, surf:'vv', vr:'étape 4 · Buffon, Ravières',
@@ -766,14 +766,14 @@ var CHAIN = [
  {n:'Pouilly-en-Auxois', ll:[47.2639,4.5583], km:41, surf:'vv', vr:'étape 7 · toit de la Bourgogne',
   gare:'—', svc:['eau','commerces','boulangerie'],
   camps:[{n:'Camping du Vert Auxois', t:'★★ · centre'}]},
- {n:'La Bussière-sur-Ouche', ll:[47.2167,4.7833], km:25, surf:'vv', vr:'étape 8 · vallée de l\u2019Ouche',
+ {n:'La Bussière-sur-Ouche', ll:[47.216808,4.721216], km:25, surf:'vv', vr:'étape 8 · vallée de l\u2019Ouche',
   gare:'—', svc:['eau','commerces'],
   camps:[{n:'Camping de la vallée de l\u2019Ouche', t:'★★ · rivière'}]},
  {n:'Dijon', ll:[47.322,5.0415], km:34, surf:'vv', vr:'étape 9 · lac Kir',
   gare:'Gare de Dijon-Ville (TER direct St-Jean-de-Losne, 15 min)', svc:['eau','supermarché','pharmacie','vélociste','laverie','baignade'],
   camps:[{n:'Camping du Lac Kir', t:'★★★ · plage'},
          {n:'Hôtels de Dijon', t:'repli'}]},
- {n:'Longecourt-en-Plaine', ll:[47.1833,5.1333], km:18, surf:'route', vr:'liaison · canal de Bourgogne', loop:true,
+ {n:'Longecourt-en-Plaine', ll:[47.197057,5.151092], km:18, surf:'route', vr:'liaison · canal de Bourgogne', loop:true,
   gare:'\u2014', svc:['eau','commerces'],
   camps:[{n:'Halte de Longecourt', t:'château et canal'}]},
  {n:'Saint-Jean-de-Losne', ll:[47.1013,5.2632], km:17, surf:'vv', vr:'liaison · retour au parking', loop:true,
@@ -847,7 +847,7 @@ try{
   if(lsv){ ['camps','bains','eau','velo'].forEach(function(k){ if(typeof lsv[k]==='boolean'){ LAYERS[k]=lsv[k]; } }); }
 }catch(e){}
 function saveLayers(){ try{ localStorage.setItem('bourg-layers', JSON.stringify(LAYERS)); }catch(e){} }
-/* nettoyage des caches de l'ancienne couche bivouac (retirée en v11.4.0) */
+/* nettoyage des caches de l'ancienne couche bivouac (retirée en v11.5.0) */
 try{
   var oldK = [];
   for(var oi=0; oi<localStorage.length; oi++){
